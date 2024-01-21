@@ -11,7 +11,6 @@ import TxData from '@/components/transactions/TxDetails/TxData'
 import { MethodDetails } from '@/components/transactions/TxDetails/TxData/DecodedData/MethodDetails'
 import { TxDataRow } from '@/components/transactions/TxDetails/Summary/TxDataRow'
 import { dateString } from '@/utils/formatters'
-import { BATCH_EVENTS, trackEvent } from '@/services/analytics'
 
 type BatchTxItemProps = DraftBatchItem & {
   id: string
@@ -46,21 +45,16 @@ const BatchTxItem = ({
       e.stopPropagation()
       if (confirm('Are you sure you want to delete this transaction?')) {
         onDelete?.(id)
-        trackEvent(BATCH_EVENTS.BATCH_DELETE_TX)
       }
     },
     [onDelete, id],
   )
 
-  const handleExpand = () => {
-    trackEvent(BATCH_EVENTS.BATCH_EXPAND_TX)
-  }
-
   return (
     <ListItem disablePadding sx={{ gap: 2, alignItems: 'flex-start' }}>
       <div className={css.number}>{count}</div>
 
-      <Accordion elevation={0} sx={{ flex: 1 }} onChange={handleExpand}>
+      <Accordion elevation={0} sx={{ flex: 1 }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} disabled={dragging} className={css.accordion}>
           <Box flex={1} display="flex" alignItems="center" gap={2} py={0.4}>
             {draggable && (

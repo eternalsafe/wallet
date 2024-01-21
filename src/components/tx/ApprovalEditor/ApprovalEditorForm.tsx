@@ -4,8 +4,6 @@ import css from './styles.module.css'
 import CheckIcon from '@mui/icons-material/Check'
 import type { ApprovalInfo } from './hooks/useApprovalInfos'
 import { ApprovalValueField } from './ApprovalValueField'
-import { MODALS_EVENTS } from '@/services/analytics'
-import Track from '@/components/common/Track'
 import { useMemo } from 'react'
 import ApprovalItem from '@/components/tx/ApprovalEditor/ApprovalItem'
 import { BigNumber } from 'ethers'
@@ -55,16 +53,14 @@ export const ApprovalEditorForm = ({
             <ApprovalItem spender={tx.spender} method={tx.method}>
               <>
                 <ApprovalValueField name={`approvals.${idx}`} tx={tx} />
-                <Track {...MODALS_EVENTS.EDIT_APPROVALS}>
-                  <IconButton
-                    className={css.iconButton}
-                    onClick={onSave}
-                    disabled={!!errors.approvals || !dirtyFields.approvals?.[idx]}
-                    title="Save"
-                  >
-                    <SvgIcon component={CheckIcon} />
-                  </IconButton>
-                </Track>
+                <IconButton
+                  className={css.iconButton}
+                  onClick={onSave}
+                  disabled={!!errors.approvals || !dirtyFields.approvals?.[idx]}
+                  title="Save"
+                >
+                  <SvgIcon component={CheckIcon} />
+                </IconButton>
               </>
             </ApprovalItem>
           </ListItem>

@@ -1,5 +1,5 @@
 import { Button, Checkbox, Divider, FormControlLabel, Typography } from '@mui/material'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { ReactElement, ChangeEvent } from 'react'
 import type { Web3WalletTypes } from '@walletconnect/web3wallet'
 
@@ -14,8 +14,6 @@ import {
   isBlockedBridge,
   isWarnedBridge,
 } from '@/features/walletconnect/services/utils'
-import { trackEvent } from '@/services/analytics'
-import { WALLETCONNECT_EVENTS } from '@/services/analytics/events/walletconnect'
 import useSafeInfo from '@/hooks/useSafeInfo'
 
 type ProposalFormProps = {
@@ -41,39 +39,9 @@ const WcProposalForm = ({ proposal, onApprove, onReject }: ProposalFormProps): R
   const isBlocked = isScam || isBlockedBridge(origin)
   const disabled = !safeLoaded || isUnsupportedChain || isBlocked || (isHighRisk && !understandsRisk)
 
-  const onCheckboxClick = useCallback(
-    (_: ChangeEvent, checked: boolean) => {
-      setUnderstandsRisk(checked)
-
-      if (checked) {
-        trackEvent({
-          ...WALLETCONNECT_EVENTS.ACCEPT_RISK,
-          label: url,
-        })
-      }
-    },
-    [url],
-  )
-
-  // Track risk/scam/bridge warnings
-  useEffect(() => {
-    if (isHighRisk || isBlocked) {
-      trackEvent({
-        ...WALLETCONNECT_EVENTS.SHOW_RISK,
-        label: url,
-      })
-    }
-  }, [isHighRisk, isBlocked, url])
-
-  // Track unsupported chain warnings
-  useEffect(() => {
-    if (isUnsupportedChain) {
-      trackEvent({
-        ...WALLETCONNECT_EVENTS.UNSUPPORTED_CHAIN,
-        label: url,
-      })
-    }
-  }, [url, isUnsupportedChain])
+  const onCheckboxClick = (_: ChangeEvent, checked: boolean) => {
+    setUnderstandsRisk(checked)
+  }
 
   return (
     <div className={css.container}>

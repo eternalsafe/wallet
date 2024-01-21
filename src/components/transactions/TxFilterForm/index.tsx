@@ -14,8 +14,6 @@ import { useMemo, type ReactElement } from 'react'
 import AddressBookInput from '@/components/common/AddressBookInput'
 import DatePickerInput from '@/components/common/DatePickerInput'
 import { validateAmount } from '@/utils/validation'
-import { trackEvent } from '@/services/analytics'
-import { TX_LIST_EVENTS } from '@/services/analytics/events/txList'
 import { txFilter, useTxFilter, TxFilterType, type TxFilter } from '@/utils/tx-history-filter'
 import { useCurrentChain } from '@/hooks/useChains'
 import NumberField from '@/components/common/NumberField'
@@ -105,10 +103,6 @@ const TxFilterForm = ({ toggleFilter }: { toggleFilter: () => void }): ReactElem
   }
 
   const onSubmit = (data: TxFilterFormState) => {
-    for (const name of dirtyFieldNames) {
-      trackEvent({ ...TX_LIST_EVENTS.FILTER, label: name })
-    }
-
     const filterData = txFilter.parseFormData(data)
 
     setFilter(filterData)

@@ -18,8 +18,6 @@ import sharedCss from '@/components/tx/security/shared/styles.module.css'
 import { TxInfoContext } from '@/components/tx-flow/TxInfoProvider'
 import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import InfoIcon from '@/public/images/notifications/info.svg'
-import Track from '@/components/common/Track'
-import { MODALS_EVENTS } from '@/services/analytics'
 
 export type TxSimulationProps = {
   transactions?: SimulationTxParams['transactions']
@@ -115,17 +113,15 @@ const TxSimulationBlock = ({ transactions, disabled, gasLimit, executionOwner }:
             </Typography>
           )
         ) : (
-          <Track {...MODALS_EVENTS.SIMULATE_TX}>
-            <Button
-              variant="outlined"
-              size="small"
-              className={css.simulate}
-              onClick={handleSimulation}
-              disabled={!transactions || disabled}
-            >
-              Simulate
-            </Button>
-          </Track>
+          <Button
+            variant="outlined"
+            size="small"
+            className={css.simulate}
+            onClick={handleSimulation}
+            disabled={!transactions || disabled}
+          >
+            Simulate
+          </Button>
         )}
       </div>
     </Paper>

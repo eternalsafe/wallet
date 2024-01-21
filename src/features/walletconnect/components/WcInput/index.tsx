@@ -4,28 +4,12 @@ import { WalletConnectContext } from '@/features/walletconnect/WalletConnectCont
 import { asError } from '@/services/exceptions/utils'
 import { getClipboard, isClipboardSupported } from '@/utils/clipboard'
 import { isPairingUri } from '@/features/walletconnect/services/utils'
-import Track from '@/components/common/Track'
-import { WALLETCONNECT_EVENTS } from '@/services/analytics/events/walletconnect'
-import { trackEvent } from '@/services/analytics'
-import useDebounce from '@/hooks/useDebounce'
-
-const useTrackErrors = (error?: Error) => {
-  const debouncedErrorMessage = useDebounce(error?.message, 1000)
-
-  // Track errors
-  useEffect(() => {
-    if (debouncedErrorMessage) {
-      trackEvent({ ...WALLETCONNECT_EVENTS.SHOW_ERROR, label: debouncedErrorMessage })
-    }
-  }, [debouncedErrorMessage])
-}
 
 const WcInput = ({ uri }: { uri: string }) => {
   const { walletConnect } = useContext(WalletConnectContext)
   const [value, setValue] = useState('')
   const [error, setError] = useState<Error>()
   const [connecting, setConnecting] = useState(false)
-  useTrackErrors(error)
 
   const onInput = useCallback(
     async (val: string) => {
@@ -84,11 +68,9 @@ const WcInput = ({ uri }: { uri: string }) => {
         autoComplete: 'off',
         endAdornment: isClipboardSupported() ? undefined : (
           <InputAdornment position="end">
-            <Track {...WALLETCONNECT_EVENTS.PASTE_CLICK}>
-              <Button variant="contained" onClick={onPaste} sx={{ py: 1 }} disabled={connecting}>
-                Paste
-              </Button>
-            </Track>
+            <Button variant="contained" onClick={onPaste} sx={{ py: 1 }} disabled={connecting}>
+              Paste
+            </Button>
           </InputAdornment>
         ),
       }}

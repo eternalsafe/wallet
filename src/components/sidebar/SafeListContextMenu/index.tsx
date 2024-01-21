@@ -13,7 +13,6 @@ import { selectAddedSafes } from '@/store/addedSafesSlice'
 import EditIcon from '@/public/images/common/edit.svg'
 import DeleteIcon from '@/public/images/common/delete.svg'
 import ContextMenu from '@/components/common/ContextMenu'
-import { trackEvent, OVERVIEW_EVENTS } from '@/services/analytics'
 import { SvgIcon } from '@mui/material'
 
 enum ModalType {
@@ -46,14 +45,10 @@ const SafeListContextMenu = ({
     setAnchorEl(undefined)
   }
 
-  const handleOpenModal =
-    (type: keyof typeof open, event: typeof OVERVIEW_EVENTS.SIDEBAR_RENAME | typeof OVERVIEW_EVENTS.SIDEBAR_RENAME) =>
-    () => {
-      handleCloseContextMenu()
-      setOpen((prev) => ({ ...prev, [type]: true }))
-
-      trackEvent(event)
-    }
+  const handleOpenModal = (type: keyof typeof open) => () => {
+    handleCloseContextMenu()
+    setOpen((prev) => ({ ...prev, [type]: true }))
+  }
 
   const handleCloseModal = () => {
     setOpen(defaultOpen)
@@ -65,7 +60,7 @@ const SafeListContextMenu = ({
         <MoreVertIcon sx={({ palette }) => ({ color: palette.border.main })} />
       </IconButton>
       <ContextMenu anchorEl={anchorEl} open={!!anchorEl} onClose={handleCloseContextMenu}>
-        <MenuItem onClick={handleOpenModal(ModalType.RENAME, OVERVIEW_EVENTS.SIDEBAR_RENAME)}>
+        <MenuItem onClick={handleOpenModal(ModalType.RENAME)}>
           <ListItemIcon>
             <SvgIcon component={EditIcon} inheritViewBox fontSize="small" color="success" />
           </ListItemIcon>
@@ -73,7 +68,7 @@ const SafeListContextMenu = ({
         </MenuItem>
 
         {isAdded && (
-          <MenuItem onClick={handleOpenModal(ModalType.REMOVE, OVERVIEW_EVENTS.SIDEBAR_REMOVE)}>
+          <MenuItem onClick={handleOpenModal(ModalType.REMOVE)}>
             <ListItemIcon>
               <SvgIcon component={DeleteIcon} inheritViewBox fontSize="small" color="error" />
             </ListItemIcon>

@@ -16,7 +16,6 @@ import type { PendingSafeTx } from '@/components/new-safe/create/types'
 import type { NewSafeFormData } from '@/components/new-safe/create'
 import type { UrlObject } from 'url'
 import { AppRoutes } from '@/config/routes'
-import { SAFE_APPS_EVENTS, trackEvent } from '@/services/analytics'
 import type { AppDispatch, AppThunk } from '@/store'
 import { showNotification } from '@/store/notificationsSlice'
 import { SafeFactory } from '@safe-global/safe-core-sdk'
@@ -254,12 +253,6 @@ export const getRedirect = (
   }
 
   // Otherwise, redirect to the provided URL (e.g. from a Safe App)
-
-  // Track the redirect to Safe App
-  // TODO: Narrow this down to /apps only
-  if (redirectUrl.includes('apps')) {
-    trackEvent(SAFE_APPS_EVENTS.SHARED_APP_OPEN_AFTER_SAFE_CREATION)
-  }
 
   // We're prepending the safe address directly here because the `router.push` doesn't parse
   // The URL for already existing query params

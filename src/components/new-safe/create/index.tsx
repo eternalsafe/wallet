@@ -12,7 +12,6 @@ import { CreateSafeStatus } from '@/components/new-safe/create/steps/StatusStep'
 import useAddressBook from '@/hooks/useAddressBook'
 import { CardStepper } from '@/components/new-safe/CardStepper'
 import { AppRoutes } from '@/config/routes'
-import { CREATE_SAFE_CATEGORY } from '@/services/analytics'
 import type { AlertColor } from '@mui/material'
 import type { CreateSafeInfoItem } from '@/components/new-safe/create/CreateSafeInfos'
 import CreateSafeInfos from '@/components/new-safe/create/CreateSafeInfos'
@@ -189,7 +188,6 @@ const CreateSafe = () => {
             initialStep={initialStep}
             onClose={onClose}
             steps={CreateSafeSteps}
-            eventCategory={CREATE_SAFE_CATEGORY}
             setWidgetStep={setActiveStep}
           />
         </Grid>

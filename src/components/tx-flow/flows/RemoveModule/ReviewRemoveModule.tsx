@@ -2,15 +2,10 @@ import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
 import { Grid, Typography } from '@mui/material'
 import { useContext, useEffect } from 'react'
 import { Errors, logError } from '@/services/exceptions'
-import { trackEvent, SETTINGS_EVENTS } from '@/services/analytics'
 import { createRemoveModuleTx } from '@/services/tx/tx-sender'
 import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import { type RemoveModuleFlowProps } from '.'
 import EthHashInfo from '@/components/common/EthHashInfo'
-
-const onFormSubmit = () => {
-  trackEvent(SETTINGS_EVENTS.MODULES.REMOVE_MODULE)
-}
 
 export const ReviewRemoveModule = ({ params }: { params: RemoveModuleFlowProps }) => {
   const { setSafeTx, safeTxError, setSafeTxError } = useContext(SafeTxContext)
@@ -26,7 +21,7 @@ export const ReviewRemoveModule = ({ params }: { params: RemoveModuleFlowProps }
   }, [safeTxError])
 
   return (
-    <SignOrExecuteForm onSubmit={onFormSubmit}>
+    <SignOrExecuteForm>
       <Grid container gap={1} alignItems="center">
         <Grid item xs={2}>
           Module

@@ -1,7 +1,6 @@
 import { type ReactElement, useContext } from 'react'
 import Button from '@mui/material/Button'
 import css from './styles.module.css'
-import { OVERVIEW_EVENTS, trackEvent } from '@/services/analytics'
 import CheckWallet from '@/components/common/CheckWallet'
 import { TxModalContext } from '@/components/tx-flow'
 import { NewTxFlow } from '@/components/tx-flow/flows'
@@ -11,7 +10,6 @@ const NewTxButton = (): ReactElement => {
 
   const onClick = () => {
     setTxFlow(<NewTxFlow />, undefined, false)
-    trackEvent(OVERVIEW_EVENTS.NEW_TRANSACTION)
   }
 
   return (

@@ -14,7 +14,6 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import layoutCss from '@/components/new-safe/create/styles.module.css'
 import NetworkWarning from '@/components/new-safe/create/NetworkWarning'
 import useIsWrongChain from '@/hooks/useIsWrongChain'
-import { CREATE_SAFE_EVENTS, trackEvent } from '@/services/analytics'
 import OwnerRow from '@/components/new-safe/OwnerRow'
 
 enum OwnerPolicyStepFields {
@@ -77,16 +76,6 @@ const OwnerPolicyStep = ({
 
   const onFormSubmit = handleSubmit((data) => {
     onSubmit(data)
-
-    trackEvent({
-      ...CREATE_SAFE_EVENTS.OWNERS,
-      label: data.owners.length,
-    })
-
-    trackEvent({
-      ...CREATE_SAFE_EVENTS.THRESHOLD,
-      label: data.threshold,
-    })
   })
 
   return (

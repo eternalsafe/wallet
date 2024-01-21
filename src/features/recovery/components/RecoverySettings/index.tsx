@@ -1,6 +1,4 @@
-import Track from '@/components/common/Track'
 import { ChooseRecoveryMethodModal } from './ChooseRecoveryMethodModal'
-import { RECOVERY_EVENTS } from '@/services/analytics/events/recovery'
 import { Box, Button, Grid, Paper, SvgIcon, Tooltip, Typography } from '@mui/material'
 import { type ReactElement, useMemo, useState } from 'react'
 
@@ -128,11 +126,9 @@ function RecoverySettings(): ReactElement {
             {isRecoveryEnabled
               ? 'The trusted Recoverer will be able to recover your Safe Account if you ever lose access. You can change Recoverers or alter your recovery setup at any time.'
               : 'Choose a trusted Recoverer to recover your Safe Account if you ever lose access. Enabling the Account recovery module will require a transaction.'}{' '}
-            <Track {...RECOVERY_EVENTS.LEARN_MORE} label="settings">
-              <ExternalLink href={HelpCenterArticle.RECOVERY} title={HelperCenterArticleTitles.RECOVERY}>
-                Learn more
-              </ExternalLink>
-            </Track>
+            <ExternalLink href={HelpCenterArticle.RECOVERY} title={HelperCenterArticleTitles.RECOVERY}>
+              Learn more
+            </ExternalLink>
           </Typography>
 
           {!isRecoveryEnabled ? (
@@ -153,11 +149,9 @@ export const SetupRecoveryButton = ({ eventLabel }: { eventLabel: string }) => {
     <>
       <CheckWallet>
         {(isOk) => (
-          <Track {...RECOVERY_EVENTS.SETUP_RECOVERY} label={eventLabel}>
-            <Button variant="contained" disabled={!isOk} onClick={() => setOpen(true)} sx={{ mt: 2 }}>
-              Set up recovery
-            </Button>
-          </Track>
+          <Button variant="contained" disabled={!isOk} onClick={() => setOpen(true)} sx={{ mt: 2 }}>
+            Set up recovery
+          </Button>
         )}
       </CheckWallet>
 

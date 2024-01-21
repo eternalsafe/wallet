@@ -3,7 +3,6 @@ import { Typography, Divider, Box, SvgIcon, Paper } from '@mui/material'
 
 import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
 import useSafeInfo from '@/hooks/useSafeInfo'
-import { trackEvent, SETTINGS_EVENTS } from '@/services/analytics'
 import { createSwapOwnerTx, createAddOwnerTx } from '@/services/tx/tx-sender'
 import { useAppDispatch } from '@/store'
 import { upsertAddressBookEntry } from '@/store/addressBookSlice'
@@ -46,9 +45,6 @@ export const ReviewOwner = ({ params }: { params: AddOwnerFlowProps | ReplaceOwn
         }),
       )
     }
-
-    trackEvent({ ...SETTINGS_EVENTS.SETUP.THRESHOLD, label: safe.threshold })
-    trackEvent({ ...SETTINGS_EVENTS.SETUP.OWNERS, label: safe.owners.length })
   }
 
   return (

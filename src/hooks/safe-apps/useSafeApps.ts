@@ -5,7 +5,6 @@ import { useCustomSafeApps } from '@/hooks/safe-apps/useCustomSafeApps'
 import { usePinnedSafeApps } from '@/hooks/safe-apps/usePinnedSafeApps'
 import { useBrowserPermissions, useSafePermissions } from './permissions'
 import { useRankedSafeApps } from '@/hooks/safe-apps/useRankedSafeApps'
-import { SAFE_APPS_EVENTS, trackSafeAppEvent } from '@/services/analytics'
 
 type ReturnType = {
   allSafeApps: SafeAppData[]
@@ -64,14 +63,11 @@ const useSafeApps = (): ReturnType => {
   const togglePin = (appId: number) => {
     const alreadyPinned = pinnedSafeAppIds.has(appId)
     const newSet = new Set(pinnedSafeAppIds)
-    const appName = allSafeApps.find((app) => app.id === appId)?.name
 
     if (alreadyPinned) {
       newSet.delete(appId)
-      trackSafeAppEvent(SAFE_APPS_EVENTS.UNPIN, appName)
     } else {
       newSet.add(appId)
-      trackSafeAppEvent(SAFE_APPS_EVENTS.PIN, appName)
     }
     updatePinnedSafeApps(newSet)
   }

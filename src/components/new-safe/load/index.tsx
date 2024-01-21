@@ -1,7 +1,6 @@
 import React from 'react'
 import { useRouter } from 'next/router'
 
-import { LOAD_SAFE_CATEGORY } from '@/services/analytics'
 import { Container, Grid, Typography } from '@mui/material'
 import { CardStepper } from '@/components/new-safe/CardStepper'
 import type { TxStepperProps } from '@/components/new-safe/CardStepper/useCardStepper'
@@ -66,7 +65,6 @@ const LoadSafe = ({ initialData }: { initialData?: TxStepperProps<LoadSafeFormDa
             initialData={initialSafe}
             onClose={onClose}
             steps={LoadSafeSteps}
-            eventCategory={LOAD_SAFE_CATEGORY}
           />
         </Grid>
       </Grid>

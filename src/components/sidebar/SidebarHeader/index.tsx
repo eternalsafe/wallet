@@ -21,8 +21,6 @@ import { useCurrentChain } from '@/hooks/useChains'
 import { getBlockExplorerLink } from '@/utils/chains'
 import EthHashInfo from '@/components/common/EthHashInfo'
 import QrCodeButton from '../QrCodeButton'
-import Track from '@/components/common/Track'
-import { OVERVIEW_EVENTS } from '@/services/analytics/events/overview'
 import { SvgIcon } from '@mui/material'
 import { useVisibleBalances } from '@/hooks/useVisibleBalances'
 import EnvHintButton from '@/components/settings/EnvironmentVariables/EnvHintButton'
@@ -77,27 +75,21 @@ const SafeHeader = (): ReactElement => {
         </div>
 
         <div className={css.iconButtons}>
-          <Track {...OVERVIEW_EVENTS.SHOW_QR}>
-            <QrCodeButton>
-              <Tooltip title="Open QR code" placement="top">
-                <IconButton className={css.iconButton}>
-                  <SvgIcon component={QrIconBold} inheritViewBox color="primary" fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </QrCodeButton>
-          </Track>
-
-          <Track {...OVERVIEW_EVENTS.COPY_ADDRESS}>
-            <CopyTooltip text={addressCopyText}>
+          <QrCodeButton>
+            <Tooltip title="Open QR code" placement="top">
               <IconButton className={css.iconButton}>
-                <SvgIcon component={CopyIconBold} inheritViewBox color="primary" fontSize="small" />
+                <SvgIcon component={QrIconBold} inheritViewBox color="primary" fontSize="small" />
               </IconButton>
-            </CopyTooltip>
-          </Track>
+            </Tooltip>
+          </QrCodeButton>
 
-          <Track {...OVERVIEW_EVENTS.OPEN_EXPLORER}>
-            <ExplorerButton {...blockExplorerLink} className={css.iconButton} icon={LinkIconBold} />
-          </Track>
+          <CopyTooltip text={addressCopyText}>
+            <IconButton className={css.iconButton}>
+              <SvgIcon component={CopyIconBold} inheritViewBox color="primary" fontSize="small" />
+            </IconButton>
+          </CopyTooltip>
+
+          <ExplorerButton {...blockExplorerLink} className={css.iconButton} icon={LinkIconBold} />
 
           <EnvHintButton />
         </div>

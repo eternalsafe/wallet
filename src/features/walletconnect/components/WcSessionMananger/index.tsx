@@ -8,9 +8,6 @@ import WcConnectionForm from '../WcConnectionForm'
 import WcErrorMessage from '../WcErrorMessage'
 import WcProposalForm from '../WcProposalForm'
 import WcConnectionState from '../WcConnectionState'
-import { trackEvent } from '@/services/analytics'
-import { WALLETCONNECT_EVENTS } from '@/services/analytics/events/walletconnect'
-import { splitError } from '@/features/walletconnect/services/utils'
 
 type WcSessionManagerProps = {
   sessions: SessionTypes.Struct[]
@@ -31,7 +28,6 @@ const WcSessionManager = ({ sessions, uri }: WcSessionManagerProps) => {
     if (!walletConnect || !chainId || !safeAddress || !proposal) return
 
     const label = proposal?.params.proposer.metadata.url
-    trackEvent({ ...WALLETCONNECT_EVENTS.APPROVE_CLICK, label })
 
     try {
       await walletConnect.approveSession(proposal, chainId, safeAddress)
@@ -39,8 +35,6 @@ const WcSessionManager = ({ sessions, uri }: WcSessionManagerProps) => {
       setError(asError(e))
       return
     }
-
-    trackEvent({ ...WALLETCONNECT_EVENTS.CONNECTED, label })
 
     setProposal(undefined)
   }, [walletConnect, setError, chainId, safeAddress, proposal])
@@ -50,7 +44,6 @@ const WcSessionManager = ({ sessions, uri }: WcSessionManagerProps) => {
     if (!walletConnect || !proposal) return
 
     const label = proposal?.params.proposer.metadata.url
-    trackEvent({ ...WALLETCONNECT_EVENTS.REJECT_CLICK, label })
 
     try {
       await walletConnect.rejectSession(proposal)
@@ -66,7 +59,6 @@ const WcSessionManager = ({ sessions, uri }: WcSessionManagerProps) => {
   const onDisconnect = useCallback(
     async (session: SessionTypes.Struct) => {
       const label = session.peer.metadata.url
-      trackEvent({ ...WALLETCONNECT_EVENTS.DISCONNECT_CLICK, label })
 
       if (!walletConnect) return
       try {
@@ -114,15 +106,6 @@ const WcSessionManager = ({ sessions, uri }: WcSessionManagerProps) => {
 
     return () => clearTimeout(timer)
   }, [changedSession, setOpen])
-
-  // Track errors
-  useEffect(() => {
-    if (error) {
-      // The summary of the error
-      const label = splitError(error.message || '')[0]
-      trackEvent({ ...WALLETCONNECT_EVENTS.SHOW_ERROR, label })
-    }
-  }, [error])
 
   //
   // UI states

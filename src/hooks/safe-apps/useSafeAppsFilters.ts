@@ -1,12 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { SafeAppData } from '@safe-global/safe-gateway-typescript-sdk'
 
 import { useAppsFilterByCategory } from './useAppsFilterByCategory'
 import { useAppsSearch } from './useAppsSearch'
 import { useAppsFilterByOptimizedForBatch } from './useAppsFilterByOptimizedForBatch'
-import useDebounce from '../useDebounce'
-import { SAFE_APPS_EVENTS, trackSafeAppEvent } from '@/services/analytics'
 
 type ReturnType = {
   query: string
@@ -26,13 +24,6 @@ const useSafeAppsFilters = (safeAppsList: SafeAppData[]): ReturnType => {
   const filteredAppsByQuery = useAppsSearch(safeAppsList, query)
   const filteredAppsByQueryAndCategories = useAppsFilterByCategory(filteredAppsByQuery, selectedCategories)
   const filteredApps = useAppsFilterByOptimizedForBatch(filteredAppsByQueryAndCategories, optimizedWithBatchFilter)
-
-  const debouncedSearchQuery = useDebounce(query, 2000)
-  useEffect(() => {
-    if (debouncedSearchQuery) {
-      trackSafeAppEvent({ ...SAFE_APPS_EVENTS.SEARCH, label: debouncedSearchQuery })
-    }
-  }, [debouncedSearchQuery])
 
   return {
     query,

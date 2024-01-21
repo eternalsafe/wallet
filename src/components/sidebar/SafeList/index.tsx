@@ -27,8 +27,6 @@ import css from './styles.module.css'
 import { sameAddress } from '@/utils/addresses'
 import ChainIndicator from '@/components/common/ChainIndicator'
 import useSafeInfo from '@/hooks/useSafeInfo'
-import Track from '@/components/common/Track'
-import { OVERVIEW_EVENTS } from '@/services/analytics/events/overview'
 import LoadingIcon from '@/public/images/common/loading.svg'
 import useWallet from '@/hooks/wallets/useWallet'
 import useConnectWallet from '@/components/common/ConnectWallet/useConnectWallet'
@@ -108,23 +106,21 @@ const SafeList = ({ closeDrawer }: { closeDrawer?: () => void }): ReactElement =
         </Typography>
 
         {!isWelcomePage && (
-          <Track {...OVERVIEW_EVENTS.ADD_SAFE}>
-            <Link
-              href={{ pathname: AppRoutes.welcome.index, query: { chain: currentChain?.shortName } }}
-              passHref
-              legacyBehavior
+          <Link
+            href={{ pathname: AppRoutes.welcome.index, query: { chain: currentChain?.shortName } }}
+            passHref
+            legacyBehavior
+          >
+            <Button
+              disableElevation
+              size="small"
+              variant="outlined"
+              onClick={closeDrawer}
+              startIcon={<SvgIcon component={AddIcon} inheritViewBox fontSize="small" />}
             >
-              <Button
-                disableElevation
-                size="small"
-                variant="outlined"
-                onClick={closeDrawer}
-                startIcon={<SvgIcon component={AddIcon} inheritViewBox fontSize="small" />}
-              >
-                Add
-              </Button>
-            </Link>
-          </Track>
+              Add
+            </Button>
+          </Link>
         )}
       </div>
 

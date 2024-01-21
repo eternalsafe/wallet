@@ -3,14 +3,12 @@ import { AppRoutes } from '@/config/routes'
 import { useRemoteSafeApps } from '@/hooks/safe-apps/useRemoteSafeApps'
 import useChainId from '@/hooks/useChainId'
 import useSafeTokenAllocation, { useSafeVotingPower, type Vesting } from '@/hooks/useSafeTokenAllocation'
-import { OVERVIEW_EVENTS } from '@/services/analytics'
 import { formatVisualAmount } from '@/utils/formatters'
 import { Box, Button, ButtonBase, Skeleton, Tooltip, Typography } from '@mui/material'
 import { BigNumber } from 'ethers'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import type { UrlObject } from 'url'
-import Track from '../Track'
 import SafeTokenIcon from '@/public/images/common/safe-token.svg'
 import css from './styles.module.css'
 import UnreadBadge from '../UnreadBadge'
@@ -75,45 +73,41 @@ const SafeTokenWidget = () => {
         }
       >
         <span>
-          <Track {...OVERVIEW_EVENTS.SAFE_TOKEN_WIDGET}>
-            <Link href={url || ''} passHref legacyBehavior>
-              <ButtonBase
-                aria-describedby="safe-token-widget"
-                className={classnames(css.tokenButton, { [css.sep5]: canRedeemSep5 })}
-                disabled={url === undefined}
+          <Link href={url || ''} passHref legacyBehavior>
+            <ButtonBase
+              aria-describedby="safe-token-widget"
+              className={classnames(css.tokenButton, { [css.sep5]: canRedeemSep5 })}
+              disabled={url === undefined}
+            >
+              <SafeTokenIcon width={24} height={24} />
+              <Typography
+                component="div"
+                lineHeight="16px"
+                fontWeight={700}
+                // Badge does not accept className so must be here
+                className={css.allocationBadge}
               >
-                <SafeTokenIcon width={24} height={24} />
-                <Typography
-                  component="div"
-                  lineHeight="16px"
-                  fontWeight={700}
-                  // Badge does not accept className so must be here
-                  className={css.allocationBadge}
+                <UnreadBadge
+                  invisible={!canRedeemSep5}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                  }}
                 >
-                  <UnreadBadge
-                    invisible={!canRedeemSep5}
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'right',
-                    }}
-                  >
-                    {allocationDataLoading || allocationLoading ? (
-                      <Skeleton width="16px" animation="wave" />
-                    ) : (
-                      flooredSafeBalance
-                    )}
-                  </UnreadBadge>
-                </Typography>
-                {canRedeemSep5 && (
-                  <Track {...OVERVIEW_EVENTS.SEP5_ALLOCATION_BUTTON}>
-                    <Button variant="contained" className={css.redeemButton}>
-                      New allocation
-                    </Button>
-                  </Track>
-                )}
-              </ButtonBase>
-            </Link>
-          </Track>
+                  {allocationDataLoading || allocationLoading ? (
+                    <Skeleton width="16px" animation="wave" />
+                  ) : (
+                    flooredSafeBalance
+                  )}
+                </UnreadBadge>
+              </Typography>
+              {canRedeemSep5 && (
+                <Button variant="contained" className={css.redeemButton}>
+                  New allocation
+                </Button>
+              )}
+            </ButtonBase>
+          </Link>
         </span>
       </Tooltip>
     </Box>

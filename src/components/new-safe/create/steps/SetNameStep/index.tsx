@@ -12,7 +12,6 @@ import layoutCss from '@/components/new-safe/create/styles.module.css'
 import useIsWrongChain from '@/hooks/useIsWrongChain'
 import NetworkWarning from '@/components/new-safe/create/NetworkWarning'
 import NameInput from '@/components/common/NameInput'
-import { CREATE_SAFE_EVENTS, trackEvent } from '@/services/analytics'
 import { AppRoutes } from '@/config/routes'
 import MUILink from '@mui/material/Link'
 import Link from 'next/link'
@@ -55,14 +54,9 @@ function SetNameStep({
     const name = data.name || fallbackName
     setSafeName(name)
     onSubmit({ ...data, name })
-
-    if (data.name) {
-      trackEvent(CREATE_SAFE_EVENTS.NAME_SAFE)
-    }
   }
 
   const onCancel = () => {
-    trackEvent(CREATE_SAFE_EVENTS.CANCEL_CREATE_SAFE_FORM)
     router.push(AppRoutes.welcome.index)
   }
 

@@ -2,8 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { Box, Button, Divider, Paper, Tooltip, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
 
-import Track from '@/components/common/Track'
-import { CREATE_SAFE_EVENTS } from '@/services/analytics/events/createLoadSafe'
 import StatusMessage from '@/components/new-safe/create/steps/StatusStep/StatusMessage'
 import useWallet from '@/hooks/wallets/useWallet'
 import useIsWrongChain from '@/hooks/useIsWrongChain'
@@ -12,7 +10,6 @@ import type { StepRenderProps } from '@/components/new-safe/CardStepper/useCardS
 import useSafeCreationEffects from '@/components/new-safe/create/steps/StatusStep/useSafeCreationEffects'
 import { SafeCreationStatus, useSafeCreation } from '@/components/new-safe/create/steps/StatusStep/useSafeCreation'
 import StatusStepper from '@/components/new-safe/create/steps/StatusStep/StatusStepper'
-import { OPEN_SAFE_LABELS, OVERVIEW_EVENTS, trackEvent } from '@/services/analytics'
 import { getRedirect } from '@/components/new-safe/create/logic'
 import layoutCss from '@/components/new-safe/create/styles.module.css'
 import { AppRoutes } from '@/config/routes'
@@ -58,8 +55,6 @@ export const CreateSafeStatus = ({ data, setProgressColor, setStep }: StepRender
   }, [handleCreateSafe, initialStatus])
 
   const onFinish = useCallback(() => {
-    trackEvent(CREATE_SAFE_EVENTS.GET_STARTED)
-
     const { safeAddress } = pendingSafe || {}
 
     if (safeAddress) {
@@ -104,11 +99,9 @@ export const CreateSafeStatus = ({ data, setProgressColor, setStep }: StepRender
         <>
           <Divider />
           <Box className={layoutCss.row}>
-            <Track {...OVERVIEW_EVENTS.OPEN_SAFE} label={OPEN_SAFE_LABELS.after_create}>
-              <Button data-testid="start-using-safe-btn" variant="contained" onClick={onFinish}>
-                Start using {'Safe{Wallet}'}
-              </Button>
-            </Track>
+            <Button data-testid="start-using-safe-btn" variant="contained" onClick={onFinish}>
+              Start using {'Safe{Wallet}'}
+            </Button>
           </Box>
         </>
       )}
@@ -118,22 +111,16 @@ export const CreateSafeStatus = ({ data, setProgressColor, setStep }: StepRender
           <Divider />
           <Box className={layoutCss.row}>
             <Box display="flex" flexDirection="row" justifyContent="space-between" gap={3}>
-              <Track {...CREATE_SAFE_EVENTS.CANCEL_CREATE_SAFE}>
-                <Button onClick={onClose} variant="outlined">
-                  Cancel
-                </Button>
-              </Track>
-              <Track {...CREATE_SAFE_EVENTS.RETRY_CREATE_SAFE}>
-                <Tooltip
-                  title={!isConnected ? 'Please make sure your wallet is connected on the correct network.' : ''}
-                >
-                  <Typography display="flex" height={1}>
-                    <Button onClick={handleRetry} variant="contained" disabled={!isConnected}>
-                      Retry
-                    </Button>
-                  </Typography>
-                </Tooltip>
-              </Track>
+              <Button onClick={onClose} variant="outlined">
+                Cancel
+              </Button>
+              <Tooltip title={!isConnected ? 'Please make sure your wallet is connected on the correct network.' : ''}>
+                <Typography display="flex" height={1}>
+                  <Button onClick={handleRetry} variant="contained" disabled={!isConnected}>
+                    Retry
+                  </Button>
+                </Typography>
+              </Tooltip>
             </Box>
           </Box>
         </>

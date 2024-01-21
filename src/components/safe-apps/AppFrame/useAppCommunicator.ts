@@ -31,7 +31,6 @@ import AppCommunicator from '@/services/safe-apps/AppCommunicator'
 import { Errors, logError } from '@/services/exceptions'
 import { createSafeAppsWeb3Provider } from '@/hooks/wallets/web3'
 import type { SafePermissionsRequest } from '@/hooks/safe-apps/permissions'
-import { SAFE_APPS_EVENTS, trackSafeAppEvent } from '@/services/analytics'
 import { useAppSelector } from '@/store'
 import { selectRpc } from '@/store/settingsSlice'
 
@@ -88,21 +87,6 @@ const useAppCommunicator = (
 
     const initCommunicator = (iframeRef: MutableRefObject<HTMLIFrameElement>, app?: SafeAppData) => {
       communicatorInstance = new AppCommunicator(iframeRef, {
-        onMessage: (msg) => {
-          if (!msg.data) return
-
-          const isCustomApp = app && app.id < 1
-
-          trackSafeAppEvent(
-            { ...SAFE_APPS_EVENTS.SAFE_APP_SDK_METHOD_CALL },
-            isCustomApp ? app?.url : app?.name || '',
-            {
-              method: msg.data.method,
-              ethMethod: (msg.data.params as any)?.call,
-              version: msg.data.env.sdkVersion,
-            },
-          )
-        },
         onError: (error) => {
           logError(Errors._901, error.message)
         },

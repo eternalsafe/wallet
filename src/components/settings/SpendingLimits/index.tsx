@@ -7,9 +7,7 @@ import { selectSpendingLimits, selectSpendingLimitsLoading } from '@/store/spend
 import { FEATURES } from '@/utils/chains'
 import { useHasFeature } from '@/hooks/useChains'
 import { NewSpendingLimitFlow } from '@/components/tx-flow/flows'
-import { SETTINGS_EVENTS } from '@/services/analytics'
 import CheckWallet from '@/components/common/CheckWallet'
-import Track from '@/components/common/Track'
 import { TxModalContext } from '@/components/tx-flow'
 
 const SpendingLimits = () => {
@@ -37,16 +35,14 @@ const SpendingLimits = () => {
 
               <CheckWallet>
                 {(isOk) => (
-                  <Track {...SETTINGS_EVENTS.SPENDING_LIMIT.NEW_LIMIT}>
-                    <Button
-                      onClick={() => setTxFlow(<NewSpendingLimitFlow />)}
-                      sx={{ mt: 2 }}
-                      variant="contained"
-                      disabled={!isOk}
-                    >
-                      New spending limit
-                    </Button>
-                  </Track>
+                  <Button
+                    onClick={() => setTxFlow(<NewSpendingLimitFlow />)}
+                    sx={{ mt: 2 }}
+                    variant="contained"
+                    disabled={!isOk}
+                  >
+                    New spending limit
+                  </Button>
                 )}
               </CheckWallet>
 

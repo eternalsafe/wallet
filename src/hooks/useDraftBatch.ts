@@ -5,7 +5,6 @@ import useSafeAddress from './useSafeAddress'
 import type { DraftBatchItem } from '@/store/batchSlice'
 import { selectBatchBySafe, addTx, removeTx, setBatch } from '@/store/batchSlice'
 import { type TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
-import { BATCH_EVENTS, trackEvent } from '@/services/analytics'
 import { txDispatch, TxEvent } from '@/services/tx/txEvents'
 
 export const useUpdateBatch = () => {
@@ -24,8 +23,6 @@ export const useUpdateBatch = () => {
       )
 
       txDispatch(TxEvent.BATCH_ADD, { txId: txDetails.txId })
-
-      trackEvent({ ...BATCH_EVENTS.BATCH_TX_APPENDED, label: txDetails.txInfo.type })
     },
     [dispatch, chainId, safeAddress],
   )
@@ -52,8 +49,6 @@ export const useUpdateBatch = () => {
           items,
         }),
       )
-
-      trackEvent({ ...BATCH_EVENTS.BATCH_REORDER })
     },
     [dispatch, chainId, safeAddress],
   )

@@ -1,5 +1,4 @@
 import ExternalLink from '@/components/common/ExternalLink'
-import { SETTINGS_EVENTS, trackEvent } from '@/services/analytics'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { selectOnChainSigning, setOnChainSigning } from '@/store/settingsSlice'
 import { FormControlLabel, Checkbox, Paper, Typography, FormGroup, Grid } from '@mui/material'
@@ -11,7 +10,6 @@ export const SafeAppsSigningMethod = () => {
   const dispatch = useAppDispatch()
 
   const onChange = () => {
-    trackEvent(SETTINGS_EVENTS.SAFE_APPS.CHANGE_SIGNING_METHOD)
     dispatch(setOnChainSigning(!onChainSigning))
   }
 

@@ -12,7 +12,6 @@ import { useChainId } from '@/hooks/useChainId'
 import { type ReactElement, forwardRef, useMemo } from 'react'
 import { useCallback } from 'react'
 import { AppRoutes } from '@/config/routes'
-import { trackEvent, OVERVIEW_EVENTS } from '@/services/analytics'
 import useWallet from '@/hooks/wallets/useWallet'
 import { isSocialWalletEnabled } from '@/hooks/wallets/wallets'
 import { isSocialLoginWallet } from '@/services/mpc/SocialLoginModule'
@@ -72,7 +71,6 @@ const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement =>
     const shortName = configs.find((item) => item.chainId === newChainId)?.shortName
 
     if (shortName) {
-      trackEvent({ ...OVERVIEW_EVENTS.SWITCH_NETWORK, label: newChainId })
       router.push(getNetworkLink(shortName))
     }
   }

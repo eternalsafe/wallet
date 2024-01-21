@@ -4,8 +4,6 @@ import InputAdornment from '@mui/material/InputAdornment'
 import SearchIcon from '@/public/images/common/search.svg'
 import TextField from '@mui/material/TextField'
 
-import Track from '@/components/common/Track'
-import { ADDRESS_BOOK_EVENTS } from '@/services/analytics/events/addressBook'
 import PageHeader from '@/components/common/PageHeader'
 import { ModalType } from '../AddressBookTable'
 import { useAppSelector } from '@/store'
@@ -78,23 +76,17 @@ function AddressBookHeader({
             />
           </Grid>
           <Grid item xs={12} md={7} display="flex" justifyContent={['space-between', , 'flex-end']} alignItems="center">
-            <Track {...ADDRESS_BOOK_EVENTS.IMPORT_BUTTON}>
-              <HeaderButton onClick={handleOpenModal(ModalType.IMPORT)} icon={ImportIcon}>
-                Import
-              </HeaderButton>
-            </Track>
+            <HeaderButton onClick={handleOpenModal(ModalType.IMPORT)} icon={ImportIcon}>
+              Import
+            </HeaderButton>
 
-            <Track {...ADDRESS_BOOK_EVENTS.DOWNLOAD_BUTTON}>
-              <HeaderButton onClick={handleOpenModal(ModalType.EXPORT)} icon={ExportIcon} disabled={!canExport}>
-                Export
-              </HeaderButton>
-            </Track>
+            <HeaderButton onClick={handleOpenModal(ModalType.EXPORT)} icon={ExportIcon} disabled={!canExport}>
+              Export
+            </HeaderButton>
 
-            <Track {...ADDRESS_BOOK_EVENTS.CREATE_ENTRY}>
-              <HeaderButton onClick={handleOpenModal(ModalType.ENTRY)} icon={AddCircleIcon}>
-                Create entry
-              </HeaderButton>
-            </Track>
+            <HeaderButton onClick={handleOpenModal(ModalType.ENTRY)} icon={AddCircleIcon}>
+              Create entry
+            </HeaderButton>
           </Grid>
         </Grid>
       }

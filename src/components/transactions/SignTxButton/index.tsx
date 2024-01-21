@@ -8,8 +8,6 @@ import useWallet from '@/hooks/wallets/useWallet'
 import useIsPending from '@/hooks/useIsPending'
 import IconButton from '@mui/material/IconButton'
 import CheckIcon from '@mui/icons-material/Check'
-import Track from '@/components/common/Track'
-import { TX_LIST_EVENTS } from '@/services/analytics/events/txList'
 import CheckWallet from '@/components/common/CheckWallet'
 import { useSafeSDK } from '@/hooks/coreSDK/safeCoreSDK'
 import { getTxButtonTooltip } from '@/components/transactions/utils'
@@ -41,23 +39,21 @@ const SignTxButton = ({
 
   return (
     <CheckWallet>
-      {(isOk) => (
-        <Track {...TX_LIST_EVENTS.CONFIRM}>
-          {compact ? (
-            <Tooltip title={tooltipTitle} arrow placement="top">
-              <span>
-                <IconButton onClick={onClick} color="primary" disabled={!isOk || isDisabled} size="small">
-                  <CheckIcon fontSize="small" />
-                </IconButton>
-              </span>
-            </Tooltip>
-          ) : (
-            <Button onClick={onClick} variant="contained" disabled={!isOk || isDisabled} size="stretched">
-              Confirm
-            </Button>
-          )}
-        </Track>
-      )}
+      {(isOk) =>
+        compact ? (
+          <Tooltip title={tooltipTitle} arrow placement="top">
+            <span>
+              <IconButton onClick={onClick} color="primary" disabled={!isOk || isDisabled} size="small">
+                <CheckIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+        ) : (
+          <Button onClick={onClick} variant="contained" disabled={!isOk || isDisabled} size="stretched">
+            Confirm
+          </Button>
+        )
+      }
     </CheckWallet>
   )
 }

@@ -1,4 +1,4 @@
-import { type SyntheticEvent, type ReactElement, memo } from 'react'
+import { type ReactElement, memo } from 'react'
 import {
   Accordion,
   AccordionDetails,
@@ -17,7 +17,6 @@ import useAsync from '@/hooks/useAsync'
 import { MethodDetails } from '@/components/transactions/TxDetails/TxData/DecodedData/MethodDetails'
 import ErrorMessage from '../ErrorMessage'
 import Summary, { PartialSummary } from '@/components/transactions/TxDetails/Summary'
-import { trackEvent, MODALS_EVENTS } from '@/services/analytics'
 import Multisend from '@/components/transactions/TxDetails/TxData/DecodedData/Multisend'
 import InfoIcon from '@/public/images/notifications/info.svg'
 import ExternalLink from '@/components/common/ExternalLink'
@@ -53,10 +52,6 @@ const DecodedTx = ({
 
   const addressInfoIndex = txDetails?.txData?.addressInfoIndex
 
-  const onChangeExpand = (_: SyntheticEvent, expanded: boolean) => {
-    trackEvent({ ...MODALS_EVENTS.TX_DETAILS, label: expanded ? 'Open' : 'Close' })
-  }
-
   if (!decodedData) return null
 
   return (
@@ -77,7 +72,7 @@ const DecodedTx = ({
         </Box>
       )}
 
-      <Accordion elevation={0} onChange={onChangeExpand} sx={!tx ? { pointerEvents: 'none' } : undefined}>
+      <Accordion elevation={0} sx={!tx ? { pointerEvents: 'none' } : undefined}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} className={accordionCss.accordion}>
           <span style={{ flex: 1 }}>Transaction details</span>
 

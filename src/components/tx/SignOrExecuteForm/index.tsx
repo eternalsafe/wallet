@@ -20,9 +20,6 @@ import useDecodeTx from '@/hooks/useDecodeTx'
 import { ErrorBoundary } from '@sentry/react'
 import ApprovalEditor from '../ApprovalEditor'
 import { isDelegateCall } from '@/services/tx/tx-sender/sdk'
-import { getTransactionTrackingType } from '@/services/analytics/tx-tracking'
-import { TX_EVENTS } from '@/services/analytics/events/transactions'
-import { trackEvent } from '@/services/analytics'
 import useChainId from '@/hooks/useChainId'
 
 export type SubmitCallback = (txId: string, isExecuted?: boolean) => void
@@ -39,17 +36,6 @@ export type SignOrExecuteProps = {
   disableSubmit?: boolean
   origin?: string
   isCreation?: boolean
-}
-
-const trackTxEvents = async (chainId: string, txId: string, isCreation: boolean, isExecuted: boolean) => {
-  const event = isCreation ? TX_EVENTS.CREATE : isExecuted ? TX_EVENTS.EXECUTE : TX_EVENTS.CONFIRM
-  const txType = await getTransactionTrackingType(chainId, txId)
-  trackEvent({ ...event, label: txType })
-
-  // Immediate execution on creation
-  if (isCreation && isExecuted) {
-    trackEvent({ ...TX_EVENTS.EXECUTE, label: txType })
-  }
 }
 
 export const SignOrExecuteForm = ({
@@ -78,11 +64,8 @@ export const SignOrExecuteForm = ({
   const onFormSubmit = useCallback<SubmitCallback>(
     async (txId, isExecuted = false) => {
       onSubmit?.(txId, isExecuted)
-
-      // Track tx event
-      trackTxEvents(chainId, txId, isCreation, isExecuted)
     },
-    [chainId, isCreation, onSubmit],
+    [onSubmit],
   )
 
   return (

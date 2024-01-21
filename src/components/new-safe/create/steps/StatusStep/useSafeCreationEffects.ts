@@ -2,12 +2,10 @@ import type { Dispatch, SetStateAction } from 'react'
 import { useEffect } from 'react'
 import { pollSafeInfo } from '@/components/new-safe/create/logic'
 import { SafeCreationStatus } from '@/components/new-safe/create/steps/StatusStep/useSafeCreation'
-import { CREATE_SAFE_EVENTS, trackEvent } from '@/services/analytics'
 import { updateAddressBook } from '@/components/new-safe/create/logic/address-book'
 import { useAppDispatch } from '@/store'
 import useChainId from '@/hooks/useChainId'
 import { usePendingSafe } from './usePendingSafe'
-import { gtmSetSafeAddress } from '@/services/analytics/gtm'
 
 const useSafeCreationEffects = ({
   status,
@@ -71,20 +69,6 @@ const useSafeCreationEffects = ({
       }
     }
   }, [pendingSafe, setPendingSafe, status])
-
-  // Tracking
-  useEffect(() => {
-    if (status === SafeCreationStatus.SUCCESS) {
-      pendingSafe?.safeAddress && gtmSetSafeAddress(pendingSafe.safeAddress)
-      trackEvent(CREATE_SAFE_EVENTS.CREATED_SAFE)
-      return
-    }
-
-    if (status === SafeCreationStatus.WALLET_REJECTED) {
-      trackEvent(CREATE_SAFE_EVENTS.REJECT_CREATE_SAFE)
-      return
-    }
-  }, [pendingSafe?.safeAddress, status])
 }
 
 export default useSafeCreationEffects

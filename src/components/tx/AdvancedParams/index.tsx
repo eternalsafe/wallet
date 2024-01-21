@@ -1,6 +1,5 @@
 import GasParams from '@/components/tx/GasParams'
 import { useHasFeature } from '@/hooks/useChains'
-import { MODALS_EVENTS, trackEvent } from '@/services/analytics'
 import { FEATURES } from '@/utils/chains'
 import { useState } from 'react'
 import AdvancedParamsForm from './AdvancedParamsForm'
@@ -28,7 +27,6 @@ const AdvancedParams = ({
 
   const onEditOpen = () => {
     setIsEditing(true)
-    trackEvent(MODALS_EVENTS.EDIT_ADVANCED_PARAMS)
   }
 
   const onAdvancedSubmit = (data: AdvancedParameters) => {

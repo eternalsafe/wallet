@@ -24,13 +24,8 @@ import useSafeNotifications from '@/hooks/useSafeNotifications'
 import useTxPendingStatuses from '@/hooks/useTxPendingStatuses'
 import { useInitSession } from '@/hooks/useInitSession'
 import Notifications from '@/components/common/Notifications'
-import CookieBanner from '@/components/common/CookieBanner'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { cgwDebugStorage } from '@/components/sidebar/DebugToggle'
-import { useTxTracking } from '@/hooks/useTxTracking'
-import { useSafeMsgTracking } from '@/hooks/messages/useSafeMsgTracking'
-import useGtm from '@/services/analytics/useGtm'
-import useBeamer from '@/hooks/Beamer/useBeamer'
 import ErrorBoundary from '@/components/common/ErrorBoundary'
 import createEmotionCache from '@/utils/createEmotionCache'
 import MetaTags from '@/components/common/MetaTags'
@@ -39,7 +34,6 @@ import useSafeMessageNotifications from '@/hooks/messages/useSafeMessageNotifica
 import useSafeMessagePendingStatuses from '@/hooks/messages/useSafeMessagePendingStatuses'
 import useChangedValue from '@/hooks/useChangedValue'
 import { TxModalProvider } from '@/components/tx-flow'
-import { useNotificationTracking } from '@/components/settings/PushNotifications/hooks/useNotificationTracking'
 import Recovery from '@/features/recovery/components/Recovery'
 import WalletProvider from '@/components/common/WalletProvider'
 
@@ -48,8 +42,6 @@ const GATEWAY_URL = IS_PRODUCTION || cgwDebugStorage.get() ? GATEWAY_URL_PRODUCT
 const InitApp = (): null => {
   setGatewayBaseUrl(GATEWAY_URL)
   useAdjustUrl()
-  useGtm()
-  useNotificationTracking()
   useInitSession()
   useLoadableStores()
   useInitOnboard()
@@ -60,9 +52,6 @@ const InitApp = (): null => {
   useSafeNotifications()
   useTxPendingStatuses()
   useSafeMessagePendingStatuses()
-  useTxTracking()
-  useSafeMsgTracking()
-  useBeamer()
   useRehydrateSocialWallet()
 
   return null
@@ -118,8 +107,6 @@ const WebCoreApp = ({
           <PageLayout pathname={router.pathname}>
             <Component {...pageProps} key={safeKey} />
           </PageLayout>
-
-          <CookieBanner />
 
           <Notifications />
 

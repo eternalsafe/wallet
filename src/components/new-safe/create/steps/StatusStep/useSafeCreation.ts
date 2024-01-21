@@ -19,7 +19,6 @@ import {
 } from '@/components/new-safe/create/logic'
 import { useAppDispatch } from '@/store'
 import { closeByGroupKey } from '@/store/notificationsSlice'
-import { CREATE_SAFE_EVENTS, trackEvent } from '@/services/analytics'
 import { waitForCreateSafeTx } from '@/services/tx/txMonitor'
 import useGasPrice from '@/hooks/useGasPrice'
 import { hasFeature } from '@/utils/chains'
@@ -63,7 +62,6 @@ export const useSafeCreation = (
   const createSafeCallback = useCallback(
     async (txHash: string, tx: PendingSafeTx) => {
       setStatus(SafeCreationStatus.PROCESSING)
-      trackEvent(CREATE_SAFE_EVENTS.SUBMIT_CREATE_SAFE)
       setPendingSafe(pendingSafe ? { ...pendingSafe, txHash, tx } : undefined)
     },
     [setStatus, setPendingSafe, pendingSafe],

@@ -23,7 +23,6 @@ import { AppRoutes } from '@/config/routes'
 import SettingsIcon from '@/public/images/sidebar/settings.svg'
 
 import css from './styles.module.css'
-import { trackEvent, OVERVIEW_EVENTS } from '@/services/analytics'
 import SvgIcon from '@mui/icons-material/ExpandLess'
 
 const NOTIFICATION_CENTER_LIMIT = 4
@@ -61,8 +60,6 @@ const NotificationCenter = (): ReactElement => {
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (!open) {
-      trackEvent(OVERVIEW_EVENTS.NOTIFICATION_CENTER)
-
       notifications.forEach(({ isDismissed, id }) => {
         if (!isDismissed) {
           dispatch(closeNotification({ id }))

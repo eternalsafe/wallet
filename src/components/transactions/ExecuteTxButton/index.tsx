@@ -8,8 +8,6 @@ import { isMultisigExecutionInfo } from '@/utils/transaction-guards'
 import useIsPending from '@/hooks/useIsPending'
 import RocketIcon from '@/public/images/transactions/rocket.svg'
 import IconButton from '@mui/material/IconButton'
-import Track from '@/components/common/Track'
-import { TX_LIST_EVENTS } from '@/services/analytics/events/txList'
 import { ReplaceTxHoverContext } from '../GroupedTxListItems/ReplaceTxHoverProvider'
 import CheckWallet from '@/components/common/CheckWallet'
 import { useSafeSDK } from '@/hooks/coreSDK/safeCoreSDK'
@@ -53,37 +51,35 @@ const ExecuteTxButton = ({
   return (
     <>
       <CheckWallet allowNonOwner>
-        {(isOk) => (
-          <Track {...TX_LIST_EVENTS.EXECUTE}>
-            {compact ? (
-              <Tooltip title={tooltipTitle} arrow placement="top">
-                <span>
-                  <IconButton
-                    onClick={onClick}
-                    onMouseEnter={onMouseEnter}
-                    onMouseLeave={onMouseLeave}
-                    color="primary"
-                    disabled={!isOk || isDisabled}
-                    size="small"
-                  >
-                    <SvgIcon component={RocketIcon} inheritViewBox fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-            ) : (
-              <Button
-                onClick={onClick}
-                onMouseEnter={onMouseEnter}
-                onMouseLeave={onMouseLeave}
-                variant="contained"
-                disabled={!isOk || isDisabled}
-                size="stretched"
-              >
-                Execute
-              </Button>
-            )}
-          </Track>
-        )}
+        {(isOk) =>
+          compact ? (
+            <Tooltip title={tooltipTitle} arrow placement="top">
+              <span>
+                <IconButton
+                  onClick={onClick}
+                  onMouseEnter={onMouseEnter}
+                  onMouseLeave={onMouseLeave}
+                  color="primary"
+                  disabled={!isOk || isDisabled}
+                  size="small"
+                >
+                  <SvgIcon component={RocketIcon} inheritViewBox fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          ) : (
+            <Button
+              onClick={onClick}
+              onMouseEnter={onMouseEnter}
+              onMouseLeave={onMouseLeave}
+              variant="contained"
+              disabled={!isOk || isDisabled}
+              size="stretched"
+            >
+              Execute
+            </Button>
+          )
+        }
       </CheckWallet>
     </>
   )

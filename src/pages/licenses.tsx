@@ -691,14 +691,6 @@ const SafeLicenses = () => (
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>react-gtm-module</TableCell>
-              <TableCell>
-                <ExternalLink href="https://github.com/alinemorelli/react-gtm/blob/master/LICENSE">
-                  https://github.com/alinemorelli/react-gtm/blob/master/LICENSE
-                </ExternalLink>
-              </TableCell>
-            </TableRow>
-            <TableRow>
               <TableCell>react-hook-form</TableCell>
               <TableCell>
                 <ExternalLink href="https://github.com/react-hook-form/react-hook-form/blob/master/LICENSE">

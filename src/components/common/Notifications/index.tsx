@@ -9,8 +9,6 @@ import { Alert, Link, Snackbar, Typography } from '@mui/material'
 import css from './styles.module.css'
 import NextLink from 'next/link'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import { OVERVIEW_EVENTS } from '@/services/analytics/events/overview'
-import Track from '../Track'
 import { isRelativeUrl } from '@/utils/url'
 
 const toastStyle = { position: 'static', margin: 1 }
@@ -30,17 +28,15 @@ export const NotificationLink = ({
     typeof link.href === 'string' ? !isRelativeUrl(link.href) : !!(link.href.host || link.href.hostname)
 
   return (
-    <Track {...OVERVIEW_EVENTS.NOTIFICATION_INTERACTION} label={link.title} as="span">
-      <NextLink href={link.href} passHref legacyBehavior>
-        <Link
-          className={css.link}
-          onClick={onClick}
-          {...(isExternal && { target: '_blank', rel: 'noopener noreferrer' })}
-        >
-          {link.title} <ChevronRightIcon />
-        </Link>
-      </NextLink>
-    </Track>
+    <NextLink href={link.href} passHref legacyBehavior>
+      <Link
+        className={css.link}
+        onClick={onClick}
+        {...(isExternal && { target: '_blank', rel: 'noopener noreferrer' })}
+      >
+        {link.title} <ChevronRightIcon />
+      </Link>
+    </NextLink>
   )
 }
 

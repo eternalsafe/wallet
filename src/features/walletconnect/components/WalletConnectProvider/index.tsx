@@ -9,7 +9,6 @@ import { IS_PRODUCTION } from '@/config/constants'
 import { SafeAppsTag } from '@/config/constants'
 import { useRemoteSafeApps } from '@/hooks/safe-apps/useRemoteSafeApps'
 import { getPeerName, stripEip155Prefix } from '@/features/walletconnect/services/utils'
-import { trackRequest } from '@/features/walletconnect//services/tracking'
 import { wcPopupStore } from '@/features/walletconnect/components'
 import WalletConnectWallet from '@/features/walletconnect/services/WalletConnectWallet'
 import { WalletConnectContext } from '@/features/walletconnect/WalletConnectContext'
@@ -69,11 +68,6 @@ export const WalletConnectProvider = ({ children }: { children: ReactNode }) => 
       const { topic } = event
       const session = walletConnect.getActiveSessions().find((s) => s.topic === topic)
       const requestChainId = stripEip155Prefix(event.params.chainId)
-
-      // Track requests
-      if (session) {
-        trackRequest(session.peer.metadata.url, event.params.request.method)
-      }
 
       const getResponse = () => {
         // Get error if wrong chain

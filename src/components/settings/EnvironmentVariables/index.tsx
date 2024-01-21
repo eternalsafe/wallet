@@ -7,7 +7,6 @@ import { selectSettings, setRpc, setTenderly } from '@/store/settingsSlice'
 import { TENDERLY_SIMULATE_ENDPOINT_URL } from '@/config/constants'
 import useChainId from '@/hooks/useChainId'
 import { useCurrentChain } from '@/hooks/useChains'
-import { SETTINGS_EVENTS, trackEvent } from '@/services/analytics'
 import InfoIcon from '@/public/images/notifications/info.svg'
 import ExternalLink from '@/components/common/ExternalLink'
 
@@ -45,8 +44,6 @@ const EnvironmentVariables = () => {
   const tenderlyToken = watch(EnvVariablesField.tenderlyToken)
 
   const onSubmit = handleSubmit((data) => {
-    trackEvent({ ...SETTINGS_EVENTS.ENV_VARIABLES.SAVE })
-
     dispatch(
       setRpc({
         chainId,

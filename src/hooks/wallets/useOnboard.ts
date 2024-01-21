@@ -5,7 +5,6 @@ import { getAddress } from 'ethers/lib/utils'
 import useChains, { useCurrentChain } from '@/hooks/useChains'
 import ExternalStore from '@/services/ExternalStore'
 import { logError, Errors } from '@/services/exceptions'
-import { trackEvent, WALLET_EVENTS } from '@/services/analytics'
 import { useAppSelector } from '@/store'
 import { type EnvState, selectRpc } from '@/store/settingsSlice'
 import { E2E_WALLET_NAME } from '@/tests/e2e-wallet'
@@ -88,21 +87,6 @@ const getWalletConnectLabel = async (wallet: ConnectedWallet): Promise<string | 
   const { connector } = wallet.provider as unknown as any
   const peerWalletV2 = connector.session?.peer?.metadata?.name
   return peerWalletV2 || UNKNOWN_PEER
-}
-
-const trackWalletType = (wallet: ConnectedWallet) => {
-  trackEvent({ ...WALLET_EVENTS.CONNECT, label: wallet.label })
-
-  getWalletConnectLabel(wallet)
-    .then((wcLabel) => {
-      if (wcLabel) {
-        trackEvent({
-          ...WALLET_EVENTS.WALLET_CONNECT,
-          label: wcLabel,
-        })
-      }
-    })
-    .catch(() => null)
 }
 
 // Detect mobile devices
@@ -228,7 +212,6 @@ export const useInitOnboard = () => {
         if (newWallet.label !== lastConnectedWallet) {
           lastConnectedWallet = newWallet.label
           saveLastWallet(lastConnectedWallet)
-          trackWalletType(newWallet)
         }
       } else if (lastConnectedWallet) {
         lastConnectedWallet = ''

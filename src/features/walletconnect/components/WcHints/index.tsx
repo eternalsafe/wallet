@@ -16,8 +16,6 @@ import { useState } from 'react'
 import type { ReactElement } from 'react'
 import Question from '@/public/images/common/question.svg'
 import css from './styles.module.css'
-import { trackEvent } from '@/services/analytics'
-import { WALLETCONNECT_EVENTS } from '@/services/analytics/events/walletconnect'
 
 const HintAccordion = ({
   title,
@@ -80,8 +78,6 @@ const WcHints = (): ReactElement => {
     setExpandedAccordion((prev) => {
       return prev === accordion ? null : accordion
     })
-
-    trackEvent(WALLETCONNECT_EVENTS.HINTS_EXPAND)
   }
 
   return (

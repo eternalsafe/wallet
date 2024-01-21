@@ -24,8 +24,6 @@ import { useAppSelector } from '@/store'
 import { useNotificationPreferences } from './hooks/useNotificationPreferences'
 import { useNotificationRegistrations } from './hooks/useNotificationRegistrations'
 import { selectAllAddedSafes } from '@/store/addedSafesSlice'
-import { trackEvent } from '@/services/analytics'
-import { PUSH_NOTIFICATION_EVENTS } from '@/services/analytics/events/push-notifications'
 import { requestNotificationPermission } from './logic'
 import { useDismissPushNotificationsBanner } from './PushNotificationsBanner'
 import type { NotifiableSafes } from './logic'
@@ -345,8 +343,6 @@ export const GlobalPushNotifications = (): ReactElement | null => {
     }
 
     await Promise.all(registrationPromises)
-
-    trackEvent(PUSH_NOTIFICATION_EVENTS.SAVE_SETTINGS)
 
     setIsLoading(false)
   }

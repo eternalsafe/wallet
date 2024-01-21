@@ -3,7 +3,6 @@ import type { ReactElement, Dispatch, SetStateAction } from 'react'
 
 import ModalDialog from '@/components/common/ModalDialog'
 import { useAppDispatch } from '@/store'
-import { trackEvent, SETTINGS_EVENTS } from '@/services/analytics'
 import { addedSafesSlice } from '@/store/addedSafesSlice'
 import { addressBookSlice } from '@/store/addressBookSlice'
 import { safeAppsSlice } from '@/store/safeAppsSlice'
@@ -44,27 +43,17 @@ export const ImportDialog = ({
   const handleImport = () => {
     if (addressBook) {
       dispatch(addressBookSlice.actions.setAddressBook(addressBook))
-      trackEvent({
-        ...SETTINGS_EVENTS.DATA.IMPORT_ADDRESS_BOOK,
-        label: addressBookEntriesCount,
-      })
     }
     if (addedSafes) {
       dispatch(addedSafesSlice.actions.setAddedSafes(addedSafes))
-      trackEvent({
-        ...SETTINGS_EVENTS.DATA.IMPORT_ADDED_SAFES,
-        label: addedSafesCount,
-      })
     }
 
     if (settings) {
       dispatch(settingsSlice.actions.setSettings(settings))
-      trackEvent(SETTINGS_EVENTS.DATA.IMPORT_SETTINGS)
     }
 
     if (safeApps) {
       dispatch(safeAppsSlice.actions.setSafeApps(safeApps))
-      trackEvent(SETTINGS_EVENTS.DATA.IMPORT_SAFE_APPS)
     }
 
     dispatch(

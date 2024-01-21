@@ -1,7 +1,5 @@
-import { useEffect } from 'react'
 import { Box, CircularProgress, Paper } from '@mui/material'
 import Grid from '@mui/material/Unstable_Grid2'
-import { OVERVIEW_EVENTS, SAFE_APPS_EVENTS, trackEvent, trackSafeAppEvent } from '@/services/analytics'
 import { useSafeAppFromBackend } from '@/hooks/safe-apps/useSafeAppFromBackend'
 import { useSafeAppFromManifest } from '@/hooks/safe-apps/useSafeAppFromManifest'
 import { SafeAppDetails } from '@/components/safe-apps/SafeAppLandingPage/SafeAppDetails'
@@ -29,24 +27,10 @@ const SafeAppLanding = ({ appUrl, chain }: Props) => {
   // show demo if the app was shared for mainnet or we can find the mainnet chain id on the backend
   const showDemo = chain.chainId === CHAIN_ID_WITH_A_DEMO || !!backendApp?.chainIds.includes(CHAIN_ID_WITH_A_DEMO)
 
-  useEffect(() => {
-    if (!isLoading && !backendAppLoading && safeApp?.chainIds.length) {
-      const appName = backendApp ? backendApp.name : safeApp.url
-
-      trackSafeAppEvent({ ...SAFE_APPS_EVENTS.SHARED_APP_LANDING, label: chain.chainId }, appName)
-    }
-  }, [isLoading, backendApp, safeApp, backendAppLoading, chain])
-
   const handleConnectWallet = async () => {
     if (!onboard) return
 
-    trackEvent(OVERVIEW_EVENTS.OPEN_ONBOARD)
-
     onboard.connectWallet().catch((e) => logError(Errors._302, e))
-  }
-
-  const handleDemoClick = () => {
-    trackSafeAppEvent(SAFE_APPS_EVENTS.SHARED_APP_OPEN_DEMO, backendApp ? backendApp.name : appUrl)
   }
 
   if (isLoading || backendAppLoading) {
@@ -83,7 +67,6 @@ const SafeAppLanding = ({ appUrl, chain }: Props) => {
                     pathname: AppRoutes.apps.open,
                     query: { safe: SAFE_APPS_DEMO_SAFE_MAINNET, appUrl },
                   }}
-                  onClick={handleDemoClick}
                 />
               </Grid>
             )}

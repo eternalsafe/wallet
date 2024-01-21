@@ -1,8 +1,6 @@
 import { COREKIT_STATUS, type Web3AuthMPCCoreKit } from '@web3auth/mpc-core-kit'
 import BN from 'bn.js'
 import { SecurityQuestionRecovery } from '@/services/mpc/recovery/SecurityQuestionRecovery'
-import { trackEvent } from '@/services/analytics'
-import { MPC_WALLET_EVENTS } from '@/services/analytics/events/mpcWallet'
 import { DeviceShareRecovery } from '@/services/mpc/recovery/DeviceShareRecovery'
 import { logError } from '../exceptions'
 import ErrorCodes from '../exceptions/ErrorCodes'
@@ -45,7 +43,6 @@ class SocialWalletService implements ISocialWalletService {
       }
 
       if (!this.isMFAEnabled()) {
-        trackEvent({ ...MPC_WALLET_EVENTS.ENABLE_MFA, label: 'password' })
         // 2. enable MFA in mpcCoreKit
         await this.mpcCoreKit.enableMFA({}, false)
       }
@@ -92,7 +89,6 @@ class SocialWalletService implements ISocialWalletService {
         } else {
           // Check password recovery
           if (this.securityQuestionRecovery.isEnabled()) {
-            trackEvent(MPC_WALLET_EVENTS.MANUAL_RECOVERY)
             return this.mpcCoreKit.status
           }
         }
@@ -126,10 +122,6 @@ class SocialWalletService implements ISocialWalletService {
       }
 
       await this.finalizeLogin()
-    }
-
-    if (this.mpcCoreKit.status === COREKIT_STATUS.LOGGED_IN) {
-      trackEvent({ ...MPC_WALLET_EVENTS.RECOVERED_SOCIAL_SIGNER, label: 'password' })
     }
 
     return this.mpcCoreKit.status === COREKIT_STATUS.LOGGED_IN

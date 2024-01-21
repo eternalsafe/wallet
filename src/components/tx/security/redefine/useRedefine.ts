@@ -2,7 +2,6 @@ import useAsync, { type AsyncResult } from '@/hooks/useAsync'
 import { useHasFeature } from '@/hooks/useChains'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import useWallet from '@/hooks/wallets/useWallet'
-import { MODALS_EVENTS, trackEvent } from '@/services/analytics'
 import {
   RedefineModule,
   type RedefineModuleResponse,
@@ -124,12 +123,6 @@ export const useRedefine = (
     let timeoutId = setTimeout(() => setRetryCounter((prev) => prev + 1), REDEFINE_RETRY_TIMEOUT)
     return () => clearTimeout(timeoutId)
   }, [redefinePayload, isAnalyzing])
-
-  useEffect(() => {
-    if (!loading && !error && redefinePayload) {
-      trackEvent({ ...MODALS_EVENTS.REDEFINE_RESULT, label: redefinePayload.severity })
-    }
-  }, [error, loading, redefinePayload])
 
   return [redefinePayload, error, loading]
 }

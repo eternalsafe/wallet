@@ -1,6 +1,5 @@
 import type { ChangeEvent, ReactElement } from 'react'
 import { FormControlLabel, RadioGroup, Radio, Typography } from '@mui/material'
-import { trackEvent, MODALS_EVENTS } from '@/services/analytics'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { selectSettings, setTransactionExecution } from '@/store/settingsSlice'
 
@@ -12,7 +11,6 @@ const ExecuteCheckbox = ({ onChange }: { onChange: (checked: boolean) => void })
 
   const handleChange = (_: ChangeEvent<HTMLInputElement>, value: string) => {
     const checked = value === 'true'
-    trackEvent({ ...MODALS_EVENTS.TOGGLE_EXECUTE_TX, label: checked })
     dispatch(setTransactionExecution(checked))
     onChange(checked)
   }

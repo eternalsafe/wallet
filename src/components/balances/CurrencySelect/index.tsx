@@ -4,7 +4,6 @@ import { FormControl, InputLabel, MenuItem, Select } from '@mui/material'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { selectCurrency, setCurrency } from '@/store/settingsSlice'
 import useCurrencies from './useCurrencies'
-import { trackEvent, ASSETS_EVENTS } from '@/services/analytics'
 
 const CurrencySelect = (): ReactElement => {
   const currency = useAppSelector(selectCurrency)
@@ -14,19 +13,7 @@ const CurrencySelect = (): ReactElement => {
   const handleChange = (e: SelectChangeEvent<string>) => {
     const currency = e.target.value
 
-    trackEvent({
-      ...ASSETS_EVENTS.CHANGE_CURRENCY,
-      label: currency.toUpperCase(),
-    })
-
     dispatch(setCurrency(currency.toLowerCase()))
-  }
-
-  const handleTrack = (label: 'Open' | 'Close') => {
-    trackEvent({
-      ...ASSETS_EVENTS.CURRENCY_MENU,
-      label,
-    })
   }
 
   return (
@@ -39,8 +26,6 @@ const CurrencySelect = (): ReactElement => {
         value={currency.toUpperCase()}
         label="Currency"
         onChange={handleChange}
-        onOpen={() => handleTrack('Open')}
-        onClose={() => handleTrack('Close')}
       >
         {fiatCurrencies.map((item) => (
           <MenuItem key={item} value={item} sx={{ overflow: 'hidden' }}>

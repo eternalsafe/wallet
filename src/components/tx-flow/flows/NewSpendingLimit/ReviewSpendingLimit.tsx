@@ -9,7 +9,6 @@ import SendAmountBlock from '@/components/tx-flow/flows/TokenTransfer/SendAmount
 import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
 import useBalances from '@/hooks/useBalances'
 import useChainId from '@/hooks/useChainId'
-import { trackEvent, SETTINGS_EVENTS } from '@/services/analytics'
 import { createNewSpendingLimitTx } from '@/services/tx/tx-sender'
 import { selectSpendingLimits } from '@/store/spendingLimitsSlice'
 import { formatVisualAmount } from '@/utils/formatters'
@@ -48,13 +47,6 @@ export const ReviewSpendingLimit = ({ params }: { params: NewSpendingLimitFlowPr
       : getResetTimeOptions(chainId).find((time) => time.value === params.resetTime)?.label
   }, [isOneTime, params.resetTime, chainId])
 
-  const onFormSubmit = () => {
-    trackEvent({
-      ...SETTINGS_EVENTS.SPENDING_LIMIT.RESET_PERIOD,
-      label: resetTime,
-    })
-  }
-
   const existingAmount = existingSpendingLimit
     ? formatVisualAmount(BigNumber.from(existingSpendingLimit?.amount), decimals)
     : undefined
@@ -64,7 +56,7 @@ export const ReviewSpendingLimit = ({ params }: { params: NewSpendingLimitFlowPr
     : undefined
 
   return (
-    <SignOrExecuteForm onSubmit={onFormSubmit}>
+    <SignOrExecuteForm>
       {token && (
         <SendAmountBlock amount={params.amount} tokenInfo={token.tokenInfo} title="Amount">
           {existingAmount && existingAmount !== params.amount && (

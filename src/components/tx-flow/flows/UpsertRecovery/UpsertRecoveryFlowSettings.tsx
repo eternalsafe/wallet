@@ -1,5 +1,3 @@
-import { trackEvent } from '@/services/analytics'
-import { RECOVERY_EVENTS } from '@/services/analytics/events/recovery'
 import {
   Divider,
   CardActions,
@@ -32,7 +30,6 @@ import { RecovererWarning } from './RecovererSmartContractWarning'
 import ExternalLink from '@/components/common/ExternalLink'
 import { HelpCenterArticle, HelperCenterArticleTitles } from '@/config/constants'
 import { TOOLTIP_TITLES } from '../../common/constants'
-import Track from '@/components/common/Track'
 import type { UpsertRecoveryFlowProps } from '.'
 import type { RecoveryStateItem } from '@/features/recovery/services/recovery-state'
 
@@ -79,7 +76,6 @@ export function UpsertRecoveryFlowSettings({
 
   const onShowAdvanced = () => {
     setShowAdvanced((prev) => !prev)
-    trackEvent(RECOVERY_EVENTS.SHOW_ADVANCED)
   }
 
   const isDisabled = !understandsRisk || !isDirty
@@ -91,11 +87,9 @@ export function UpsertRecoveryFlowSettings({
           <TxCard>
             <Alert severity="warning" sx={{ border: 'unset' }}>
               Your Recoverer will be able to reset your Account setup. Only select an address that you trust.{' '}
-              <Track {...RECOVERY_EVENTS.LEARN_MORE} label="recover-setup-flow">
-                <ExternalLink href={HelpCenterArticle.RECOVERY} title={HelperCenterArticleTitles.RECOVERY}>
-                  Learn more
-                </ExternalLink>
-              </Track>
+              <ExternalLink href={HelpCenterArticle.RECOVERY} title={HelperCenterArticleTitles.RECOVERY}>
+                Learn more
+              </ExternalLink>
             </Alert>
 
             <div>

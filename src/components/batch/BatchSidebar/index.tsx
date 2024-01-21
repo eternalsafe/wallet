@@ -8,8 +8,6 @@ import css from './styles.module.css'
 import { NewTxFlow } from '@/components/tx-flow/flows'
 import { TxModalContext } from '@/components/tx-flow'
 import { ConfirmBatchFlow } from '@/components/tx-flow/flows'
-import Track from '@/components/common/Track'
-import { BATCH_EVENTS } from '@/services/analytics'
 import CheckWallet from '@/components/common/CheckWallet'
 import PlusIcon from '@/public/images/common/plus.svg'
 import EmptyBatch from './EmptyBatch'
@@ -78,12 +76,10 @@ const BatchSidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: (open: 
 
             <CheckWallet>
               {(isOk) => (
-                <Track {...BATCH_EVENTS.BATCH_NEW_TX}>
-                  <Button onClick={onAddClick} disabled={!isOk}>
-                    <SvgIcon component={PlusIcon} inheritViewBox fontSize="small" sx={{ mr: 1 }} />
-                    Add new transaction
-                  </Button>
-                </Track>
+                <Button onClick={onAddClick} disabled={!isOk}>
+                  <SvgIcon component={PlusIcon} inheritViewBox fontSize="small" sx={{ mr: 1 }} />
+                  Add new transaction
+                </Button>
               )}
             </CheckWallet>
 
@@ -91,16 +87,14 @@ const BatchSidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: (open: 
 
             <CheckWallet>
               {(isOk) => (
-                <Track {...BATCH_EVENTS.BATCH_CONFIRM} label={batchTxs.length}>
-                  <Button
-                    variant="contained"
-                    onClick={onConfirmClick}
-                    disabled={!batchTxs.length || !isOk}
-                    className={css.confirmButton}
-                  >
-                    Confirm batch
-                  </Button>
-                </Track>
+                <Button
+                  variant="contained"
+                  onClick={onConfirmClick}
+                  disabled={!batchTxs.length || !isOk}
+                  className={css.confirmButton}
+                >
+                  Confirm batch
+                </Button>
               )}
             </CheckWallet>
           </>
@@ -108,11 +102,9 @@ const BatchSidebar = ({ isOpen, onToggle }: { isOpen: boolean; onToggle: (open: 
           <EmptyBatch>
             <CheckWallet>
               {(isOk) => (
-                <Track {...BATCH_EVENTS.BATCH_NEW_TX}>
-                  <Button onClick={onAddClick} variant="contained" disabled={!isOk}>
-                    New transaction
-                  </Button>
-                </Track>
+                <Button onClick={onAddClick} variant="contained" disabled={!isOk}>
+                  New transaction
+                </Button>
               )}
             </CheckWallet>
           </EmptyBatch>

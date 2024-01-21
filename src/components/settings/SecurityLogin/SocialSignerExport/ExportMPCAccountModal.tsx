@@ -1,7 +1,5 @@
 import CopyButton from '@/components/common/CopyButton'
 import ModalDialog from '@/components/common/ModalDialog'
-import { trackEvent } from '@/services/analytics'
-import { MPC_WALLET_EVENTS } from '@/services/analytics/events/mpcWallet'
 import { Box, Button, DialogContent, DialogTitle, IconButton, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -45,11 +43,9 @@ const ExportMPCAccountModal = ({ onClose, open }: { onClose: () => void; open: b
     try {
       setError(undefined)
       const pk = await socialWalletService.exportSignerKey(data[ExportFieldNames.password])
-      trackEvent(MPC_WALLET_EVENTS.EXPORT_PK_SUCCESS)
       setValue(ExportFieldNames.pk, pk)
     } catch (err) {
       logError(ErrorCodes._305, err)
-      trackEvent(MPC_WALLET_EVENTS.EXPORT_PK_ERROR)
       setError(asError(err).message)
     }
   }
@@ -61,12 +57,7 @@ const ExportMPCAccountModal = ({ onClose, open }: { onClose: () => void; open: b
   }
 
   const toggleShowPK = () => {
-    trackEvent(MPC_WALLET_EVENTS.SEE_PK)
     setShowPassword((prev) => !prev)
-  }
-
-  const onCopy = () => {
-    trackEvent(MPC_WALLET_EVENTS.COPY_PK)
   }
 
   return (
@@ -96,7 +87,7 @@ const ExportMPCAccountModal = ({ onClose, open }: { onClose: () => void; open: b
                         <IconButton size="small" onClick={toggleShowPK}>
                           {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                         </IconButton>
-                        <CopyButton text={exportedKey} onCopy={onCopy} />
+                        <CopyButton text={exportedKey} />
                       </>
                     ),
                   }}

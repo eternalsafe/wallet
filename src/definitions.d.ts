@@ -1,5 +1,4 @@
 import type React from 'react'
-import type { BeamerConfig, BeamerMethods } from '@services/beamer/types'
 
 declare global {
   interface Window {
@@ -12,10 +11,7 @@ declare global {
       }
       isConnected?: () => boolean
     }
-    beamer_config?: BeamerConfig
-    Beamer?: BeamerMethods
     dataLayer?: any[]
-    gtag?: (...args: any[]) => void
     Cypress?
   }
 }

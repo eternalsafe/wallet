@@ -8,9 +8,6 @@ import InfoIcon from '@/public/images/notifications/info.svg'
 
 import css from './styles.module.css'
 import useWallet from '@/hooks/wallets/useWallet'
-import Track from '@/components/common/Track'
-import { CREATE_SAFE_EVENTS } from '@/services/analytics'
-import { MPC_WALLET_EVENTS } from '@/services/analytics/events/mpcWallet'
 import useChains, { useCurrentChain } from '@/hooks/useChains'
 import { isSocialWalletEnabled } from '@/hooks/wallets/wallets'
 import { isSocialLoginWallet } from '@/services/mpc/SocialLoginModule'
@@ -96,63 +93,59 @@ export const SocialSigner = ({
     <>
       <Box display="flex" flexDirection="column" gap={2} sx={{ width: '100%' }}>
         {isSocialLogin && userInfo ? (
-          <Track {...CREATE_SAFE_EVENTS.CONTINUE_TO_CREATION}>
-            <Button
-              data-testid="signed-in-account-btn"
-              variant="outlined"
-              sx={{ px: 2, py: 1, borderWidth: '1px !important' }}
-              onClick={onLogin}
-              size="small"
-              disabled={isDisabled}
-              fullWidth
-            >
-              <LinearProgress
-                color="secondary"
-                className={css.loginProgress}
-                sx={{
-                  opacity: loginPending ? 1 : 0,
-                }}
+          <Button
+            data-testid="signed-in-account-btn"
+            variant="outlined"
+            sx={{ px: 2, py: 1, borderWidth: '1px !important' }}
+            onClick={onLogin}
+            size="small"
+            disabled={isDisabled}
+            fullWidth
+          >
+            <LinearProgress
+              color="secondary"
+              className={css.loginProgress}
+              sx={{
+                opacity: loginPending ? 1 : 0,
+              }}
+            />
+            <Box width="100%" display="flex" flexDirection="row" alignItems="center" gap={1}>
+              <img
+                src={userInfo.profileImage}
+                className={css.profileImg}
+                alt="Profile Image"
+                referrerPolicy="no-referrer"
               />
-              <Box width="100%" display="flex" flexDirection="row" alignItems="center" gap={1}>
-                <img
-                  src={userInfo.profileImage}
-                  className={css.profileImg}
-                  alt="Profile Image"
-                  referrerPolicy="no-referrer"
-                />
-                <div className={css.profileData}>
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Continue as {userInfo.name}
-                  </Typography>
-                  <Typography variant="body2">{userInfo.email}</Typography>
-                </div>
-                <SvgIcon component={GoogleLogo} inheritViewBox fontSize="medium" sx={{ marginLeft: 'auto' }} />
-              </Box>
-            </Button>
-          </Track>
+              <div className={css.profileData}>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Continue as {userInfo.name}
+                </Typography>
+                <Typography variant="body2">{userInfo.email}</Typography>
+              </div>
+              <SvgIcon component={GoogleLogo} inheritViewBox fontSize="medium" sx={{ marginLeft: 'auto' }} />
+            </Box>
+          </Button>
         ) : (
-          <Track {...MPC_WALLET_EVENTS.CONNECT_GOOGLE} label={isWelcomePage ? 'welcomePage' : 'navBar'}>
-            <Button
-              data-testid="google-connect-btn"
-              variant="outlined"
-              onClick={login}
-              size="small"
-              disabled={isDisabled}
-              fullWidth
-              sx={{ borderWidth: '1px !important' }}
-            >
-              <LinearProgress
-                color="secondary"
-                className={css.loginProgress}
-                sx={{
-                  opacity: loginPending ? 1 : 0,
-                }}
-              />
-              <Box display="flex" flexDirection="row" alignItems="center" gap={1}>
-                <SvgIcon component={GoogleLogo} inheritViewBox fontSize="medium" /> Continue with Google
-              </Box>
-            </Button>
-          </Track>
+          <Button
+            data-testid="google-connect-btn"
+            variant="outlined"
+            onClick={login}
+            size="small"
+            disabled={isDisabled}
+            fullWidth
+            sx={{ borderWidth: '1px !important' }}
+          >
+            <LinearProgress
+              color="secondary"
+              className={css.loginProgress}
+              sx={{
+                opacity: loginPending ? 1 : 0,
+              }}
+            />
+            <Box display="flex" flexDirection="row" alignItems="center" gap={1}>
+              <SvgIcon component={GoogleLogo} inheritViewBox fontSize="medium" /> Continue with Google
+            </Box>
+          </Button>
         )}
         {loginError && <ErrorMessage className={css.loginError}>{loginError}</ErrorMessage>}
       </Box>

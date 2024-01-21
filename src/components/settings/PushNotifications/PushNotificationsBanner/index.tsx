@@ -1,7 +1,7 @@
 import { Button, Chip, Grid, SvgIcon, Typography, IconButton } from '@mui/material'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { ReactElement } from 'react'
 
 import { CustomTooltip } from '@/components/common/CustomTooltip'
@@ -11,8 +11,6 @@ import { selectAddedSafes, selectAllAddedSafes, selectTotalAdded } from '@/store
 import PushNotificationIcon from '@/public/images/notifications/push-notification.svg'
 import useLocalStorage from '@/services/local-storage/useLocalStorage'
 import { useNotificationRegistrations } from '../hooks/useNotificationRegistrations'
-import { PUSH_NOTIFICATION_EVENTS } from '@/services/analytics/events/push-notifications'
-import { trackEvent } from '@/services/analytics'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import CheckWallet from '@/components/common/CheckWallet'
 import CloseIcon from '@/public/images/common/close.svg'
@@ -89,21 +87,6 @@ export const _getSafesToRegister = (
   return { [chainId]: newlyAddedSafes }
 }
 
-const TrackBanner = (): null => {
-  const hasTracked = useRef(false)
-
-  useEffect(() => {
-    if (hasTracked.current) {
-      return
-    }
-
-    trackEvent(PUSH_NOTIFICATION_EVENTS.SHOW_BANNER)
-    hasTracked.current = true
-  }, [])
-
-  return null
-}
-
 export const PushNotificationsBanner = ({ children }: { children: ReactElement }): ReactElement => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const isNotificationFeatureEnabled = useHasFeature(FEATURES.PUSH_NOTIFICATIONS)
@@ -132,7 +115,6 @@ export const PushNotificationsBanner = ({ children }: { children: ReactElement }
   }, [dismissPushNotificationBanner, safe.chainId])
 
   const onDismiss = () => {
-    trackEvent(PUSH_NOTIFICATION_EVENTS.DISMISS_BANNER)
     dismissBanner()
   }
 
@@ -142,8 +124,6 @@ export const PushNotificationsBanner = ({ children }: { children: ReactElement }
     }
 
     setIsSubmitting(true)
-
-    trackEvent(PUSH_NOTIFICATION_EVENTS.ENABLE_ALL)
 
     const allPreferences = getAllPreferences()
     const safesToRegister = _getSafesToRegister(safe.chainId, addedSafesOnChain, allPreferences)
@@ -162,8 +142,6 @@ export const PushNotificationsBanner = ({ children }: { children: ReactElement }
   }
 
   const onCustomize = () => {
-    trackEvent(PUSH_NOTIFICATION_EVENTS.CUSTOMIZE_SETTINGS)
-
     dismissBanner()
   }
 
@@ -172,61 +150,58 @@ export const PushNotificationsBanner = ({ children }: { children: ReactElement }
   }
 
   return (
-    <>
-      <TrackBanner />
-      <CustomTooltip
-        className={css.banner}
-        title={
-          <Grid container className={css.container}>
-            <Grid item xs={3}>
-              <Chip label="New" className={css.chip} />
-              <SvgIcon component={PushNotificationIcon} inheritViewBox fontSize="inherit" className={css.icon} />
-            </Grid>
-            <Grid item xs={9}>
-              <Typography variant="subtitle2" fontWeight={700}>
-                Enable push notifications
-              </Typography>
-              <IconButton onClick={onDismiss} className={css.close}>
-                <SvgIcon component={CloseIcon} inheritViewBox color="border" fontSize="small" />
-              </IconButton>
-              <Typography mt={0.5} mb={1.5} variant="body2">
-                Get notified about pending signatures, incoming and outgoing transactions for all Safe Accounts on{' '}
-                {chain?.chainName} when Safe
-                {`{Wallet}`} is in the background or closed.
-              </Typography>
-              {/* Cannot wrap singular button as it causes style inconsistencies */}
-              <CheckWallet>
-                {(isOk) => (
-                  <div className={css.buttons}>
-                    {totalAddedSafes > 0 && (
-                      <Button
-                        variant="contained"
-                        size="small"
-                        className={css.button}
-                        onClick={onEnableAll}
-                        startIcon={isSubmitting ? <CircularProgress size={12} color="inherit" /> : null}
-                        disabled={!isOk || !onboard || isSubmitting}
-                      >
-                        Enable all
-                      </Button>
-                    )}
-                    {safe && (
-                      <Link passHref href={{ pathname: AppRoutes.settings.notifications, query }} onClick={onCustomize}>
-                        <Button variant="outlined" size="small" className={css.button}>
-                          Customize
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </CheckWallet>
-            </Grid>
+    <CustomTooltip
+      className={css.banner}
+      title={
+        <Grid container className={css.container}>
+          <Grid item xs={3}>
+            <Chip label="New" className={css.chip} />
+            <SvgIcon component={PushNotificationIcon} inheritViewBox fontSize="inherit" className={css.icon} />
           </Grid>
-        }
-        open
-      >
-        <span>{children}</span>
-      </CustomTooltip>
-    </>
+          <Grid item xs={9}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              Enable push notifications
+            </Typography>
+            <IconButton onClick={onDismiss} className={css.close}>
+              <SvgIcon component={CloseIcon} inheritViewBox color="border" fontSize="small" />
+            </IconButton>
+            <Typography mt={0.5} mb={1.5} variant="body2">
+              Get notified about pending signatures, incoming and outgoing transactions for all Safe Accounts on{' '}
+              {chain?.chainName} when Safe
+              {`{Wallet}`} is in the background or closed.
+            </Typography>
+            {/* Cannot wrap singular button as it causes style inconsistencies */}
+            <CheckWallet>
+              {(isOk) => (
+                <div className={css.buttons}>
+                  {totalAddedSafes > 0 && (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      className={css.button}
+                      onClick={onEnableAll}
+                      startIcon={isSubmitting ? <CircularProgress size={12} color="inherit" /> : null}
+                      disabled={!isOk || !onboard || isSubmitting}
+                    >
+                      Enable all
+                    </Button>
+                  )}
+                  {safe && (
+                    <Link passHref href={{ pathname: AppRoutes.settings.notifications, query }} onClick={onCustomize}>
+                      <Button variant="outlined" size="small" className={css.button}>
+                        Customize
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </CheckWallet>
+          </Grid>
+        </Grid>
+      }
+      open
+    >
+      <span>{children}</span>
+    </CustomTooltip>
   )
 }

@@ -5,7 +5,6 @@ import Tooltip from '@mui/material/Tooltip'
 import SvgIcon from '@mui/material/SvgIcon'
 
 import { useShareSafeAppUrl } from '@/components/safe-apps/hooks/useShareSafeAppUrl'
-import { SAFE_APPS_EVENTS, trackSafeAppEvent } from '@/services/analytics'
 import CopyButton from '@/components/common/CopyButton'
 import ShareIcon from '@/public/images/common/share.svg'
 import BookmarkIcon from '@/public/images/apps/bookmark.svg'
@@ -31,11 +30,6 @@ const SafeAppActionButtons = ({
   const isCustomApp = safeApp.id < 1
   const shareSafeAppUrl = useShareSafeAppUrl(safeApp.url)
 
-  const handleCopyShareSafeAppUrl = () => {
-    const appName = isCustomApp ? safeApp.url : safeApp.name
-    trackSafeAppEvent(SAFE_APPS_EVENTS.COPY_SHARE_URL, appName)
-  }
-
   return (
     <Box display="flex" gap={1} alignItems="center">
       {/* Open the preview drawer */}
@@ -53,11 +47,7 @@ const SafeAppActionButtons = ({
       )}
 
       {/* Copy share Safe App url button */}
-      <CopyButton
-        initialToolTipText={`Copy share URL for ${safeApp.name}`}
-        onCopy={handleCopyShareSafeAppUrl}
-        text={shareSafeAppUrl}
-      >
+      <CopyButton initialToolTipText={`Copy share URL for ${safeApp.name}`} text={shareSafeAppUrl}>
         <IconButton size="small">
           <SvgIcon component={ShareIcon} inheritViewBox color="border" fontSize="small" />
         </IconButton>

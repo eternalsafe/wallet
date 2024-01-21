@@ -1,6 +1,3 @@
-import Track from '@/components/common/Track'
-import { trackEvent } from '@/services/analytics'
-import { RECOVERY_EVENTS } from '@/services/analytics/events/recovery'
 import { Button, Card, Divider, Grid, Typography } from '@mui/material'
 import { useContext } from 'react'
 import type { ReactElement } from 'react'
@@ -37,7 +34,6 @@ export function _RecoveryProposalCard({ orientation = 'vertical', onClose, safe,
   const onRecover = async () => {
     onClose?.()
     setTxFlow(<RecoverAccountFlow />)
-    trackEvent({ ...RECOVERY_EVENTS.START_RECOVERY, label: orientation === 'vertical' ? 'pop-up' : 'dashboard' })
   }
 
   const icon = (
@@ -52,11 +48,9 @@ export function _RecoveryProposalCard({ orientation = 'vertical', onClose, safe,
   } regain access by resetting the Account setup.`
 
   const link = (
-    <Track {...RECOVERY_EVENTS.LEARN_MORE} label="proposal-card">
-      <ExternalLink href={HelpCenterArticle.RECOVERY} title={HelperCenterArticleTitles.RECOVERY}>
-        Learn more
-      </ExternalLink>
-    </Track>
+    <ExternalLink href={HelpCenterArticle.RECOVERY} title={HelperCenterArticleTitles.RECOVERY}>
+      Learn more
+    </ExternalLink>
   )
 
   const recoveryButton = (
@@ -119,7 +113,6 @@ export function _RecoveryProposalCard({ orientation = 'vertical', onClose, safe,
         <Grid item container justifyContent="flex-end" gap={{ md: 1 }}>
           <Button
             onClick={() => {
-              trackEvent(RECOVERY_EVENTS.DISMISS_PROPOSAL_CARD)
               onClose?.()
             }}
           >

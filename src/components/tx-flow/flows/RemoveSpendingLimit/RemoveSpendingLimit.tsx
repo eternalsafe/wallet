@@ -7,16 +7,11 @@ import EthHashInfo from '@/components/common/EthHashInfo'
 import { Grid, Typography } from '@mui/material'
 import type { SpendingLimitState } from '@/store/spendingLimitsSlice'
 import { relativeTime } from '@/utils/date'
-import { trackEvent, SETTINGS_EVENTS } from '@/services/analytics'
 import useBalances from '@/hooks/useBalances'
 import SendAmountBlock from '@/components/tx-flow/flows/TokenTransfer/SendAmountBlock'
 import { safeFormatUnits } from '@/utils/formatters'
 import SpendingLimitLabel from '@/components/common/SpendingLimitLabel'
 import { createTx } from '@/services/tx/tx-sender'
-
-const onFormSubmit = () => {
-  trackEvent(SETTINGS_EVENTS.SPENDING_LIMIT.LIMIT_REMOVED)
-}
 
 export const RemoveSpendingLimit = ({ params }: { params: SpendingLimitState }) => {
   const { setSafeTx, setSafeTxError } = useContext(SafeTxContext)
@@ -47,7 +42,7 @@ export const RemoveSpendingLimit = ({ params }: { params: SpendingLimitState }) 
   }, [chainId, params.beneficiary, params.token, setSafeTx, setSafeTxError])
 
   return (
-    <SignOrExecuteForm onSubmit={onFormSubmit}>
+    <SignOrExecuteForm>
       {token && (
         <SendAmountBlock
           amount={safeFormatUnits(params.amount, token.tokenInfo.decimals)}

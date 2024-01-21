@@ -22,8 +22,6 @@ import { getPreloadedState, persistState } from './persistStore'
 import { pendingTxsSlice } from './pendingTxsSlice'
 import { addedSafesListener, addedSafesSlice } from './addedSafesSlice'
 import { settingsSlice } from './settingsSlice'
-import { cookiesSlice } from './cookiesSlice'
-import { popupSlice } from './popupSlice'
 import { spendingLimitSlice } from './spendingLimitsSlice'
 import { safeAppsSlice } from './safeAppsSlice'
 import { safeMessagesListener, safeMessagesSlice } from './safeMessagesSlice'
@@ -42,8 +40,6 @@ const rootReducer = combineReducers({
   [pendingTxsSlice.name]: pendingTxsSlice.reducer,
   [addedSafesSlice.name]: addedSafesSlice.reducer,
   [settingsSlice.name]: settingsSlice.reducer,
-  [cookiesSlice.name]: cookiesSlice.reducer,
-  [popupSlice.name]: popupSlice.reducer,
   [spendingLimitSlice.name]: spendingLimitSlice.reducer,
   [safeAppsSlice.name]: safeAppsSlice.reducer,
   [safeMessagesSlice.name]: safeMessagesSlice.reducer,
@@ -57,7 +53,6 @@ const persistedSlices: (keyof PreloadedState<RootState>)[] = [
   pendingTxsSlice.name,
   addedSafesSlice.name,
   settingsSlice.name,
-  cookiesSlice.name,
   safeAppsSlice.name,
   pendingSafeMessagesSlice.name,
   batchSlice.name,

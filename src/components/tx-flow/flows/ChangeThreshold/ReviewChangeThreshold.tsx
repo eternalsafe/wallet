@@ -3,7 +3,6 @@ import { useContext, useEffect } from 'react'
 import { Box, Divider, Typography } from '@mui/material'
 
 import { createUpdateThresholdTx } from '@/services/tx/tx-sender'
-import { SETTINGS_EVENTS, trackEvent } from '@/services/analytics'
 import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
 import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import { ChangeThresholdFlowFieldNames } from '@/components/tx-flow/flows/ChangeThreshold'
@@ -21,13 +20,8 @@ const ReviewChangeThreshold = ({ params }: { params: ChangeThresholdFlowProps })
     createUpdateThresholdTx(newThreshold).then(setSafeTx).catch(setSafeTxError)
   }, [newThreshold, setSafeTx, setSafeTxError])
 
-  const onChangeThreshold = () => {
-    trackEvent({ ...SETTINGS_EVENTS.SETUP.OWNERS, label: safe.owners.length })
-    trackEvent({ ...SETTINGS_EVENTS.SETUP.THRESHOLD, label: newThreshold })
-  }
-
   return (
-    <SignOrExecuteForm onSubmit={onChangeThreshold}>
+    <SignOrExecuteForm>
       <div>
         <Typography variant="body2" color="text.secondary" mb={0.5}>
           Any transaction will require the confirmation of:

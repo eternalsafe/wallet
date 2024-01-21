@@ -5,7 +5,6 @@ import type { ReactElement } from 'react'
 import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
 import useAddressBook from '@/hooks/useAddressBook'
 import useSafeInfo from '@/hooks/useSafeInfo'
-import { trackEvent, SETTINGS_EVENTS } from '@/services/analytics'
 import { createRemoveOwnerTx } from '@/services/tx/tx-sender'
 import MinusIcon from '@/public/images/common/minus.svg'
 import { SafeTxContext } from '../../SafeTxProvider'
@@ -26,13 +25,8 @@ export const ReviewRemoveOwner = ({ params }: { params: RemoveOwnerFlowProps }):
 
   const newOwnerLength = safe.owners.length - 1
 
-  const onFormSubmit = () => {
-    trackEvent({ ...SETTINGS_EVENTS.SETUP.THRESHOLD, label: safe.threshold })
-    trackEvent({ ...SETTINGS_EVENTS.SETUP.OWNERS, label: safe.owners.length })
-  }
-
   return (
-    <SignOrExecuteForm onSubmit={onFormSubmit}>
+    <SignOrExecuteForm>
       <Paper sx={{ backgroundColor: ({ palette }) => palette.warning.background, p: 2 }}>
         <Typography color="text.secondary" mb={2} display="flex" alignItems="center">
           <SvgIcon component={MinusIcon} inheritViewBox fontSize="small" sx={{ mr: 1 }} />

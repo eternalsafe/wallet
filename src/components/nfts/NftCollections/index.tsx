@@ -5,8 +5,6 @@ import PagePlaceholder from '@/components/common/PagePlaceholder'
 import NftIcon from '@/public/images/common/nft.svg'
 import useCollectibles from '@/hooks/useCollectibles'
 import InfiniteScroll from '@/components/common/InfiniteScroll'
-import { NFT_EVENTS } from '@/services/analytics/events/nfts'
-import { trackEvent } from '@/services/analytics'
 import NftGrid from '../NftGrid'
 import NftSendForm from '../NftSendForm'
 import NftPreviewModal from '../NftPreviewModal'
@@ -30,7 +28,6 @@ const NftCollections = (): ReactElement => {
   // On NFT preview click
   const onPreview = useCallback((token: SafeCollectibleResponse) => {
     setPreviewNft(token)
-    trackEvent(NFT_EVENTS.PREVIEW)
   }, [])
 
   const onSendSubmit = useCallback(
@@ -40,9 +37,6 @@ const NftCollections = (): ReactElement => {
       if (selectedNfts.length) {
         // Show the NFT transfer modal
         setTxFlow(<NftTransferFlow tokens={selectedNfts} />)
-
-        // Track how many NFTs are being sent
-        trackEvent({ ...NFT_EVENTS.SEND, label: selectedNfts.length })
       }
     },
     [selectedNfts, setTxFlow],

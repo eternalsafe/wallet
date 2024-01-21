@@ -37,13 +37,13 @@ const useRehydrateSocialWallet = () => {
     if (!chain || !onboard) return
 
     const rehydrate = async () => {
-      const { initMPC } = await import('./useMPC')
+      // const { initMPC } = await import('./useMPC')
       const { initSocialWallet } = await import('./useSocialWallet')
-      const mpcCoreKit = await initMPC(chain, onboard)
+      // const mpcCoreKit = await initMPC(chain, onboard)
 
-      if (!mpcCoreKit) return
+      // if (!mpcCoreKit) return
 
-      const socialWalletService = await initSocialWallet(mpcCoreKit)
+      // const socialWalletService = await initSocialWallet(mpcCoreKit)
 
       const onConnect = async () => {
         const wallets = await connectWallet(onboard, {
@@ -54,11 +54,11 @@ const useRehydrateSocialWallet = () => {
         }).catch((reason) => console.error('Error connecting to MPC module:', reason))
 
         // If the signer is not in the address book => add the user's email as name
-        const userInfo = socialWalletService?.getUserInfo()
-        updateAddressBook(userInfo, wallets)
+        // const userInfo = socialWalletService?.getUserInfo()
+        // updateAddressBook(userInfo, wallets)
       }
 
-      socialWalletService.setOnConnect(onConnect)
+      // socialWalletService.setOnConnect(onConnect)
     }
 
     void rehydrate()

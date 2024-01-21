@@ -4,8 +4,6 @@ import { Button, type ButtonProps } from '@mui/material'
 
 import { useTxBuilderApp } from '@/hooks/safe-apps/useTxBuilderApp'
 import { AppRoutes } from '@/config/routes'
-import Track from '@/components/common/Track'
-import { MODALS_EVENTS } from '@/services/analytics'
 import { useContext } from 'react'
 import { TxModalContext } from '..'
 
@@ -16,11 +14,9 @@ const buttonSx = {
 
 export const SendTokensButton = ({ onClick, sx }: { onClick: () => void; sx?: ButtonProps['sx'] }) => {
   return (
-    <Track {...MODALS_EVENTS.SEND_FUNDS}>
-      <Button onClick={onClick} variant="contained" sx={sx ?? buttonSx} fullWidth>
-        Send tokens
-      </Button>
-    </Track>
+    <Button onClick={onClick} variant="contained" sx={sx ?? buttonSx} fullWidth>
+      Send tokens
+    </Button>
   )
 }
 
@@ -32,13 +28,11 @@ export const SendNFTsButton = () => {
   const onClick = isNftPage ? () => setTxFlow(undefined) : undefined
 
   return (
-    <Track {...MODALS_EVENTS.SEND_COLLECTIBLE}>
-      <Link href={{ pathname: AppRoutes.balances.nfts, query: { safe: router.query.safe } }} passHref legacyBehavior>
-        <Button variant="contained" sx={buttonSx} fullWidth onClick={onClick}>
-          Send NFTs
-        </Button>
-      </Link>
-    </Track>
+    <Link href={{ pathname: AppRoutes.balances.nfts, query: { safe: router.query.safe } }} passHref legacyBehavior>
+      <Button variant="contained" sx={buttonSx} fullWidth onClick={onClick}>
+        Send NFTs
+      </Button>
+    </Link>
   )
 }
 
@@ -53,12 +47,10 @@ export const TxBuilderButton = () => {
   const onClick = isTxBuilder ? () => setTxFlow(undefined) : undefined
 
   return (
-    <Track {...MODALS_EVENTS.CONTRACT_INTERACTION}>
-      <Link href={txBuilder.link} passHref style={{ width: '100%' }}>
-        <Button variant="outlined" sx={buttonSx} fullWidth onClick={onClick}>
-          Transaction Builder
-        </Button>
-      </Link>
-    </Track>
+    <Link href={txBuilder.link} passHref style={{ width: '100%' }}>
+      <Button variant="outlined" sx={buttonSx} fullWidth onClick={onClick}>
+        Transaction Builder
+      </Button>
+    </Link>
   )
 }

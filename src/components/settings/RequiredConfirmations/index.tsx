@@ -1,6 +1,4 @@
 import { Box, Button, Grid, Typography } from '@mui/material'
-import Track from '@/components/common/Track'
-import { SETTINGS_EVENTS } from '@/services/analytics'
 import { ChangeThresholdFlow } from '@/components/tx-flow/flows'
 import CheckWallet from '@/components/common/CheckWallet'
 import { useContext } from 'react'
@@ -28,11 +26,9 @@ export const RequiredConfirmation = ({ threshold, owners }: { threshold: number;
             <Box pt={2}>
               <CheckWallet>
                 {(isOk) => (
-                  <Track {...SETTINGS_EVENTS.SETUP.CHANGE_THRESHOLD}>
-                    <Button onClick={() => setTxFlow(<ChangeThresholdFlow />)} variant="contained" disabled={!isOk}>
-                      Change
-                    </Button>
-                  </Track>
+                  <Button onClick={() => setTxFlow(<ChangeThresholdFlow />)} variant="contained" disabled={!isOk}>
+                    Change
+                  </Button>
                 )}
               </CheckWallet>
             </Box>

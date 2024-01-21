@@ -1,10 +1,8 @@
 import { type ReactElement } from 'react'
 import { Typography, Button } from '@mui/material'
-import { ASSETS_EVENTS } from '@/services/analytics'
 import useHiddenTokens from '@/hooks/useHiddenTokens'
 import useBalances from '@/hooks/useBalances'
 import { VisibilityOutlined } from '@mui/icons-material'
-import Track from '@/components/common/Track'
 
 import css from './styles.module.css'
 
@@ -23,29 +21,27 @@ const HiddenTokenButton = ({
 
   return (
     <div className={css.hiddenTokenButton}>
-      <Track {...ASSETS_EVENTS.SHOW_HIDDEN_ASSETS}>
-        <Button
-          sx={{
-            gap: 1,
-            padding: 1,
-            borderWidth: '1px !important',
-            borderColor: ({ palette }) => palette.border.main,
-          }}
-          disabled={showHiddenAssets}
-          onClick={toggleShowHiddenAssets}
-          data-testid="toggle-hidden-assets"
-          variant="outlined"
-        >
-          <>
-            <VisibilityOutlined fontSize="small" />
-            <Typography fontSize="medium">
-              {hiddenAssetCount === 0
-                ? 'Hide tokens'
-                : `${hiddenAssetCount} hidden token${hiddenAssetCount > 1 ? 's' : ''}`}{' '}
-            </Typography>
-          </>
-        </Button>
-      </Track>
+      <Button
+        sx={{
+          gap: 1,
+          padding: 1,
+          borderWidth: '1px !important',
+          borderColor: ({ palette }) => palette.border.main,
+        }}
+        disabled={showHiddenAssets}
+        onClick={toggleShowHiddenAssets}
+        data-testid="toggle-hidden-assets"
+        variant="outlined"
+      >
+        <>
+          <VisibilityOutlined fontSize="small" />
+          <Typography fontSize="medium">
+            {hiddenAssetCount === 0
+              ? 'Hide tokens'
+              : `${hiddenAssetCount} hidden token${hiddenAssetCount > 1 ? 's' : ''}`}{' '}
+          </Typography>
+        </>
+      </Button>
     </div>
   )
 }

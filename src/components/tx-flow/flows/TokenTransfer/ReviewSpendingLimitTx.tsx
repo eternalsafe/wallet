@@ -17,14 +17,12 @@ import ErrorMessage from '@/components/tx/ErrorMessage'
 import { useCurrentChain } from '@/hooks/useChains'
 import { dispatchSpendingLimitTxExecution } from '@/services/tx/tx-sender'
 import { getTxOptions } from '@/utils/transactions'
-import { MODALS_EVENTS, trackEvent } from '@/services/analytics'
 import useOnboard from '@/hooks/wallets/useOnboard'
 import { WrongChainWarning } from '@/components/tx/WrongChainWarning'
 import { asError } from '@/services/exceptions/utils'
 import TxCard from '@/components/tx-flow/common/TxCard'
 import { TxModalContext } from '@/components/tx-flow'
 import { type SubmitCallback } from '@/components/tx/SignOrExecuteForm'
-import { TX_EVENTS, TX_TYPES } from '@/services/analytics/events/transactions'
 
 export type SpendingLimitTxParams = {
   safeAddress: string
@@ -83,8 +81,6 @@ const ReviewSpendingLimitTx = ({
     e.preventDefault()
     if (!onboard) return
 
-    trackEvent(MODALS_EVENTS.USE_SPENDING_LIMIT)
-
     setIsSubmittable(false)
     setSubmitError(undefined)
 
@@ -100,9 +96,6 @@ const ReviewSpendingLimitTx = ({
       setIsSubmittable(true)
       setSubmitError(err)
     }
-
-    trackEvent({ ...TX_EVENTS.CREATE, label: TX_TYPES.transfer_token })
-    trackEvent({ ...TX_EVENTS.EXECUTE, label: TX_TYPES.transfer_token })
   }
 
   const submitDisabled = !isSubmittable || gasLimitLoading

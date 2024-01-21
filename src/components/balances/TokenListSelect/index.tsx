@@ -6,8 +6,6 @@ import { Box, SvgIcon, Tooltip, Typography, FormControl, InputLabel, Select, Men
 import InfoIcon from '@/public/images/notifications/info.svg'
 import ExternalLink from '@/components/common/ExternalLink'
 import { OnboardingTooltip } from '@/components/common/OnboardingTooltip'
-import Track from '@/components/common/Track'
-import { ASSETS_EVENTS, trackEvent } from '@/services/analytics'
 import { HelpCenterArticle } from '@/config/constants'
 import { useHasFeature } from '@/hooks/useChains'
 
@@ -53,33 +51,28 @@ const TokenListSelect = () => {
           label="Tokenlist"
           onChange={handleSelectTokenList}
           renderValue={(value) => TokenListLabel[value]}
-          onOpen={() => trackEvent(ASSETS_EVENTS.OPEN_TOKEN_LIST_MENU)}
           sx={{ minWidth: '152px' }}
         >
           <MenuItem value={TOKEN_LISTS.TRUSTED}>
-            <Track {...ASSETS_EVENTS.SHOW_DEFAULT_TOKENS}>
-              <Box display="flex" flexDirection="row" gap="4px" alignItems="center" minWidth={155}>
-                {TokenListLabel.TRUSTED}
-                <Tooltip
-                  arrow
-                  title={
-                    <Typography>
-                      Learn more about <ExternalLink href={HelpCenterArticle.SPAM_TOKENS}>default tokens</ExternalLink>
-                    </Typography>
-                  }
-                >
-                  <span>
-                    <SvgIcon sx={{ display: 'block' }} color="border" fontSize="small" component={InfoIcon} />
-                  </span>
-                </Tooltip>
-              </Box>
-            </Track>
+            <Box display="flex" flexDirection="row" gap="4px" alignItems="center" minWidth={155}>
+              {TokenListLabel.TRUSTED}
+              <Tooltip
+                arrow
+                title={
+                  <Typography>
+                    Learn more about <ExternalLink href={HelpCenterArticle.SPAM_TOKENS}>default tokens</ExternalLink>
+                  </Typography>
+                }
+              >
+                <span>
+                  <SvgIcon sx={{ display: 'block' }} color="border" fontSize="small" component={InfoIcon} />
+                </span>
+              </Tooltip>
+            </Box>
           </MenuItem>
 
           <MenuItem value={TOKEN_LISTS.ALL}>
-            <Track {...ASSETS_EVENTS.SHOW_ALL_TOKENS}>
-              <span>{TokenListLabel.ALL}</span>
-            </Track>
+            <span>{TokenListLabel.ALL}</span>
           </MenuItem>
         </Select>
       </OnboardingTooltip>

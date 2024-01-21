@@ -1,5 +1,3 @@
-import Track from '@/components/common/Track'
-import { RECOVERY_EVENTS } from '@/services/analytics/events/recovery'
 import { Button, Card, Divider, Grid, Typography } from '@mui/material'
 import { useRouter } from 'next/dist/client/router'
 import type { ReactElement } from 'react'
@@ -51,11 +49,9 @@ export function RecoveryInProgressCard({ orientation = 'vertical', onClose, reco
     : 'The recovery process has started. This Account will be ready to recover in:'
 
   const link = (
-    <Track {...RECOVERY_EVENTS.LEARN_MORE} label="in-progress-card">
-      <ExternalLink href={HelpCenterArticle.RECOVERY} title={HelperCenterArticleTitles.RECOVERY}>
-        Learn more
-      </ExternalLink>
-    </Track>
+    <ExternalLink href={HelpCenterArticle.RECOVERY} title={HelperCenterArticleTitles.RECOVERY}>
+      Learn more
+    </ExternalLink>
   )
 
   if (orientation === 'horizontal') {
@@ -109,11 +105,9 @@ export function RecoveryInProgressCard({ orientation = 'vertical', onClose, reco
 
         <Divider flexItem sx={{ mx: -4 }} />
 
-        <Track {...RECOVERY_EVENTS.CHECK_RECOVERY_PROPOSAL}>
-          <Button variant="contained" onClick={onClick} sx={{ alignSelf: 'flex-end' }}>
-            Go to queue
-          </Button>
-        </Track>
+        <Button variant="contained" onClick={onClick} sx={{ alignSelf: 'flex-end' }}>
+          Go to queue
+        </Button>
       </Grid>
     </Card>
   )

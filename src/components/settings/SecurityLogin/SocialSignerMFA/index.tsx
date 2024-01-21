@@ -1,4 +1,3 @@
-import Track from '@/components/common/Track'
 import {
   Typography,
   Button,
@@ -12,7 +11,6 @@ import {
   Divider,
   Alert,
 } from '@mui/material'
-import { MPC_WALLET_EVENTS } from '@/services/analytics/events/mpcWallet'
 import { useRouter } from 'next/router'
 import { useState, useMemo, type ChangeEvent } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
@@ -255,11 +253,9 @@ const SocialSignerMFA = () => {
                     <Button sx={{ fontSize: '14px' }} variant="text" onClick={onReset} disabled={!formState.isDirty}>
                       Cancel
                     </Button>
-                    <Track {...MPC_WALLET_EVENTS.UPSERT_PASSWORD}>
-                      <Button sx={{ fontSize: '14px' }} disabled={isSubmitDisabled} type="submit" variant="contained">
-                        {isPasswordSet ? 'Change' : 'Create'} Password
-                      </Button>
-                    </Track>
+                    <Button sx={{ fontSize: '14px' }} disabled={isSubmitDisabled} type="submit" variant="contained">
+                      {isPasswordSet ? 'Change' : 'Create'} Password
+                    </Button>
                   </Box>
                 </Grid>
                 <Grid

@@ -1,8 +1,5 @@
-import Track from '@/components/common/Track'
 import { RECOVERY_FEEDBACK_FORM, HelpCenterArticle } from '@/config/constants'
-import { trackEvent } from '@/services/analytics'
-import { RECOVERY_EVENTS } from '@/services/analytics/events/recovery'
-import { type ChangeEvent, type ReactElement, useContext } from 'react'
+import { type ReactElement, useContext } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import Link from 'next/link'
 import {
@@ -61,10 +58,6 @@ export function ChooseRecoveryMethodModal({ open, onClose }: { open: boolean; on
 
   const currentType = watch(FieldNames.recoveryMethod)
 
-  const trackOptionChoice = (e: ChangeEvent<HTMLInputElement>) => {
-    trackEvent({ ...RECOVERY_EVENTS.SELECT_RECOVERY_METHOD, label: e.target.value })
-  }
-
   return (
     <Dialog open={open} onClose={onClose} className={css.dialog}>
       <DialogContent dividers sx={{ py: 2, px: 3 }}>
@@ -76,10 +69,7 @@ export function ChooseRecoveryMethodModal({ open, onClose }: { open: boolean; on
         </IconButton>
         <DialogContentText color="text.primary" mb={4}>
           Ensure that you never lose access to your funds by selecting one of the options below. Want to know how
-          recovery works? Learn more in our{' '}
-          <Track {...RECOVERY_EVENTS.LEARN_MORE} label="method-modal">
-            <ExternalLink href={HelpCenterArticle.RECOVERY}>Help Center</ExternalLink>
-          </Track>
+          recovery works? Learn more in our <ExternalLink href={HelpCenterArticle.RECOVERY}>Help Center</ExternalLink>
         </DialogContentText>
         <FormControl>
           <Controller
@@ -91,7 +81,6 @@ export function ChooseRecoveryMethodModal({ open, onClose }: { open: boolean; on
                 className={css.buttonGroup}
                 onChange={(e) => {
                   field.onChange(e)
-                  trackOptionChoice(e)
                 }}
               >
                 <FormControlLabel
@@ -179,34 +168,27 @@ export function ChooseRecoveryMethodModal({ open, onClose }: { open: boolean; on
           />
         </FormControl>
         <Typography color="primary.light" mt="12px">
-          Unhappy with the provided options?{' '}
-          <Track {...RECOVERY_EVENTS.GIVE_US_FEEDBACK} label="method-modal">
-            <ExternalLink href={RECOVERY_FEEDBACK_FORM}>Give us feedback</ExternalLink>
-          </Track>
+          Unhappy with the provided options? <ExternalLink href={RECOVERY_FEEDBACK_FORM}>Give us feedback</ExternalLink>
         </Typography>
         <Box display="flex" justifyContent="center" mt={3}>
           {currentType === RecoveryMethod.SelfCustody ? (
-            <Track {...RECOVERY_EVENTS.CONTINUE_WITH_RECOVERY} label={currentType}>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setTxFlow(<UpsertRecoveryFlow />)
-                  onClose()
-                }}
-              >
-                Set up
-              </Button>
-            </Track>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setTxFlow(<UpsertRecoveryFlow />)
+                onClose()
+              }}
+            >
+              Set up
+            </Button>
           ) : (
-            <Track {...RECOVERY_EVENTS.CONTINUE_TO_WAITLIST} label={currentType}>
-              <Link
-                href={currentType === RecoveryMethod.Sygnum ? SYGNUM_WAITLIST_LINK : COINCOVER_WAITLIST_LINK}
-                target="_blank"
-                passHref
-              >
-                <Button variant="contained">Join waitlist</Button>
-              </Link>
-            </Track>
+            <Link
+              href={currentType === RecoveryMethod.Sygnum ? SYGNUM_WAITLIST_LINK : COINCOVER_WAITLIST_LINK}
+              target="_blank"
+              passHref
+            >
+              <Button variant="contained">Join waitlist</Button>
+            </Link>
           )}
         </Box>
       </DialogContent>

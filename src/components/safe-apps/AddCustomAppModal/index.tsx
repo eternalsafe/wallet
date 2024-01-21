@@ -22,7 +22,6 @@ import { useCurrentChain } from '@/hooks/useChains'
 import useAsync from '@/hooks/useAsync'
 import useDebounce from '@/hooks/useDebounce'
 import { fetchSafeAppFromManifest } from '@/services/safe-apps/manifest'
-import { SAFE_APPS_EVENTS, trackSafeAppEvent } from '@/services/analytics'
 import { isSameUrl, trimTrailingSlash } from '@/utils/url'
 import CustomAppPlaceholder from './CustomAppPlaceholder'
 import CustomApp from './CustomApp'
@@ -65,7 +64,6 @@ export const AddCustomAppModal = ({ open, onClose, onSave, safeAppsList }: Props
   const onSubmit: SubmitHandler<CustomAppFormData> = (_, __) => {
     if (safeApp) {
       onSave(safeApp)
-      trackSafeAppEvent(SAFE_APPS_EVENTS.ADD_CUSTOM_APP, safeApp.url)
       reset()
       onClose()
     }

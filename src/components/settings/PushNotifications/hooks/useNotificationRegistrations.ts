@@ -3,8 +3,6 @@ import { registerDevice, unregisterDevice, unregisterSafe } from '@safe-global/s
 import { useAppDispatch } from '@/store'
 import { showNotification } from '@/store/notificationsSlice'
 import { useNotificationPreferences } from './useNotificationPreferences'
-import { trackEvent } from '@/services/analytics'
-import { PUSH_NOTIFICATION_EVENTS } from '@/services/analytics/events/push-notifications'
 import { getRegisterDevicePayload } from '../logic'
 import { logError } from '@/services/exceptions'
 import ErrorCodes from '@/services/exceptions/ErrorCodes'
@@ -64,11 +62,6 @@ export const useNotificationRegistrations = (): {
         0,
       )
 
-      trackEvent({
-        ...PUSH_NOTIFICATION_EVENTS.REGISTER_SAFES,
-        label: totalRegistered,
-      })
-
       dispatch(
         showNotification({
           message: `You will now receive notifications for ${
@@ -85,7 +78,6 @@ export const useNotificationRegistrations = (): {
     if (uuid) {
       return registrationFlow(unregisterSafe(chainId, safeAddress, uuid), () => {
         deletePreferences({ [chainId]: [safeAddress] })
-        trackEvent(PUSH_NOTIFICATION_EVENTS.UNREGISTER_SAFE)
       })
     }
   }
@@ -94,7 +86,6 @@ export const useNotificationRegistrations = (): {
     if (uuid) {
       return registrationFlow(unregisterDevice(chainId, uuid), () => {
         deleteAllChainPreferences(chainId)
-        trackEvent(PUSH_NOTIFICATION_EVENTS.UNREGISTER_DEVICE)
       })
     }
   }

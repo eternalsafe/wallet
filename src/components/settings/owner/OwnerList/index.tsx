@@ -9,8 +9,6 @@ import { useContext, useMemo } from 'react'
 import { EditOwnerDialog } from '../EditOwnerDialog'
 import EnhancedTable from '@/components/common/EnhancedTable'
 import AddIcon from '@/public/images/common/add.svg'
-import Track from '@/components/common/Track'
-import { SETTINGS_EVENTS } from '@/services/analytics/events/settings'
 import CheckWallet from '@/components/common/CheckWallet'
 import { TxModalContext } from '@/components/tx-flow'
 import ReplaceOwnerIcon from '@/public/images/settings/setup/replace-owner.svg'
@@ -49,19 +47,17 @@ export const OwnerList = () => {
               <div className={tableCss.actions}>
                 <CheckWallet>
                   {(isOk) => (
-                    <Track {...SETTINGS_EVENTS.SETUP.REPLACE_OWNER}>
-                      <Tooltip title={isOk ? 'Replace owner' : undefined}>
-                        <span>
-                          <IconButton
-                            onClick={() => setTxFlow(<ReplaceOwnerFlow address={address} />)}
-                            size="small"
-                            disabled={!isOk}
-                          >
-                            <SvgIcon component={ReplaceOwnerIcon} inheritViewBox color="border" fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    </Track>
+                    <Tooltip title={isOk ? 'Replace owner' : undefined}>
+                      <span>
+                        <IconButton
+                          onClick={() => setTxFlow(<ReplaceOwnerFlow address={address} />)}
+                          size="small"
+                          disabled={!isOk}
+                        >
+                          <SvgIcon component={ReplaceOwnerIcon} inheritViewBox color="border" fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   )}
                 </CheckWallet>
 
@@ -70,19 +66,17 @@ export const OwnerList = () => {
                 {showRemoveOwnerButton && (
                   <CheckWallet>
                     {(isOk) => (
-                      <Track {...SETTINGS_EVENTS.SETUP.REMOVE_OWNER}>
-                        <Tooltip title={isOk ? 'Remove owner' : undefined}>
-                          <span>
-                            <IconButton
-                              onClick={() => setTxFlow(<RemoveOwnerFlow name={name} address={address} />)}
-                              size="small"
-                              disabled={!isOk}
-                            >
-                              <SvgIcon component={DeleteIcon} inheritViewBox color="error" fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      </Track>
+                      <Tooltip title={isOk ? 'Remove owner' : undefined}>
+                        <span>
+                          <IconButton
+                            onClick={() => setTxFlow(<RemoveOwnerFlow name={name} address={address} />)}
+                            size="small"
+                            disabled={!isOk}
+                          >
+                            <SvgIcon component={DeleteIcon} inheritViewBox color="error" fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
                     )}
                   </CheckWallet>
                 )}
@@ -114,17 +108,15 @@ export const OwnerList = () => {
           <Box pt={2} display="flex" justifyContent="space-between">
             <CheckWallet>
               {(isOk) => (
-                <Track {...SETTINGS_EVENTS.SETUP.ADD_OWNER}>
-                  <Button
-                    data-testid="add-owner-btn"
-                    onClick={() => setTxFlow(<AddOwnerFlow />)}
-                    variant="text"
-                    startIcon={<SvgIcon component={AddIcon} inheritViewBox fontSize="small" />}
-                    disabled={!isOk}
-                  >
-                    Add new owner
-                  </Button>
-                </Track>
+                <Button
+                  data-testid="add-owner-btn"
+                  onClick={() => setTxFlow(<AddOwnerFlow />)}
+                  variant="text"
+                  startIcon={<SvgIcon component={AddIcon} inheritViewBox fontSize="small" />}
+                  disabled={!isOk}
+                >
+                  Add new owner
+                </Button>
               )}
             </CheckWallet>
 

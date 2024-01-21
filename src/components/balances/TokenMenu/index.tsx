@@ -1,6 +1,4 @@
 import { Sticky } from '@/components/common/Sticky'
-import Track from '@/components/common/Track'
-import { ASSETS_EVENTS } from '@/services/analytics'
 import { VisibilityOffOutlined } from '@mui/icons-material'
 import { Box, Typography, Button } from '@mui/material'
 
@@ -32,21 +30,15 @@ const TokenMenu = ({
           </Typography>
         </Box>
         <Box display="flex" flexDirection="row" gap={1}>
-          <Track {...ASSETS_EVENTS.CANCEL_HIDE_DIALOG}>
-            <Button onClick={cancel} className={css.cancelButton} size="small" variant="outlined">
-              Cancel
-            </Button>
-          </Track>
-          <Track {...ASSETS_EVENTS.DESELECT_ALL_HIDE_DIALOG}>
-            <Button onClick={deselectAll} className={css.cancelButton} size="small" variant="outlined">
-              Deselect all
-            </Button>
-          </Track>
-          <Track {...ASSETS_EVENTS.SAVE_HIDE_DIALOG}>
-            <Button onClick={saveChanges} className={css.applyButton} size="small" variant="contained">
-              Save
-            </Button>
-          </Track>
+          <Button onClick={cancel} className={css.cancelButton} size="small" variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={deselectAll} className={css.cancelButton} size="small" variant="outlined">
+            Deselect all
+          </Button>
+          <Button onClick={saveChanges} className={css.applyButton} size="small" variant="contained">
+            Save
+          </Button>
         </Box>
       </Box>
     </Sticky>

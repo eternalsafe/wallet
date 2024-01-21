@@ -1,5 +1,3 @@
-import { trackEvent } from '@/services/analytics'
-import { RECOVERY_EVENTS } from '@/services/analytics/events/recovery'
 import { Typography } from '@mui/material'
 import { useContext, useEffect } from 'react'
 import type { ReactElement } from 'react'
@@ -11,10 +9,6 @@ import { getRecoverySkipTransaction } from '@/features/recovery/services/transac
 import { createTx } from '@/services/tx/tx-sender'
 import ErrorMessage from '@/components/tx/ErrorMessage'
 import type { RecoveryQueueItem } from '@/features/recovery/services/recovery-state'
-
-const onSubmit = () => {
-  trackEvent({ ...RECOVERY_EVENTS.SUBMIT_RECOVERY_CANCEL })
-}
 
 export function CancelRecoveryFlowReview({ recovery }: { recovery: RecoveryQueueItem }): ReactElement {
   const web3ReadOnly = useWeb3ReadOnly()
@@ -29,7 +23,7 @@ export function CancelRecoveryFlowReview({ recovery }: { recovery: RecoveryQueue
   }, [setSafeTx, setSafeTxError, recovery, web3ReadOnly])
 
   return (
-    <SignOrExecuteForm onSubmit={onSubmit} isBatchable={false}>
+    <SignOrExecuteForm isBatchable={false}>
       <Typography mb={1}>
         All actions initiated by the Recoverer will be cancelled. The current owners will remain the owners of the Safe
         Account.

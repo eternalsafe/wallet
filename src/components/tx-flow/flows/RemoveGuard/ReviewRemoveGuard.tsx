@@ -3,14 +3,9 @@ import { Typography } from '@mui/material'
 import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
 import EthHashInfo from '@/components/common/EthHashInfo'
 import { Errors, logError } from '@/services/exceptions'
-import { trackEvent, SETTINGS_EVENTS } from '@/services/analytics'
 import { createRemoveGuardTx } from '@/services/tx/tx-sender'
 import { type RemoveGuardFlowProps } from '.'
 import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
-
-const onFormSubmit = () => {
-  trackEvent(SETTINGS_EVENTS.MODULES.REMOVE_GUARD)
-}
 
 export const ReviewRemoveGuard = ({ params }: { params: RemoveGuardFlowProps }) => {
   const { setSafeTx, safeTxError, setSafeTxError } = useContext(SafeTxContext)
@@ -26,7 +21,7 @@ export const ReviewRemoveGuard = ({ params }: { params: RemoveGuardFlowProps }) 
   }, [safeTxError])
 
   return (
-    <SignOrExecuteForm onSubmit={onFormSubmit}>
+    <SignOrExecuteForm>
       <Typography sx={({ palette }) => ({ color: palette.primary.light })}>Transaction guard</Typography>
 
       <EthHashInfo address={params.address} showCopyButton hasExplorer shortAddress={false} />

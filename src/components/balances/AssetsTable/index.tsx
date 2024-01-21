@@ -8,8 +8,6 @@ import TokenAmount from '@/components/common/TokenAmount'
 import TokenIcon from '@/components/common/TokenIcon'
 import EnhancedTable, { type EnhancedTableProps } from '@/components/common/EnhancedTable'
 import TokenExplorerLink from '@/components/common/TokenExplorerLink'
-import Track from '@/components/common/Track'
-import { ASSETS_EVENTS } from '@/services/analytics/events/assets'
 import InfoIcon from '@/public/images/notifications/info.svg'
 import { VisibilityOutlined } from '@mui/icons-material'
 import TokenMenu from '../TokenMenu'
@@ -99,17 +97,15 @@ const SendButton = ({
   return (
     <CheckWallet allowSpendingLimit={!!spendingLimit}>
       {(isOk) => (
-        <Track {...ASSETS_EVENTS.SEND}>
-          <Button
-            variant="contained"
-            color="primary"
-            size="small"
-            onClick={() => onClick(tokenInfo.address)}
-            disabled={!isOk}
-          >
-            Send
-          </Button>
-        </Track>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => onClick(tokenInfo.address)}
+          disabled={!isOk}
+        >
+          Send
+        </Button>
       )}
     </CheckWallet>
   )
@@ -220,17 +216,15 @@ const AssetsTable = ({
                     {showHiddenAssets ? (
                       <Checkbox size="small" checked={isSelected} onClick={() => toggleAsset(item.tokenInfo.address)} />
                     ) : (
-                      <Track {...ASSETS_EVENTS.HIDE_TOKEN}>
-                        <Tooltip title="Hide asset" arrow disableInteractive>
-                          <IconButton
-                            disabled={hidingAsset !== undefined}
-                            size="medium"
-                            onClick={() => hideAsset(item.tokenInfo.address)}
-                          >
-                            <VisibilityOutlined fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Track>
+                      <Tooltip title="Hide asset" arrow disableInteractive>
+                        <IconButton
+                          disabled={hidingAsset !== undefined}
+                          size="medium"
+                          onClick={() => hideAsset(item.tokenInfo.address)}
+                        >
+                          <VisibilityOutlined fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     )}
                   </>
                 </Box>

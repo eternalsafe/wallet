@@ -1,5 +1,3 @@
-import Track from '@/components/common/Track'
-import { MPC_WALLET_EVENTS } from '@/services/analytics/events/mpcWallet'
 import { Alert, Box, Button, Tooltip, Typography } from '@mui/material'
 import { useState } from 'react'
 import ExportMPCAccountModal from '@/components/settings/SecurityLogin/SocialSignerExport/ExportMPCAccountModal'
@@ -23,21 +21,19 @@ const SocialSignerExport = () => {
           your social login signer.
         </Alert>
 
-        <Track {...MPC_WALLET_EVENTS.REVEAL_PRIVATE_KEY}>
-          <Tooltip title={isPasswordSet ? '' : 'Private key export is only available if you set a recovery password'}>
-            <span>
-              <Button
-                color="primary"
-                variant="contained"
-                sx={{ pointerEvents: 'all !important' }}
-                disabled={isModalOpen || !isPasswordSet}
-                onClick={() => setIsModalOpen(true)}
-              >
-                Reveal private key
-              </Button>
-            </span>
-          </Tooltip>
-        </Track>
+        <Tooltip title={isPasswordSet ? '' : 'Private key export is only available if you set a recovery password'}>
+          <span>
+            <Button
+              color="primary"
+              variant="contained"
+              sx={{ pointerEvents: 'all !important' }}
+              disabled={isModalOpen || !isPasswordSet}
+              onClick={() => setIsModalOpen(true)}
+            >
+              Reveal private key
+            </Button>
+          </span>
+        </Tooltip>
       </Box>
       <ExportMPCAccountModal onClose={() => setIsModalOpen(false)} open={isModalOpen} />
     </>

@@ -1,4 +1,3 @@
-import { MPC_WALLET_EVENTS } from '@/services/analytics/events/mpcWallet'
 import {
   Typography,
   FormControlLabel,
@@ -11,7 +10,6 @@ import {
   FormControl,
 } from '@mui/material'
 import { useState } from 'react'
-import Track from '@/components/common/Track'
 import { FormProvider, useForm } from 'react-hook-form'
 import PasswordInput from '@/components/settings/SecurityLogin/SocialSignerMFA/PasswordInput'
 import ErrorMessage from '@/components/tx/ErrorMessage'
@@ -100,11 +98,9 @@ export const PasswordRecovery = ({
 
               <Divider />
               <Box p={4} display="flex" justifyContent="flex-end">
-                <Track {...MPC_WALLET_EVENTS.RECOVER_PASSWORD}>
-                  <Button variant="contained" type="submit" disabled={isDisabled}>
-                    Submit
-                  </Button>
-                </Track>
+                <Button variant="contained" type="submit" disabled={isDisabled}>
+                  Submit
+                </Button>
               </Box>
             </Box>
           </Grid>

@@ -5,7 +5,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { useCurrentChain } from '@/hooks/useChains'
 import { formatVisualAmount } from '@/utils/formatters'
 import { type AdvancedParameters } from '../AdvancedParams/types'
-import { trackEvent, MODALS_EVENTS } from '@/services/analytics'
 import classnames from 'classnames'
 import css from './styles.module.css'
 import accordionCss from '@/styles/accordion.module.css'
@@ -43,10 +42,6 @@ export const _GasParams = ({
 }: GasParamsProps & { chain?: ChainInfo }): ReactElement => {
   const { nonce, userNonce, safeTxGas, gasLimit, maxFeePerGas, maxPriorityFeePerGas } = params
 
-  const onChangeExpand = (_: SyntheticEvent, expanded: boolean) => {
-    trackEvent({ ...MODALS_EVENTS.ESTIMATION, label: expanded ? 'Open' : 'Close' })
-  }
-
   const isLoading = !gasLimit || !maxFeePerGas
   const isError = gasLimitError && !gasLimit
 
@@ -66,11 +61,7 @@ export const _GasParams = ({
   }
 
   return (
-    <Accordion
-      elevation={0}
-      onChange={onChangeExpand}
-      className={classnames({ [css.withExecutionMethod]: isExecution })}
-    >
+    <Accordion elevation={0} className={classnames({ [css.withExecutionMethod]: isExecution })}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />} className={accordionCss.accordion}>
         {isExecution ? (
           <Typography display="flex" alignItems="center" justifyContent="space-between" width={1}>

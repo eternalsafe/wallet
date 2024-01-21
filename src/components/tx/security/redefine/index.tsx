@@ -13,8 +13,6 @@ import css from 'src/components/tx/security/redefine/styles.module.css'
 import sharedCss from '@/components/tx/security/shared/styles.module.css'
 import RedefineLogoDark from '@/public/images/transactions/redefine-dark-mode.png'
 import RedefineLogo from '@/public/images/transactions/redefine.png'
-import Track from '@/components/common/Track'
-import { MODALS_EVENTS } from '@/services/analytics'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import CircularProgress from '@mui/material/CircularProgress'
 import { RedefineHint } from '@/components/tx/security/redefine/RedefineHint'
@@ -123,15 +121,11 @@ const RedefineBlock = () => {
       <div>
         {needsRiskConfirmation && (
           <Box pl={2} ref={checkboxRef}>
-            <Track {...MODALS_EVENTS.ACCEPT_RISK}>
-              <FormControlLabel
-                label={`I understand the risks and would like to sign this ${
-                  isTransaction ? 'transaction' : 'message'
-                }`}
-                control={<Checkbox checked={isRiskConfirmed} onChange={toggleConfirmation} />}
-                className={isRiskIgnored ? css.checkboxError : ''}
-              />
-            </Track>
+            <FormControlLabel
+              label={`I understand the risks and would like to sign this ${isTransaction ? 'transaction' : 'message'}`}
+              control={<Checkbox checked={isRiskConfirmed} onChange={toggleConfirmation} />}
+              className={isRiskIgnored ? css.checkboxError : ''}
+            />
           </Box>
         )}
       </div>

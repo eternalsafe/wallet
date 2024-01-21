@@ -18,7 +18,6 @@ import { Methods } from '@safe-global/safe-apps-sdk'
 
 import { trackSafeAppOpenCount } from '@/services/safe-apps/track-app-usage-count'
 import { TxEvent, txSubscribe } from '@/services/tx/txEvents'
-import { SAFE_APPS_EVENTS, trackSafeAppEvent } from '@/services/analytics'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import { useSafeAppFromBackend } from '@/hooks/safe-apps/useSafeAppFromBackend'
 import useChainId from '@/hooks/useChainId'
@@ -27,9 +26,7 @@ import { useSafePermissions } from '@/hooks/safe-apps/permissions'
 import { useCurrentChain } from '@/hooks/useChains'
 import { isSameUrl } from '@/utils/url'
 import useTransactionQueueBarState from '@/components/safe-apps/AppFrame/useTransactionQueueBarState'
-import { gtmTrackPageview } from '@/services/analytics/gtm'
 import useThirdPartyCookies from './useThirdPartyCookies'
-import useAnalyticsFromSafeApp from './useFromAppAnalytics'
 import useAppIsLoading from './useAppIsLoading'
 import useAppCommunicator, { CommunicatorMessages } from './useAppCommunicator'
 import { ThirdPartyCookiesWarning } from './ThirdPartyCookiesWarning'
@@ -84,7 +81,6 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
   const [remoteApp, , isBackendAppsLoading] = useSafeAppFromBackend(appUrl, safe.chainId)
   const { thirdPartyCookiesDisabled, setThirdPartyCookiesDisabled } = useThirdPartyCookies()
   const { iframeRef, appIsLoading, isLoadingSlow, setAppIsLoading } = useAppIsLoading()
-  useAnalyticsFromSafeApp(iframeRef)
   const { getPermissions, hasPermission, permissionsRequest, setPermissionsRequest, confirmPermissionRequest } =
     useSafePermissions()
   const appName = useMemo(() => (remoteApp ? remoteApp.name : appUrl), [appUrl, remoteApp])
@@ -94,7 +90,6 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
     setCurrentRequestId((prevId) => {
       if (prevId) {
         communicator?.send(CommunicatorMessages.REJECT_TRANSACTION_MESSAGE, prevId, true)
-        trackSafeAppEvent(SAFE_APPS_EVENTS.PROPOSE_TRANSACTION_REJECTED, appName)
       }
       return undefined
     })
@@ -237,24 +232,11 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
     }
 
     setAppIsLoading(false)
-    gtmTrackPageview(`${router.pathname}?appUrl=${router.query.appUrl}`, router.asPath)
-  }, [appUrl, iframeRef, setAppIsLoading, router])
-
-  useEffect(() => {
-    if (!appIsLoading && !isBackendAppsLoading) {
-      trackSafeAppEvent(
-        {
-          ...SAFE_APPS_EVENTS.OPEN_APP,
-        },
-        appName,
-      )
-    }
-  }, [appIsLoading, isBackendAppsLoading, appName])
+  }, [appUrl, iframeRef, setAppIsLoading])
 
   useEffect(() => {
     const unsubscribe = txSubscribe(TxEvent.SAFE_APPS_REQUEST, async ({ safeAppRequestId, safeTxHash }) => {
       if (safeAppRequestId && currentRequestId === safeAppRequestId) {
-        trackSafeAppEvent(SAFE_APPS_EVENTS.PROPOSE_TRANSACTION, appName)
         communicator?.send({ safeTxHash }, safeAppRequestId)
       }
     })

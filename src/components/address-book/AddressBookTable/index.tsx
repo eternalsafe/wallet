@@ -16,8 +16,6 @@ import RemoveDialog from '@/components/address-book/RemoveDialog'
 import EthHashInfo from '@/components/common/EthHashInfo'
 import AddressBookHeader from '../AddressBookHeader'
 import useAddressBook from '@/hooks/useAddressBook'
-import Track from '@/components/common/Track'
-import { ADDRESS_BOOK_EVENTS } from '@/services/analytics/events/addressBook'
 import SvgIcon from '@mui/material/SvgIcon'
 import PagePlaceholder from '@/components/common/PagePlaceholder'
 import NoEntriesIcon from '@/public/images/address-book/no-entries.svg'
@@ -100,35 +98,29 @@ function AddressBookTable({ chain, setTxFlow }: AddressBookTableProps) {
         sticky: true,
         content: (
           <div className={tableCss.actions}>
-            <Track {...ADDRESS_BOOK_EVENTS.EDIT_ENTRY}>
-              <Tooltip title="Edit entry" placement="top">
-                <IconButton onClick={() => handleOpenModalWithValues(ModalType.ENTRY, address, name)} size="small">
-                  <SvgIcon component={EditIcon} inheritViewBox color="border" fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Track>
+            <Tooltip title="Edit entry" placement="top">
+              <IconButton onClick={() => handleOpenModalWithValues(ModalType.ENTRY, address, name)} size="small">
+                <SvgIcon component={EditIcon} inheritViewBox color="border" fontSize="small" />
+              </IconButton>
+            </Tooltip>
 
-            <Track {...ADDRESS_BOOK_EVENTS.DELETE_ENTRY}>
-              <Tooltip title="Delete entry" placement="top">
-                <IconButton onClick={() => handleOpenModalWithValues(ModalType.REMOVE, address, name)} size="small">
-                  <SvgIcon component={DeleteIcon} inheritViewBox color="error" fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Track>
+            <Tooltip title="Delete entry" placement="top">
+              <IconButton onClick={() => handleOpenModalWithValues(ModalType.REMOVE, address, name)} size="small">
+                <SvgIcon component={DeleteIcon} inheritViewBox color="error" fontSize="small" />
+              </IconButton>
+            </Tooltip>
 
             <CheckWallet>
               {(isOk) => (
-                <Track {...ADDRESS_BOOK_EVENTS.SEND}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    onClick={() => setTxFlow(<TokenTransferFlow recipient={address} />)}
-                    disabled={!isOk}
-                  >
-                    Send
-                  </Button>
-                </Track>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={() => setTxFlow(<TokenTransferFlow recipient={address} />)}
+                  disabled={!isOk}
+                >
+                  Send
+                </Button>
               )}
             </CheckWallet>
           </div>

@@ -9,8 +9,6 @@ import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import InfoIcon from '@/public/images/notifications/info.svg'
-import { trackEvent } from '@/services/analytics'
-import { RECOVERY_EVENTS } from '@/services/analytics/events/recovery'
 import { Errors, logError } from '@/services/exceptions'
 import { getRecoveryUpsertTransactions } from '@/features/recovery/services/setup'
 import { useWeb3ReadOnly } from '@/hooks/wallets/web3'
@@ -35,15 +33,6 @@ const getAddressType = async (address: string, chainId: string) => {
   if (isSafeContract) return AddressType.Safe
 
   return AddressType.Other
-}
-
-const onSubmit = async (isEdit: boolean, params: UpsertRecoveryFlowProps, chainId: string) => {
-  const addressType = await getAddressType(params.recoverer, chainId)
-  const creationEvent = isEdit ? RECOVERY_EVENTS.SUBMIT_RECOVERY_EDIT : RECOVERY_EVENTS.SUBMIT_RECOVERY_CREATE
-  const settings = `delay_${params.delay},expiry_${params.expiry},type_${addressType}`
-
-  trackEvent({ ...creationEvent })
-  trackEvent({ ...RECOVERY_EVENTS.RECOVERY_SETTINGS, label: settings })
 }
 
 export function UpsertRecoveryFlowReview({
@@ -90,7 +79,7 @@ export function UpsertRecoveryFlowReview({
   const isEdit = !!moduleAddress
 
   return (
-    <SignOrExecuteForm onSubmit={() => onSubmit(isEdit, params, safe.chainId)}>
+    <SignOrExecuteForm>
       <Typography>
         This transaction will {moduleAddress ? 'update' : 'enable'} the Account recovery feature once executed.
       </Typography>
