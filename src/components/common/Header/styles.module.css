@@ -36,15 +36,11 @@
   align-items: flex-start;
 }
 
-.logo svg {
-  width: auto;
-  display: block;
-  color: var(--color-logo-main);
-  height: 20px;
-}
-
 .logo {
   padding: var(--space-2);
+  font-family: 'DM Sans';
+  font-weight: 700;
+  font-size: 28px;
 }
 
 .menuButton {
