@@ -29,17 +29,17 @@ const NewSafe = () => {
             </Box>
 
             <Typography variant="h1" fontSize={[44, null, 52]} lineHeight={1} letterSpacing={-1.5} color="static.main">
-              Unlock a new way of ownership
+              A decentralized UI for Safe.
             </Typography>
 
             <Typography mb={1} color="static.main">
-              The most trusted decentralized custody protocol and collective asset management platform.
+              You are currently interacting with Eternal Safe, a fork of {'Safe{Wallet}'}.
             </Typography>
 
             <ul className={css.bulletList}>
-              <BulletListItem text="Stealth security with multiple owners" />
-              <BulletListItem text="Make it yours with modules and guards" />
-              <BulletListItem text="Access 130+ ecosystem apps" />
+              <BulletListItem text="Requires no backend services" />
+              <BulletListItem text="Can be run completely locally" />
+              <BulletListItem text="Funded by the Safe Grants Program" />
             </ul>
           </div>
         </Grid>

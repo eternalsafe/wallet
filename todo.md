@@ -1,10 +1,10 @@
 ### Todo
 
-- [ ] Rip out home page
+- [ ] Ask for RPC URL in Safe Loading flow
+- [ ] Rip out dashboard home page and default to assets
 - [ ] Rip out notifications
 - [ ] Rip out Wallet Connect
 - [ ] Rip out Safe Apps
-- [ ] On welcome page, ask for RPC URL
 - [ ] Rip out safe creation
 - [ ] Update terms and other imprint
 
@@ -12,4 +12,6 @@
 
 ### Done ✓
 
+- [x] Update welcome page for Eternal Safe and only allow loading an already existing Safe
+- [x] Rename app
 - [x] Rip out analytics
