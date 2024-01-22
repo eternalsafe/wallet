@@ -1,8 +1,8 @@
 {
-  "name": "safe-wallet-web",
-  "homepage": "https://github.com/safe-global/safe-wallet-web",
+  "name": "eternal-safe",
+  "homepage": "https://github.com/devanoneth/eternal-safe",
   "license": "GPL-3.0",
-  "version": "1.26.2",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "next dev",

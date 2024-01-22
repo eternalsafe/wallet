@@ -41,9 +41,9 @@ export const createOnboard = (
     },
 
     appMetadata: {
-      name: 'Safe{Wallet}',
+      name: 'Eternal Safe',
       icon: location.origin + '/images/logo-round.svg',
-      description: 'Safe{Wallet} – smart contract wallet for Ethereum (ex-Gnosis Safe multisig)',
+      description: 'Eternal Safe is a decentralized fork of Safe{Wallet}.',
       recommendedInjectedWallets: getRecommendedInjectedWallets(),
     },
 
