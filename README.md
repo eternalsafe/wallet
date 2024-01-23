@@ -1,11 +1,14 @@
 # WIP: Eternal Safe
 
-[![License](https://img.shields.io/github/license/safe-global/safe-wallet-web)](https://github.com/safe-global/safe-wallet-web/blob/main/LICENSE)
-![Tests](https://img.shields.io/github/actions/workflow/status/safe-global/safe-wallet-web/test.yml?branch=main&label=tests)
-![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/safe-global/safe-wallet-web)
-[![GitPOAP Badge](https://public-api.gitpoap.io/v1/repo/safe-global/safe-wallet-web/badge)](https://www.gitpoap.io/gh/safe-global/safe-wallet-web)
+[![License](https://img.shields.io/github/license/devanoneth/eternal-safe)](https://github.com/devanoneth/eternal-safe/blob/main/LICENSE)
+![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/devanoneth/eternal-safe)
 
-The default Safe web interface.
+Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-global/safe-wallet-web). Funded by the [Safe Grants Program](https://app.charmverse.io/safe-grants-program/page-005239065690887612).
+
+## Differences with Safe{Wallet}
+
+- No analytics
+- No backend services needed, directly read/write onchain
 
 ## Contributing
 
