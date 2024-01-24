@@ -19,7 +19,7 @@ const IndexPage: NextPage = () => {
 
     router.replace(
       safeAddress
-        ? `${AppRoutes.home}?safe=${safeAddress}`
+        ? `${AppRoutes.balances.index}?safe=${safeAddress}`
         : chain
         ? `${AppRoutes.welcome.index}?chain=${chain}`
         : AppRoutes.welcome.index,

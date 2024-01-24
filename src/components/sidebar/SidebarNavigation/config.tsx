@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react'
 import React from 'react'
 import { AppRoutes } from '@/config/routes'
-import HomeIcon from '@/public/images/sidebar/home.svg'
 import AssetsIcon from '@/public/images/sidebar/assets.svg'
 import TransactionIcon from '@/public/images/sidebar/transactions.svg'
 import ABIcon from '@/public/images/sidebar/address-book.svg'
@@ -16,11 +15,6 @@ export type NavItem = {
 }
 
 export const navItems: NavItem[] = [
-  {
-    label: 'Home',
-    icon: <SvgIcon component={HomeIcon} inheritViewBox />,
-    href: AppRoutes.home,
-  },
   {
     label: 'Assets',
     icon: <SvgIcon component={AssetsIcon} inheritViewBox />,

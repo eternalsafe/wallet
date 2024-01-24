@@ -19,7 +19,7 @@ const WcPage: NextPage = () => {
     router.replace(
       lastSafe
         ? {
-            pathname: AppRoutes.home,
+            pathname: AppRoutes.balances.index,
             query: {
               safe: lastSafe,
               [WC_URI_SEARCH_PARAM]: uri,

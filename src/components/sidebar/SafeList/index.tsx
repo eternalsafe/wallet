@@ -91,7 +91,11 @@ const SafeList = ({ closeDrawer }: { closeDrawer?: () => void }): ReactElement =
   const getHref = useCallback(
     (chain: ChainInfo, address: string) => {
       return {
-        pathname: isWelcomePage ? AppRoutes.home : isSingleTxPage ? AppRoutes.transactions.history : router.pathname,
+        pathname: isWelcomePage
+          ? AppRoutes.balances.index
+          : isSingleTxPage
+          ? AppRoutes.transactions.history
+          : router.pathname,
         query: { ...router.query, safe: `${chain.shortName}:${address}` },
       }
     },

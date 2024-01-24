@@ -4,7 +4,6 @@ import useAsync from './useAsync'
 import { selectTxQueue, selectQueuedTransactionsByNonce } from '@/store/txQueueSlice'
 import useSafeInfo from './useSafeInfo'
 import { isTransactionListItem } from '@/utils/transaction-guards'
-import { useRecoveryQueue } from '../features/recovery/hooks/useRecoveryQueue'
 
 const useTxQueue = (
   pageUrl?: string,
@@ -43,8 +42,7 @@ const useTxQueue = (
 export const useQueuedTxsLength = (): string => {
   const queue = useAppSelector(selectTxQueue)
   const { length } = queue.data?.results.filter(isTransactionListItem) ?? []
-  const recoveryQueueSize = useRecoveryQueue().length
-  const totalSize = length + recoveryQueueSize
+  const totalSize = length
   if (!totalSize) return ''
   const hasNextPage = queue.data?.next != null
   return `${totalSize}${hasNextPage ? '+' : ''}`

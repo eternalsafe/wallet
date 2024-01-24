@@ -59,7 +59,6 @@ type TxLayoutProps = {
   isBatch?: boolean
   isReplacement?: boolean
   isMessage?: boolean
-  isRecovery?: boolean
 }
 
 const TxLayout = ({

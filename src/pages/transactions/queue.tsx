@@ -7,7 +7,6 @@ import BatchExecuteButton from '@/components/transactions/BatchExecuteButton'
 import { Box } from '@mui/material'
 import { BatchExecuteHoverProvider } from '@/components/transactions/BatchExecuteButton/BatchExecuteHoverProvider'
 import { usePendingTxsQueue, useShowUnsignedQueue } from '@/hooks/usePendingTxs'
-import RecoveryList from '@/features/recovery/components/RecoveryList'
 
 const Queue: NextPage = () => {
   const showPending = useShowUnsignedQueue()
@@ -25,8 +24,6 @@ const Queue: NextPage = () => {
 
         <main>
           <Box mb={4}>
-            <RecoveryList />
-
             {/* Pending unsigned transactions */}
             {showPending && <PaginatedTxns useTxns={usePendingTxsQueue} />}
 

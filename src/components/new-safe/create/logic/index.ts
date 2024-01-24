@@ -249,7 +249,7 @@ export const getRedirect = (
 
   // Go to the dashboard if no specific redirect is provided
   if (!redirectUrl) {
-    return { pathname: AppRoutes.home, query: { safe: address, [CREATION_MODAL_QUERY_PARM]: true } }
+    return { pathname: AppRoutes.balances.index, query: { safe: address, [CREATION_MODAL_QUERY_PARM]: true } }
   }
 
   // Otherwise, redirect to the provided URL (e.g. from a Safe App)

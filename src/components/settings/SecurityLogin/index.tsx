@@ -4,20 +4,13 @@ import SocialSignerExport from './SocialSignerExport'
 import useWallet from '@/hooks/wallets/useWallet'
 import { isSocialLoginWallet } from '@/services/mpc/SocialLoginModule'
 import SpendingLimits from '../SpendingLimits'
-import dynamic from 'next/dynamic'
-import { useIsRecoverySupported } from '@/features/recovery/hooks/useIsRecoverySupported'
-
-const RecoverySettings = dynamic(() => import('@/features/recovery/components/RecoverySettings'))
 
 const SecurityLogin = () => {
-  const isRecoverySupported = useIsRecoverySupported()
   const wallet = useWallet()
   const isSocialLogin = isSocialLoginWallet(wallet?.label)
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      {isRecoverySupported && <RecoverySettings />}
-
       {isSocialLogin && (
         <>
           <Paper sx={{ p: 4 }}>

@@ -3,7 +3,6 @@ import type { Transaction, TransactionListItem } from '@safe-global/safe-gateway
 
 import { isConflictHeaderListItem, isNoneConflictType, isTransactionListItem } from '@/utils/transaction-guards'
 import { sameAddress } from './addresses'
-import type { RecoveryQueueItem } from '@/features/recovery/services/recovery-state'
 
 type GroupedTxs = Array<TransactionListItem | Transaction[]>
 
@@ -44,24 +43,6 @@ export function _getRecoveryCancellations(moduleAddress: string, transactions: A
       txInfo.methodName === CANCELLATION_TX_METHOD_NAME
     )
   })
-}
-
-type GroupedRecoveryQueueItem = Transaction | RecoveryQueueItem
-
-export function groupRecoveryTransactions(queue: Array<TransactionListItem>, recoveryQueue: Array<RecoveryQueueItem>) {
-  const transactions = queue.filter(isTransactionListItem)
-
-  return recoveryQueue.reduce<Array<RecoveryQueueItem | Array<GroupedRecoveryQueueItem>>>((acc, item) => {
-    const cancellations = _getRecoveryCancellations(item.address, transactions)
-
-    if (cancellations.length === 0) {
-      acc.push(item)
-    } else {
-      acc.push([item, ...cancellations])
-    }
-
-    return acc
-  }, [])
 }
 
 export const getLatestTransactions = (list: TransactionListItem[] = []): Transaction[] => {
