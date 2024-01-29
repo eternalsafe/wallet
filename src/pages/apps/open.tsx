@@ -17,10 +17,6 @@ import { AppRoutes } from '@/config/routes'
 import { getOrigin } from '@/components/safe-apps/utils'
 import { useHasFeature } from '@/hooks/useChains'
 import { FEATURES } from '@/utils/chains'
-import { openWalletConnect } from '@/features/walletconnect/components'
-
-// TODO: Remove this once we properly deprecate the WC app
-const WC_SAFE_APP = /wallet-connect/
 
 const SafeApps: NextPage = () => {
   const chainId = useChainId()
@@ -28,7 +24,6 @@ const SafeApps: NextPage = () => {
   const appUrl = useSafeAppUrl()
   const { safeApp, isLoading } = useSafeAppFromManifest(appUrl || '', chainId)
   const isSafeAppsEnabled = useHasFeature(FEATURES.SAFE_APPS)
-  const isWalletConnectEnabled = useHasFeature(FEATURES.NATIVE_WALLETCONNECT)
 
   const { remoteSafeApps, remoteSafeAppsLoading } = useSafeApps()
 
@@ -59,12 +54,6 @@ const SafeApps: NextPage = () => {
 
   // appUrl is required to be present
   if (!isSafeAppsEnabled || !appUrl || !router.isReady) return null
-
-  if (isWalletConnectEnabled && WC_SAFE_APP.test(appUrl)) {
-    openWalletConnect()
-    goToList()
-    return null
-  }
 
   if (isModalVisible) {
     return (

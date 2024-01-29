@@ -1,8 +1,7 @@
 ### Todo
 
 - [ ] Ask for RPC URL in Safe Loading flow
-- [ ] Rip out notifications
-- [ ] Rip out Wallet Connect
+- [ ] Rip out notification
 - [ ] Rip out Safe Apps
 - [ ] Rip out Safe creation
 - [ ] Update terms and other imprint
@@ -16,6 +15,7 @@
 
 ### Done ✓
 
+- [x] Rip out Wallet Connect
 - [x] Rip out Safe token
 - [x] Rip out recovery module flow
 - [x] Rip out dashboard home page and default to assets

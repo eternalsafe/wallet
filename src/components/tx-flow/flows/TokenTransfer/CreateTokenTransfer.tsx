@@ -119,3 +119,5 @@ export const CreateTokenTransfer = ({
     </TxCard>
   )
 }
+
+export default CreateTokenTransfer
