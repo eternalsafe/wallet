@@ -5,7 +5,6 @@
 - [ ] Rip out Wallet Connect
 - [ ] Rip out Safe Apps
 - [ ] Rip out Safe creation
-- [ ] Rip out Safe token
 - [ ] Update terms and other imprint
 - [ ] Implement magic link with signatures
 - [ ] Query all data via contracts rather than API
@@ -17,8 +16,13 @@
 
 ### Done ✓
 
+- [x] Rip out Safe token
 - [x] Rip out recovery module flow
 - [x] Rip out dashboard home page and default to assets
 - [x] Update welcome page for Eternal Safe and only allow loading an already existing Safe
 - [x] Rename app
 - [x] Rip out analytics
+
+### Future
+
+- Dappnode package
