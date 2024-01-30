@@ -3,7 +3,6 @@ import { getExplorerLink } from './gateway'
 
 export enum FEATURES {
   ERC721 = 'ERC721',
-  SAFE_APPS = 'SAFE_APPS',
   CONTRACT_INTERACTION = 'CONTRACT_INTERACTION',
   DOMAIN_LOOKUP = 'DOMAIN_LOOKUP',
   SPENDING_LIMIT = 'SPENDING_LIMIT',

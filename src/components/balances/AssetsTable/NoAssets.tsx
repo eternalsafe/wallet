@@ -5,7 +5,6 @@ import { useCurrentChain } from '@/hooks/useChains'
 import useSafeAddress from '@/hooks/useSafeAddress'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { selectSettings, setQrShortName } from '@/store/settingsSlice'
-import BuyCryproButton from '@/components/common/BuyCryproButton'
 
 const NoAssets = () => {
   const safeAddress = useSafeAddress()
@@ -38,16 +37,10 @@ const NoAssets = () => {
             Add funds to get started
           </Typography>
 
-          <Typography>
-            Add funds directly from your bank account or copy your address to send tokens from a different account.
-          </Typography>
+          <Typography>Copy your address to send tokens from a different account.</Typography>
 
           <Box bgcolor="background.main" p={2} borderRadius="6px" alignSelf="flex-start" fontSize="14px">
             <EthHashInfo address={safeAddress} shortAddress={false} showCopyButton hasExplorer avatarSize={24} />
-          </Box>
-
-          <Box alignSelf="flex-start">
-            <BuyCryproButton />
           </Box>
         </Grid>
       </Grid>

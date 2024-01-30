@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import Head from 'next/head'
-import { FEATURES } from '@safe-global/safe-gateway-typescript-sdk'
 import { useRouter } from 'next/router'
 import type { NextPage } from 'next'
 
@@ -9,7 +8,7 @@ import TxHeader from '@/components/transactions/TxHeader'
 import SignedMessagesHelpLink from '@/components/transactions/SignedMessagesHelpLink'
 import { AppRoutes } from '@/config/routes'
 import { useCurrentChain } from '@/hooks/useChains'
-import { hasFeature } from '@/utils/chains'
+import { FEATURES, hasFeature } from '@/utils/chains'
 
 const Messages: NextPage = () => {
   const chain = useCurrentChain()

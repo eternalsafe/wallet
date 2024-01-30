@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { Button, type ButtonProps } from '@mui/material'
 
-import { useTxBuilderApp } from '@/hooks/safe-apps/useTxBuilderApp'
 import { AppRoutes } from '@/config/routes'
 import { useContext } from 'react'
 import { TxModalContext } from '..'
@@ -31,25 +30,6 @@ export const SendNFTsButton = () => {
     <Link href={{ pathname: AppRoutes.balances.nfts, query: { safe: router.query.safe } }} passHref legacyBehavior>
       <Button variant="contained" sx={buttonSx} fullWidth onClick={onClick}>
         Send NFTs
-      </Button>
-    </Link>
-  )
-}
-
-export const TxBuilderButton = () => {
-  const txBuilder = useTxBuilderApp()
-  const router = useRouter()
-  const { setTxFlow } = useContext(TxModalContext)
-
-  if (!txBuilder?.app) return null
-
-  const isTxBuilder = typeof txBuilder.link.query === 'object' && router.query.appUrl === txBuilder.link.query?.appUrl
-  const onClick = isTxBuilder ? () => setTxFlow(undefined) : undefined
-
-  return (
-    <Link href={txBuilder.link} passHref style={{ width: '100%' }}>
-      <Button variant="outlined" sx={buttonSx} fullWidth onClick={onClick}>
-        Transaction Builder
       </Button>
     </Link>
   )

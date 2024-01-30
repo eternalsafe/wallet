@@ -1,6 +1,5 @@
 import { CircularProgress, Typography, Button, CardActions, Divider, Alert } from '@mui/material'
 import useAsync from '@/hooks/useAsync'
-import { FEATURES } from '@safe-global/safe-gateway-typescript-sdk'
 import type { TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
 import { getReadOnlyMultiSendCallOnlyContract } from '@/services/contracts/safeContracts'
 import { useCurrentChain } from '@/hooks/useChains'
@@ -29,7 +28,7 @@ import ConfirmationTitle, { ConfirmationTitleTypes } from '@/components/tx/SignO
 import commonCss from '@/components/tx-flow/common/styles.module.css'
 import { TxModalContext } from '@/components/tx-flow'
 import useGasPrice from '@/hooks/useGasPrice'
-import { hasFeature } from '@/utils/chains'
+import { FEATURES, hasFeature } from '@/utils/chains'
 import type { PayableOverrides } from 'ethers'
 
 export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {

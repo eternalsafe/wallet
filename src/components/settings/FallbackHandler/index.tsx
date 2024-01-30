@@ -1,5 +1,4 @@
-import NextLink from 'next/link'
-import { Typography, Box, Grid, Paper, Link, Alert } from '@mui/material'
+import { Typography, Box, Grid, Paper, Alert } from '@mui/material'
 import semverSatisfies from 'semver/functions/satisfies'
 import { useMemo } from 'react'
 import type { ReactElement } from 'react'
@@ -9,13 +8,11 @@ import useSafeInfo from '@/hooks/useSafeInfo'
 import { getFallbackHandlerContractDeployment } from '@/services/contracts/deployments'
 import { HelpCenterArticle } from '@/config/constants'
 import ExternalLink from '@/components/common/ExternalLink'
-import { useTxBuilderApp } from '@/hooks/safe-apps/useTxBuilderApp'
 
 const FALLBACK_HANDLER_VERSION = '>=1.1.1'
 
 export const FallbackHandler = (): ReactElement | null => {
   const { safe } = useSafeInfo()
-  const txBuilder = useTxBuilderApp()
 
   const supportsFallbackHandler = !!safe.version && semverSatisfies(safe.version, FALLBACK_HANDLER_VERSION)
 
@@ -32,32 +29,10 @@ export const FallbackHandler = (): ReactElement | null => {
     hasFallbackHandler && safe.fallbackHandler?.value === fallbackHandlerDeployment?.networkAddresses[safe.chainId]
 
   const warning = !hasFallbackHandler ? (
-    <>
-      The {'Safe{Wallet}'} may not work correctly as no fallback handler is currently set.
-      {txBuilder && (
-        <>
-          {' '}
-          It can be set via the{' '}
-          <NextLink href={txBuilder.link} passHref legacyBehavior>
-            <Link>Transaction Builder</Link>
-          </NextLink>
-          .
-        </>
-      )}
-    </>
+    <>The {'Safe{Wallet}'} may not work correctly as no fallback handler is currently set.</>
   ) : !isOfficial ? (
     <>
       An <b>unofficial</b> fallback handler is currently set.
-      {txBuilder && (
-        <>
-          {' '}
-          It can be altered via the{' '}
-          <NextLink href={txBuilder.link} passHref legacyBehavior>
-            <Link>Transaction Builder</Link>
-          </NextLink>
-          .
-        </>
-      )}
     </>
   ) : undefined
 

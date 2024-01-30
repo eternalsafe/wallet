@@ -2,7 +2,6 @@
 
 - [ ] Ask for RPC URL in Safe Loading flow
 - [ ] Rip out notification
-- [ ] Rip out Safe Apps
 - [ ] Rip out Safe creation
 - [ ] Update terms and other imprint
 - [ ] Implement magic link with signatures
@@ -15,6 +14,7 @@
 
 ### Done ✓
 
+- [x] Rip out Safe Apps
 - [x] Rip out Wallet Connect
 - [x] Rip out Safe token
 - [x] Rip out recovery module flow
@@ -25,4 +25,6 @@
 
 ### Future
 
+- Custom contract interactions via built-in version of [tx-builder](https://github.com/safe-global/safe-react-apps/tree/development/apps/tx-builder)
+- Allow onchain message signing
 - Dappnode package

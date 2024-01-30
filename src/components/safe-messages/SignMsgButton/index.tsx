@@ -1,5 +1,4 @@
 import { Button, Tooltip, IconButton } from '@mui/material'
-import { useContext } from 'react'
 import CheckIcon from '@mui/icons-material/Check'
 import type { SyntheticEvent, ReactElement } from 'react'
 import type { SafeMessage } from '@safe-global/safe-gateway-typescript-sdk'
@@ -7,18 +6,16 @@ import type { SafeMessage } from '@safe-global/safe-gateway-typescript-sdk'
 import useWallet from '@/hooks/wallets/useWallet'
 import useIsSafeMessageSignableBy from '@/hooks/messages/useIsSafeMessageSignableBy'
 import useIsSafeMessagePending from '@/hooks/messages/useIsSafeMessagePending'
-import { TxModalContext } from '@/components/tx-flow'
-import { SignMessageFlow } from '@/components/tx-flow/flows'
+
+// TODO(devanon): maybe remove all of the safe-messages stuff if we don't need it
 
 const SignMsgButton = ({ msg, compact = false }: { msg: SafeMessage; compact?: boolean }): ReactElement => {
   const wallet = useWallet()
   const isSignable = useIsSafeMessageSignableBy(msg, wallet?.address || '')
   const isPending = useIsSafeMessagePending(msg.messageHash)
-  const { setTxFlow } = useContext(TxModalContext)
 
   const onClick = (e: SyntheticEvent) => {
     e.stopPropagation()
-    setTxFlow(<SignMessageFlow {...msg} />)
   }
 
   const isDisabled = !isSignable || isPending

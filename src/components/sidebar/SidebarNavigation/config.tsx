@@ -4,7 +4,6 @@ import { AppRoutes } from '@/config/routes'
 import AssetsIcon from '@/public/images/sidebar/assets.svg'
 import TransactionIcon from '@/public/images/sidebar/transactions.svg'
 import ABIcon from '@/public/images/sidebar/address-book.svg'
-import AppsIcon from '@/public/images/apps/apps-icon.svg'
 import SettingsIcon from '@/public/images/sidebar/settings.svg'
 import { SvgIcon } from '@mui/material'
 
@@ -29,11 +28,6 @@ export const navItems: NavItem[] = [
     label: 'Address book',
     icon: <SvgIcon component={ABIcon} inheritViewBox />,
     href: AppRoutes.addressBook,
-  },
-  {
-    label: 'Apps',
-    icon: <SvgIcon component={AppsIcon} inheritViewBox />,
-    href: AppRoutes.apps.index,
   },
   {
     label: 'Settings',
@@ -90,10 +84,6 @@ export const settingsNavItems = [
     href: AppRoutes.settings.modules,
   },
   {
-    label: 'Safe Apps',
-    href: AppRoutes.settings.safeApps.index,
-  },
-  {
     label: 'Data',
     href: AppRoutes.settings.data,
   },
@@ -127,16 +117,5 @@ export const generalSettingsNavItems = [
   {
     label: 'Environment variables',
     href: AppRoutes.settings.environmentVariables,
-  },
-]
-
-export const safeAppsNavItems = [
-  {
-    label: 'All apps',
-    href: AppRoutes.apps.index,
-  },
-  {
-    label: 'My custom apps',
-    href: AppRoutes.apps.custom,
   },
 ]

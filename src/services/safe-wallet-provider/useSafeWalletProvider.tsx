@@ -1,39 +1,24 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { BigNumber } from 'ethers'
 import { useRouter } from 'next/router'
 
-import { RpcErrorCode } from '.'
-import type { AppInfo, WalletSDK } from '.'
+import type { WalletSDK } from '.'
 import { SafeWalletProvider } from '.'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import { TxModalContext } from '@/components/tx-flow'
-import { SignMessageFlow } from '@/components/tx-flow/flows'
-import { safeMsgSubscribe, SafeMsgEvent } from '@/services/safe-messages/safeMsgEvents'
-import { SafeAppsTxFlow } from '@/components/tx-flow/flows'
 import { TxEvent, txSubscribe } from '@/services/tx/txEvents'
-import { Methods } from '@safe-global/safe-apps-sdk'
-import type { EIP712TypedData, SafeSettings } from '@safe-global/safe-apps-sdk'
+import type { SafeSettings } from '@safe-global/safe-apps-sdk'
 import { useWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { getTransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
-import { getAddress } from 'ethers/lib/utils'
 import { AppRoutes } from '@/config/routes'
-import useChains, { useCurrentChain } from '@/hooks/useChains'
-import { NotificationMessages, showNotification } from './notifications'
-import { SignMessageOnChainFlow } from '@/components/tx-flow/flows'
-import { useAppSelector } from '@/store'
-import { selectOnChainSigning } from '@/store/settingsSlice'
-import { isOffchainEIP1271Supported } from '@/utils/safe-messages'
+import useChains from '@/hooks/useChains'
 
 export const _useTxFlowApi = (chainId: string, safeAddress: string): WalletSDK | undefined => {
-  const { safe } = useSafeInfo()
-  const currentChain = useCurrentChain()
   const { setTxFlow } = useContext(TxModalContext)
   const web3ReadOnly = useWeb3ReadOnly()
   const router = useRouter()
   const { configs } = useChains()
   const pendingTxs = useRef<Record<string, string>>({})
 
-  const onChainSigning = useAppSelector(selectOnChainSigning)
   const [settings, setSettings] = useState<SafeSettings>({
     offChainSigning: true,
   })
@@ -49,110 +34,19 @@ export const _useTxFlowApi = (chainId: string, safeAddress: string): WalletSDK |
   return useMemo<WalletSDK | undefined>(() => {
     if (!chainId || !safeAddress) return
 
-    const signMessage = (
-      message: string | EIP712TypedData,
-      appInfo: AppInfo,
-      method: Methods.signMessage | Methods.signTypedMessage,
-    ): Promise<{ signature: string }> => {
-      const id = Math.random().toString(36).slice(2)
-      const shouldSignOffChain =
-        isOffchainEIP1271Supported(safe, currentChain) && !onChainSigning && settings.offChainSigning
-
-      const { title, options } = NotificationMessages.SIGNATURE_REQUEST(appInfo)
-      showNotification(title, options)
-
-      return new Promise((resolve, reject) => {
-        let onClose = () => {
-          reject({
-            code: RpcErrorCode.USER_REJECTED,
-            message: 'User rejected signature',
-          })
-          unsubscribe()
-        }
-
-        const unsubscribeSignaturePrepared = safeMsgSubscribe(
-          SafeMsgEvent.SIGNATURE_PREPARED,
-          ({ requestId, signature }) => {
-            if (requestId === id) {
-              resolve({ signature })
-              unsubscribe()
-            }
-          },
-        )
-
-        const unsubscribe = () => {
-          onClose = () => {}
-          unsubscribeSignaturePrepared()
-        }
-
-        if (shouldSignOffChain) {
-          setTxFlow(
-            <SignMessageFlow
-              logoUri={appInfo.iconUrl}
-              name={appInfo.name}
-              message={message}
-              requestId={id}
-              safeAppId={appInfo.id}
-            />,
-            onClose,
-          )
-        } else {
-          setTxFlow(<SignMessageOnChainFlow props={{ requestId: id, message, method }} />, onClose)
-        }
-      })
-    }
+    //TODO(devanon): maybe remove this completely?
 
     return {
       async signMessage(message, appInfo) {
-        return await signMessage(message, appInfo, Methods.signMessage)
+        throw Error('Not implemented')
       },
 
       async signTypedMessage(typedData, appInfo) {
-        return await signMessage(typedData as EIP712TypedData, appInfo, Methods.signTypedMessage)
+        throw Error('Not implemented')
       },
 
       async send(params: { txs: any[]; params: { safeTxGas: number } }, appInfo) {
-        const id = Math.random().toString(36).slice(2)
-
-        const transactions = params.txs.map(({ to, value, data }) => {
-          return {
-            to: getAddress(to),
-            value: BigNumber.from(value).toString(),
-            data,
-          }
-        })
-
-        const { title, options } = NotificationMessages.TRANSACTION_REQUEST(appInfo)
-        showNotification(title, options)
-
-        return new Promise((resolve, reject) => {
-          let onClose = () => {
-            reject({
-              code: RpcErrorCode.USER_REJECTED,
-              message: 'User rejected transaction',
-            })
-          }
-
-          const onSubmit = (txId: string, safeTxHash: string) => {
-            const txHash = pendingTxs.current[txId]
-            onClose = () => {}
-            resolve({ safeTxHash, txHash })
-          }
-
-          setTxFlow(
-            <SafeAppsTxFlow
-              data={{
-                appId: undefined,
-                app: appInfo,
-                requestId: id,
-                txs: transactions,
-                params: params.params,
-              }}
-              onSubmit={onSubmit}
-            />,
-            onClose,
-          )
-        })
+        throw Error('Not implemented')
       },
 
       async getBySafeTxHash(safeTxHash) {
@@ -198,7 +92,7 @@ export const _useTxFlowApi = (chainId: string, safeAddress: string): WalletSDK |
         return data.result
       },
     }
-  }, [chainId, safeAddress, safe, currentChain, onChainSigning, settings, setTxFlow, configs, router, web3ReadOnly])
+  }, [chainId, safeAddress, settings, configs, router, web3ReadOnly])
 }
 
 const useSafeWalletProvider = (): SafeWalletProvider | undefined => {
