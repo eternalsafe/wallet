@@ -34,7 +34,7 @@ export const _useTxFlowApi = (chainId: string, safeAddress: string): WalletSDK |
   return useMemo<WalletSDK | undefined>(() => {
     if (!chainId || !safeAddress) return
 
-    //TODO(devanon): maybe remove this completely?
+    // TODO(devanon): maybe remove this completely?
 
     return {
       async signMessage(message, appInfo) {

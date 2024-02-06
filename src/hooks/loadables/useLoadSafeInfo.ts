@@ -8,6 +8,10 @@ import useSafeInfo from '../useSafeInfo'
 import { Errors, logError } from '@/services/exceptions'
 import { POLLING_INTERVAL } from '@/config/constants'
 
+import Safe from '@safe-global/safe-core-sdk'
+import { ethers } from 'ethers'
+import EthersAdapter from '@safe-global/safe-ethers-lib'
+
 export const useLoadSafeInfo = (): AsyncResult<SafeInfo> => {
   const address = useSafeAddress()
   const chainId = useChainId()
@@ -15,8 +19,20 @@ export const useLoadSafeInfo = (): AsyncResult<SafeInfo> => {
   const { safe } = useSafeInfo()
   const isStoredSafeValid = safe.chainId === chainId && safe.address.value === address
 
-  const [data, error, loading] = useAsync<SafeInfo>(() => {
+  const [data, error, loading] = useAsync<SafeInfo | undefined>(async () => {
     if (!chainId || !address) return
+    // TODO(devanon): clean all this up, using hooks obviously, RPC endpoints, etc. just a test
+    const web3Provider = new ethers.providers.JsonRpcProvider('https://eth.merkle.io')
+
+    const ethAdapter = new EthersAdapter({
+      ethers,
+      signerOrProvider: web3Provider,
+    })
+
+    const safeSdk = await Safe.create({ ethAdapter, safeAddress: address })
+
+    console.log(await safeSdk.getNonce())
+
     return getSafeInfo(chainId, address)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chainId, address, pollCount])
