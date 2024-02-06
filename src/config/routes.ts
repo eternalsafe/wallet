@@ -20,7 +20,6 @@ export const AppRoutes = {
   settings: {
     setup: '/settings/setup',
     securityLogin: '/settings/security-login',
-    notifications: '/settings/notifications',
     modules: '/settings/modules',
     index: '/settings',
     environmentVariables: '/settings/environment-variables',
@@ -36,7 +35,6 @@ export const AppRoutes = {
     history: '/transactions/history',
   },
   welcome: {
-    socialLogin: '/welcome/social-login',
     index: '/welcome',
   },
 }

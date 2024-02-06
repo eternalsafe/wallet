@@ -7,12 +7,10 @@ import classnames from 'classnames'
 import css from './styles.module.css'
 import ConnectWallet from '@/components/common/ConnectWallet'
 import NetworkSelector from '@/components/common/NetworkSelector'
-import NotificationCenter from '@/components/notification-center/NotificationCenter'
 import { AppRoutes } from '@/config/routes'
 import Link from 'next/link'
 import useSafeAddress from '@/hooks/useSafeAddress'
-import BatchIndicator from '@/components/batch/BatchIndicator'
-import { PushNotificationsBanner } from '@/components/settings/PushNotifications/PushNotificationsBanner'
+// import BatchIndicator from '@/components/batch/BatchIndicator'
 
 type HeaderProps = {
   onMenuToggle?: Dispatch<SetStateAction<boolean>>
@@ -54,17 +52,12 @@ const Header = ({ onMenuToggle, onBatchToggle }: HeaderProps): ReactElement => {
         </Link>
       </div>
 
-      <div className={css.element}>
-        <PushNotificationsBanner>
-          <NotificationCenter />
-        </PushNotificationsBanner>
-      </div>
-
-      {safeAddress && (
+      {/* TODO(devanon): reintroduce once we support the transaction builder again */}
+      {/* {safeAddress && (
         <div className={classnames(css.element, css.hideMobile)}>
           <BatchIndicator onClick={handleBatchToggle} />
         </div>
-      )}
+      )} */}
 
       <div className={classnames(css.element, css.connectWallet)}>
         <ConnectWallet />

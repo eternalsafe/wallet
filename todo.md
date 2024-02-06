@@ -1,7 +1,6 @@
 ### Todo
 
 - [ ] Ask for RPC URL in Safe Loading flow
-- [ ] Rip out notification
 - [ ] Rip out Safe creation
 - [ ] Update terms and other imprint
 - [ ] Implement magic link with signatures
@@ -14,6 +13,8 @@
 
 ### Done ✓
 
+- [x] Rip out notifications
+- [x] Rip out social login
 - [x] Rip out Safe Apps
 - [x] Rip out Wallet Connect
 - [x] Rip out Safe token

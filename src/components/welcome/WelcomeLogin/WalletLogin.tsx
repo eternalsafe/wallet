@@ -1,6 +1,5 @@
 import useConnectWallet from '@/components/common/ConnectWallet/useConnectWallet'
 import useWallet from '@/hooks/wallets/useWallet'
-import { isSocialLoginWallet } from '@/services/mpc/SocialLoginModule'
 import { Box, Button, Typography } from '@mui/material'
 import EthHashInfo from '@/components/common/EthHashInfo'
 
@@ -8,9 +7,7 @@ const WalletLogin = ({ onLogin }: { onLogin: () => void }) => {
   const wallet = useWallet()
   const connectWallet = useConnectWallet()
 
-  const isSocialLogin = isSocialLoginWallet(wallet?.label)
-
-  if (wallet !== null && !isSocialLogin) {
+  if (wallet !== null) {
     return (
       <Box sx={{ width: '100%' }}>
         <Button variant="contained" sx={{ padding: '8px 16px' }} fullWidth onClick={onLogin}>

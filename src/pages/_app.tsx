@@ -1,6 +1,4 @@
 import { SentryErrorBoundary } from '@/services/sentry' // needs to be imported first
-import useRehydrateSocialWallet from '@/hooks/wallets/mpc/useRehydrateSocialWallet'
-import PasswordRecoveryModal from '@/services/mpc/PasswordRecoveryModal'
 import type { ReactNode } from 'react'
 import { type ReactElement } from 'react'
 import { type AppProps } from 'next/app'
@@ -51,7 +49,6 @@ const InitApp = (): null => {
   useSafeNotifications()
   useTxPendingStatuses()
   useSafeMessagePendingStatuses()
-  useRehydrateSocialWallet()
 
   return null
 }
@@ -108,8 +105,6 @@ const WebCoreApp = ({
           </PageLayout>
 
           <Notifications />
-
-          <PasswordRecoveryModal />
         </AppProviders>
       </CacheProvider>
     </StoreHydrator>

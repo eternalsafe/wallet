@@ -1,7 +1,7 @@
 import ErrorMessage from '@/components/tx/ErrorMessage'
 import useWalletCanPay from '@/hooks/useWalletCanPay'
 import { useMemo, useState } from 'react'
-import { Button, Grid, Typography, Divider, Box, Alert } from '@mui/material'
+import { Button, Grid, Typography, Divider, Box } from '@mui/material'
 import lightPalette from '@/components/theme/lightPalette'
 import ChainIndicator from '@/components/common/ChainIndicator'
 import EthHashInfo from '@/components/common/EthHashInfo'
@@ -23,15 +23,12 @@ import NetworkWarning from '@/components/new-safe/create/NetworkWarning'
 import useIsWrongChain from '@/hooks/useIsWrongChain'
 import ReviewRow from '@/components/new-safe/ReviewRow'
 import { ExecutionMethodSelector, ExecutionMethod } from '@/components/tx/ExecutionMethodSelector'
-import { MAX_HOUR_RELAYS, useLeastRemainingRelays } from '@/hooks/useRemainingRelays'
+import { useLeastRemainingRelays } from '@/hooks/useRemainingRelays'
 import classnames from 'classnames'
 import { hasRemainingRelays } from '@/utils/relaying'
 import { BigNumber } from 'ethers'
 import { usePendingSafe } from '../StatusStep/usePendingSafe'
 import { LATEST_SAFE_VERSION } from '@/config/constants'
-import { isSocialLoginWallet } from '@/services/mpc/SocialLoginModule'
-import { RELAY_SPONSORS } from '@/components/tx/SponsoredBy'
-import Image from 'next/image'
 import { type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 
 export const NetworkFee = ({
@@ -43,55 +40,22 @@ export const NetworkFee = ({
   chain: ChainInfo | undefined
   willRelay: boolean
 }) => {
-  const wallet = useWallet()
-
-  const isSocialLogin = isSocialLoginWallet(wallet?.label)
-
-  if (!isSocialLogin) {
-    return (
-      <Box
-        p={1}
-        sx={{
-          backgroundColor: lightPalette.secondary.background,
-          color: 'static.main',
-          width: 'fit-content',
-          borderRadius: '6px',
-        }}
-      >
-        <Typography variant="body1" className={classnames({ [css.sponsoredFee]: willRelay })}>
-          <b>
-            &asymp; {totalFee} {chain?.nativeCurrency.symbol}
-          </b>
-        </Typography>
-      </Box>
-    )
-  }
-
-  if (willRelay) {
-    const sponsor = RELAY_SPONSORS[chain?.chainId || ''] || RELAY_SPONSORS.default
-    return (
-      <>
-        <Typography fontWeight="bold">Free</Typography>
-        <Typography variant="body2">
-          Your account is sponsored by
-          <Image
-            data-testid="sponsor-icon"
-            src={sponsor.logo}
-            alt={sponsor.name}
-            width={16}
-            height={16}
-            style={{ margin: '-3px 0px -3px 4px' }}
-          />{' '}
-          {sponsor.name}
-        </Typography>
-      </>
-    )
-  }
-
   return (
-    <Alert severity="error">
-      You have used up your {MAX_HOUR_RELAYS} free transactions per hour. Please try again later.
-    </Alert>
+    <Box
+      p={1}
+      sx={{
+        backgroundColor: lightPalette.secondary.background,
+        color: 'static.main',
+        width: 'fit-content',
+        borderRadius: '6px',
+      }}
+    >
+      <Typography variant="body1" className={classnames({ [css.sponsoredFee]: willRelay })}>
+        <b>
+          &asymp; {totalFee} {chain?.nativeCurrency.symbol}
+        </b>
+      </Typography>
+    </Box>
   )
 }
 
@@ -174,8 +138,7 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
     onSubmit(pendingSafe)
   }
 
-  const isSocialLogin = isSocialLoginWallet(wallet?.label)
-  const isDisabled = isWrongChain || (isSocialLogin && !willRelay)
+  const isDisabled = isWrongChain
 
   return (
     <>
@@ -215,7 +178,7 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
 
       <Divider />
       <Box className={layoutCss.row} display="flex" flexDirection="column" gap={3}>
-        {canRelay && !isSocialLogin && (
+        {canRelay && (
           <Grid container spacing={3}>
             <ReviewRow
               name="Execution method"
@@ -237,7 +200,7 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
               <>
                 <NetworkFee totalFee={totalFee} willRelay={willRelay} chain={chain} />
 
-                {!willRelay && !isSocialLogin && (
+                {!willRelay && (
                   <Typography variant="body2" color="text.secondary" mt={1}>
                     You will have to confirm a transaction with your connected wallet.
                   </Typography>
