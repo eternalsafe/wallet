@@ -1,62 +1,54 @@
 import { useEffect } from 'react'
-import { useRouter } from 'next/router'
-import useSafeInfo from '@/hooks/useSafeInfo'
-import { initSafeSDK, setSafeSDK } from '@/hooks/coreSDK/safeCoreSDK'
+import { initSafeSDK, setSafeImplementation, setSafeSDK } from '@/hooks/coreSDK/safeCoreSDK'
 import { trackError } from '@/services/exceptions'
 import ErrorCodes from '@/services/exceptions/ErrorCodes'
 import { useAppDispatch } from '@/store'
 import { showNotification } from '@/store/notificationsSlice'
 import { useWeb3ReadOnly } from '@/hooks/wallets/web3'
-import { parsePrefixedAddress, sameAddress } from '@/utils/addresses'
 import { asError } from '@/services/exceptions/utils'
+import { useUrlChainId } from '@/hooks/useChainId'
+import useSafeAddress from '@/hooks/useSafeAddress'
+import { bytes32ToAddress } from '@/utils/addresses'
 
 export const useInitSafeCoreSDK = () => {
-  const { safe, safeLoaded } = useSafeInfo()
   const dispatch = useAppDispatch()
   const web3ReadOnly = useWeb3ReadOnly()
-
-  const { query } = useRouter()
-  const prefixedAddress = Array.isArray(query.safe) ? query.safe[0] : query.safe
-  const { address } = parsePrefixedAddress(prefixedAddress || '')
+  const address = useSafeAddress()
+  const chainId = useUrlChainId()
 
   useEffect(() => {
-    if (!safeLoaded || !web3ReadOnly || !sameAddress(address, safe.address.value)) {
+    if (!web3ReadOnly || !address || !chainId) {
       // If we don't reset the SDK, a previous Safe could remain in the store
+      setSafeImplementation(undefined)
       setSafeSDK(undefined)
       return
     }
 
-    // A read-only instance of the SDK is sufficient because we connect the signer to it when needed
-    initSafeSDK({
-      provider: web3ReadOnly,
-      chainId: safe.chainId,
-      address: safe.address.value,
-      version: safe.version,
-      implementationVersionState: safe.implementationVersionState,
-      implementation: safe.implementation.value,
-    })
-      .then(setSafeSDK)
-      .catch((_e) => {
-        const e = asError(_e)
-        dispatch(
-          showNotification({
-            message: 'Please try connecting your wallet again.',
-            groupKey: 'core-sdk-init-error',
-            variant: 'error',
-            detailedMessage: e.message,
-          }),
-        )
-        trackError(ErrorCodes._105, e.message)
+    // Get implementation address
+    web3ReadOnly.getStorageAt(address, 0).then((impl) => {
+      let implementation = bytes32ToAddress(impl)
+      setSafeImplementation(implementation)
+
+      // A read-only instance of the SDK is sufficient because we connect the signer to it when needed
+      initSafeSDK({
+        provider: web3ReadOnly,
+        chainId: chainId,
+        address: address,
+        implementation,
       })
-  }, [
-    address,
-    dispatch,
-    safe.address.value,
-    safe.chainId,
-    safe.implementation.value,
-    safe.implementationVersionState,
-    safe.version,
-    safeLoaded,
-    web3ReadOnly,
-  ])
+        .then(setSafeSDK)
+        .catch((_e) => {
+          const e = asError(_e)
+          dispatch(
+            showNotification({
+              message: 'Please try connecting your wallet again.',
+              groupKey: 'core-sdk-init-error',
+              variant: 'error',
+              detailedMessage: e.message,
+            }),
+          )
+          trackError(ErrorCodes._105, e.message)
+        })
+    })
+  }, [dispatch, address, chainId, web3ReadOnly])
 }

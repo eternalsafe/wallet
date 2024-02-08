@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { getSafeInfo, type SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
+import { ImplementationVersionState, type SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import useAsync, { type AsyncResult } from '../useAsync'
 import useSafeAddress from '../useSafeAddress'
 import { useChainId } from '../useChainId'
@@ -7,35 +7,56 @@ import useIntervalCounter from '../useIntervalCounter'
 import useSafeInfo from '../useSafeInfo'
 import { Errors, logError } from '@/services/exceptions'
 import { POLLING_INTERVAL } from '@/config/constants'
-
-import Safe from '@safe-global/safe-core-sdk'
-import { ethers } from 'ethers'
-import EthersAdapter from '@safe-global/safe-ethers-lib'
+import { useSafeImplementation, useSafeSDK } from '@/hooks/coreSDK/safeCoreSDK'
+import { addressEx } from '@/utils/addresses'
 
 export const useLoadSafeInfo = (): AsyncResult<SafeInfo> => {
   const address = useSafeAddress()
   const chainId = useChainId()
   const [pollCount, resetPolling] = useIntervalCounter(POLLING_INTERVAL)
+  const sdk = useSafeSDK()
+  const implementation = useSafeImplementation()
   const { safe } = useSafeInfo()
   const isStoredSafeValid = safe.chainId === chainId && safe.address.value === address
 
   const [data, error, loading] = useAsync<SafeInfo | undefined>(async () => {
-    if (!chainId || !address) return
-    // TODO(devanon): clean all this up, using hooks obviously, RPC endpoints, etc. just a test
-    const web3Provider = new ethers.providers.JsonRpcProvider('https://eth.merkle.io')
+    if (!chainId || !address || !sdk || !implementation) return
 
-    const ethAdapter = new EthersAdapter({
-      ethers,
-      signerOrProvider: web3Provider,
-    })
+    let [nonce, threshold, owners, modules, guard, fallbackHandler, version] = await Promise.all([
+      sdk.getNonce(),
+      sdk.getThreshold(),
+      sdk.getOwners(),
+      sdk.getModules(),
+      sdk.getGuard(),
+      sdk.getFallbackHandler(),
+      sdk.getContractVersion(),
+    ])
 
-    const safeSdk = await Safe.create({ ethAdapter, safeAddress: address })
+    let info: SafeInfo = {
+      address: { value: address },
+      chainId,
+      nonce,
+      threshold,
+      owners: owners.map(addressEx),
+      implementation: addressEx(implementation),
+      // TODO(devanon): Get version state: https://github.com/safe-global/safe-client-gateway/blob/main/src/routes/safes/safes.service.ts#L233
+      implementationVersionState: ImplementationVersionState.UP_TO_DATE,
 
-    console.log(await safeSdk.getNonce())
+      modules: modules.map(addressEx),
+      guard: addressEx(guard),
+      fallbackHandler: addressEx(fallbackHandler),
+      version,
 
-    return getSafeInfo(chainId, address)
+      // TODO(devanon): these tags are used to force a hook reload, probably not needed here but should check: https://github.com/safe-global/safe-client-gateway/blob/main/src/routes/safes/safes.service.ts#L103
+      collectiblesTag: '',
+      txQueuedTag: '',
+      txHistoryTag: '',
+      messagesTag: '',
+    }
+
+    return info
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chainId, address, pollCount])
+  }, [chainId, address, pollCount, sdk, implementation])
 
   // Reset the counter when safe address/chainId changes
   useEffect(() => {

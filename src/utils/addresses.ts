@@ -1,5 +1,6 @@
 import { getAddress } from 'ethers/lib/utils'
 import { isAddress } from '@ethersproject/address'
+import type { AddressEx } from '@safe-global/safe-gateway-typescript-sdk'
 /**
  * Checksums the given address
  * @param address ethereum address
@@ -65,4 +66,12 @@ export const cleanInputValue = (value: string): string => {
 
   // if no match, return the original value
   return value
+}
+
+export const addressEx = (address: string): AddressEx => {
+  return { value: address }
+}
+
+export const bytes32ToAddress = (bytes32: string): string => {
+  return checksumAddress(`0x${bytes32.slice(26)}`)
 }
