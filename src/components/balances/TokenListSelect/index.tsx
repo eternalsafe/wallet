@@ -2,11 +2,8 @@ import { useAppDispatch, useAppSelector } from '@/store'
 import { selectSettings, setTokenList, TOKEN_LISTS } from '@/store/settingsSlice'
 import { FEATURES } from '@/utils/chains'
 import type { SelectChangeEvent } from '@mui/material'
-import { Box, SvgIcon, Tooltip, Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
-import InfoIcon from '@/public/images/notifications/info.svg'
-import ExternalLink from '@/components/common/ExternalLink'
+import { Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
 import { OnboardingTooltip } from '@/components/common/OnboardingTooltip'
-import { HelpCenterArticle } from '@/config/constants'
 import { useHasFeature } from '@/hooks/useChains'
 
 const LS_TOKENLIST_ONBOARDING = 'tokenlist_onboarding'
@@ -38,9 +35,9 @@ const TokenListSelect = () => {
         widgetLocalStorageId={LS_TOKENLIST_ONBOARDING}
         text={
           <>
-            Spam filter on!
+            By default, we show only the most popular tokens.
             <br />
-            Switch to &quot;All tokens&quot; to see all of your tokens.
+            You can manually add tokens if they are not listed here.
           </>
         }
       >
@@ -56,18 +53,6 @@ const TokenListSelect = () => {
           <MenuItem value={TOKEN_LISTS.TRUSTED}>
             <Box display="flex" flexDirection="row" gap="4px" alignItems="center" minWidth={155}>
               {TokenListLabel.TRUSTED}
-              <Tooltip
-                arrow
-                title={
-                  <Typography>
-                    Learn more about <ExternalLink href={HelpCenterArticle.SPAM_TOKENS}>default tokens</ExternalLink>
-                  </Typography>
-                }
-              >
-                <span>
-                  <SvgIcon sx={{ display: 'block' }} color="border" fontSize="small" component={InfoIcon} />
-                </span>
-              </Tooltip>
             </Box>
           </MenuItem>
 

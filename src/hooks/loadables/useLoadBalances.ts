@@ -1,14 +1,17 @@
 import { useEffect, useMemo } from 'react'
-import { getBalances, type SafeBalanceResponse } from '@safe-global/safe-gateway-typescript-sdk'
+import { getBalances, TokenType, type SafeBalanceResponse } from '@safe-global/safe-gateway-typescript-sdk'
 import { useAppSelector } from '@/store'
 import useAsync, { type AsyncResult } from '../useAsync'
 import { Errors, logError } from '@/services/exceptions'
 import { selectCurrency, selectSettings, TOKEN_LISTS } from '@/store/settingsSlice'
 import { useCurrentChain } from '../useChains'
 import { FEATURES, hasFeature } from '@/utils/chains'
-import { POLLING_INTERVAL } from '@/config/constants'
+import { DEFAULT_IPFS_GATEWAY, DEFAULT_TOKENLIST_IPNS, POLLING_INTERVAL } from '@/config/constants'
 import useIntervalCounter from '../useIntervalCounter'
 import useSafeInfo from '../useSafeInfo'
+import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
+import { getERC20Balance } from '@/utils/tokens'
+import { useTokenList } from '@/hooks/useTokenList'
 
 const useTokenListSetting = (): boolean | undefined => {
   const chain = useCurrentChain()
@@ -29,10 +32,46 @@ export const useLoadBalances = (): AsyncResult<SafeBalanceResponse> => {
   const { safe, safeAddress } = useSafeInfo()
   const chainId = safe.chainId
 
+  const multiWeb3ReadOnly = useMultiWeb3ReadOnly()
+  // TODO(devanon): get IPFS gateway from env or fallback to default, need method for this
+  const tokens = useTokenList(`${DEFAULT_IPFS_GATEWAY}/${DEFAULT_TOKENLIST_IPNS}`, +chainId)
+  // TODO(devanon): add on custom token list from state
+
   // Re-fetch assets when the entire SafeInfo updates
-  const [data, error, loading] = useAsync<SafeBalanceResponse>(
-    () => {
-      if (!chainId || !safeAddress || isTrustedTokenList === undefined) return
+  const [data, error, loading] = useAsync<SafeBalanceResponse | undefined>(
+    async () => {
+      if (!chainId || !safeAddress || !tokens || isTrustedTokenList === undefined) return
+
+      // TODO: Add native token and safe token
+
+      const requests = tokens.map(async (token) => {
+        let balance = await getERC20Balance(token.address, safeAddress, multiWeb3ReadOnly)
+        if (balance === undefined || balance.eq(0)) return
+        return {
+          tokenInfo: {
+            type: TokenType.ERC20,
+            address: token.address,
+            decimals: token.decimals,
+            logoUri: token.logoURI,
+            name: token.name,
+            symbol: token.symbol,
+          },
+          balance,
+          fiatBalance: '',
+          fiatConversion: '',
+        }
+      })
+
+      let balances = await Promise.all(requests)
+      //TODO(devanon): fix type error https://www.benmvp.com/blog/filtering-undefined-elements-from-array-typescript/
+      let filteredBalances = balances.filter((balance) => balance !== undefined)
+
+      console.log({ filteredBalances })
+
+      // return {
+      //   fiatTotal: '',
+      //   items: filteredBalances,
+      // }
 
       return getBalances(chainId, safeAddress, currency, {
         trusted: isTrustedTokenList,

@@ -56,6 +56,7 @@ const persistedSlices: (keyof PreloadedState<RootState>)[] = [
   safeAppsSlice.name,
   pendingSafeMessagesSlice.name,
   batchSlice.name,
+  // TODO(devanon): persist custom tokens
 ]
 
 export const getPersistedState = () => {

@@ -2,7 +2,14 @@ import { useEffect } from 'react'
 
 import { useCurrentChain } from '@/hooks/useChains'
 import useWallet from '@/hooks/wallets/useWallet'
-import { createWeb3, createWeb3ReadOnly, setWeb3, setWeb3ReadOnly } from '@/hooks/wallets/web3'
+import {
+  createMultiWeb3ReadOnly,
+  createWeb3,
+  createWeb3ReadOnly,
+  setMultiWeb3ReadOnly,
+  setWeb3,
+  setWeb3ReadOnly,
+} from '@/hooks/wallets/web3'
 import { useAppSelector } from '@/store'
 import { selectRpc } from '@/store/settingsSlice'
 
@@ -26,9 +33,13 @@ export const useInitWeb3 = () => {
   useEffect(() => {
     if (!rpcUri) {
       setWeb3ReadOnly(undefined)
+      setMultiWeb3ReadOnly(undefined)
       return
     }
     const web3ReadOnly = createWeb3ReadOnly(rpcUri, customRpcUrl)
     setWeb3ReadOnly(web3ReadOnly)
+
+    const multiWeb3ReadOnly = createMultiWeb3ReadOnly(web3ReadOnly)
+    setMultiWeb3ReadOnly(multiWeb3ReadOnly)
   }, [rpcUri, customRpcUrl])
 }

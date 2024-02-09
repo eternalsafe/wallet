@@ -102,3 +102,7 @@ export const REDEFINE_ARTICLE = 'https://safe.mirror.xyz/rInLWZwD_sf7enjoFerj6FI
 
 // Eternal Safe
 export const REPO_URL = 'https://github.com/devanoneth/eternal-safe'
+export const DEFAULT_IPFS_GATEWAY = 'https://cloudflare-ipfs.com'
+export const DEFAULT_TOKENLIST_IPNS = 'ipns/tokens.uniswap.org'
+export const DEFAULT_TOKENLIST_INFO =
+  'https://tokenlists.org/token-list?url=https://gateway.ipfs.io/ipns/tokens.uniswap.org'

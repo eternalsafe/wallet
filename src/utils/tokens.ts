@@ -24,3 +24,19 @@ export const getERC20TokenInfoOnChain = async (
     type: TokenType.ERC20,
   }
 }
+
+/**
+ * Fetches ERC20 balance, using the provided multicall provider.
+ * @param token address of erc20 token
+ * @param address address to check balance of
+ * @param multicallProvider provider to use for multicall
+ */
+export const getERC20Balance = async (
+  token: string,
+  address: string,
+  multicallProvider: any,
+): Promise<BigNumber | undefined> => {
+  if (!multicallProvider) return
+  const erc20 = ERC20__factory.connect(token, multicallProvider)
+  return erc20.balanceOf(address)
+}

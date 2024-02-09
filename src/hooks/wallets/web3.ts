@@ -4,6 +4,7 @@ import { type EIP1193Provider } from '@web3-onboard/core'
 import { JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
 import ExternalStore from '@/services/ExternalStore'
 import { EMPTY_DATA } from '@safe-global/safe-core-sdk/dist/src/utils/constants'
+import { type MulticallProvider, MulticallWrapper } from 'ethers-multicall-provider'
 
 // RPC helpers
 const formatRpcServiceUrl = ({ authentication, value }: RpcUri, token: string): string => {
@@ -27,6 +28,11 @@ export const createWeb3ReadOnly = (rpcUri: RpcUri, customRpc?: string): JsonRpcP
   return new JsonRpcProvider({ url, timeout: 10_000 })
 }
 
+export const createMultiWeb3ReadOnly = (provider: JsonRpcProvider | undefined): MulticallProvider | undefined => {
+  if (!provider) return
+  return MulticallWrapper.wrap(provider)
+}
+
 export const createWeb3 = (walletProvider: EIP1193Provider): Web3Provider => {
   return new Web3Provider(walletProvider)
 }
@@ -44,6 +50,12 @@ export const {
   setStore: setWeb3ReadOnly,
   useStore: useWeb3ReadOnly,
 } = new ExternalStore<JsonRpcProvider>()
+
+export const {
+  getStore: getMultiWeb3ReadOnly,
+  setStore: setMultiWeb3ReadOnly,
+  useStore: useMultiWeb3ReadOnly,
+} = new ExternalStore<MulticallProvider>()
 
 export const getUserNonce = async (userAddress: string): Promise<number> => {
   const web3 = getWeb3ReadOnly()
