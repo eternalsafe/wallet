@@ -1,15 +1,13 @@
-import { type ReactElement, useMemo } from 'react'
+import { type ReactElement } from 'react'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import Skeleton from '@mui/material/Skeleton'
 import Tooltip from '@mui/material/Tooltip'
 
-import { formatCurrency } from '@/utils/formatNumber'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import SafeIcon from '@/components/common/SafeIcon'
 import NewTxButton from '@/components/sidebar/NewTxButton'
 import { useAppSelector } from '@/store'
-import { selectCurrency } from '@/store/settingsSlice'
 
 import css from './styles.module.css'
 import QrIconBold from '@/public/images/sidebar/qr-bold.svg'
@@ -22,25 +20,17 @@ import { getBlockExplorerLink } from '@/utils/chains'
 import EthHashInfo from '@/components/common/EthHashInfo'
 import QrCodeButton from '../QrCodeButton'
 import { SvgIcon } from '@mui/material'
-import { useVisibleBalances } from '@/hooks/useVisibleBalances'
 import EnvHintButton from '@/components/settings/EnvironmentVariables/EnvHintButton'
 import useSafeAddress from '@/hooks/useSafeAddress'
 import ExplorerButton from '@/components/common/ExplorerButton'
 import CopyTooltip from '@/components/common/CopyTooltip'
 
 const SafeHeader = (): ReactElement => {
-  const currency = useAppSelector(selectCurrency)
-  const { balances } = useVisibleBalances()
   const safeAddress = useSafeAddress()
   const { safe } = useSafeInfo()
   const { threshold, owners } = safe
   const chain = useCurrentChain()
   const settings = useAppSelector(selectSettings)
-
-  const fiatTotal = useMemo(
-    () => (balances.fiatTotal ? formatCurrency(balances.fiatTotal, currency) : ''),
-    [currency, balances.fiatTotal],
-  )
 
   const addressCopyText = settings.shortName.copy && chain ? `${chain.shortName}:${safeAddress}` : safeAddress
 
@@ -67,10 +57,6 @@ const SafeHeader = (): ReactElement => {
                 <Skeleton variant="text" width={120} />
               </Typography>
             )}
-
-            <Typography variant="body2" fontWeight={700}>
-              {fiatTotal || <Skeleton variant="text" width={60} />}
-            </Typography>
           </div>
         </div>
 

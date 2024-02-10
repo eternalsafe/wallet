@@ -1,7 +1,8 @@
 import { getWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { ERC20__factory } from '@/types/contracts'
 import { type TokenInfo, TokenType } from '@safe-global/safe-gateway-typescript-sdk'
-import { BigNumber } from 'ethers'
+import { constants, BigNumber } from 'ethers'
+import { type MulticallProvider } from 'ethers-multicall-provider'
 
 export const UNLIMITED_APPROVAL_AMOUNT = BigNumber.from(2).pow(256).sub(1)
 
@@ -34,9 +35,15 @@ export const getERC20TokenInfoOnChain = async (
 export const getERC20Balance = async (
   token: string,
   address: string,
-  multicallProvider: any,
+  multicallProvider: MulticallProvider | undefined,
 ): Promise<BigNumber | undefined> => {
   if (!multicallProvider) return
+
+  if (token === constants.AddressZero) {
+    const balance = await multicallProvider.getBalance(address)
+    return balance
+  }
+
   const erc20 = ERC20__factory.connect(token, multicallProvider)
   return erc20.balanceOf(address)
 }

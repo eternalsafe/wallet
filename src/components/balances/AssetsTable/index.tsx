@@ -1,14 +1,12 @@
 import { type ReactElement, useMemo, useContext } from 'react'
-import { Button, Tooltip, Typography, SvgIcon, IconButton, Box, Checkbox, Skeleton } from '@mui/material'
+import { Button, Tooltip, Typography, IconButton, Box, Checkbox, Skeleton } from '@mui/material'
 import type { TokenInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import { TokenType } from '@safe-global/safe-gateway-typescript-sdk'
 import css from './styles.module.css'
-import FiatValue from '@/components/common/FiatValue'
 import TokenAmount from '@/components/common/TokenAmount'
 import TokenIcon from '@/components/common/TokenIcon'
 import EnhancedTable, { type EnhancedTableProps } from '@/components/common/EnhancedTable'
 import TokenExplorerLink from '@/components/common/TokenExplorerLink'
-import InfoIcon from '@/public/images/notifications/info.svg'
 import { VisibilityOutlined } from '@mui/icons-material'
 import TokenMenu from '../TokenMenu'
 import useBalances from '@/hooks/useBalances'
@@ -70,17 +68,12 @@ const headCells = [
   {
     id: 'balance',
     label: 'Balance',
-    width: '20%',
-  },
-  {
-    id: 'value',
-    label: 'Value',
-    width: '20%',
+    width: '30%',
   },
   {
     id: 'actions',
     label: '',
-    width: '20%',
+    width: '30%',
     sticky: true,
   },
 ]
@@ -145,7 +138,6 @@ const AssetsTable = ({
   const rows = loading
     ? skeletonRows
     : (visibleAssets || []).map((item) => {
-        const rawFiatValue = parseFloat(item.fiatBalance)
         const isNative = isNativeToken(item.tokenInfo)
         const isSelected = isAssetSelected(item.tokenInfo.address)
 
@@ -178,32 +170,6 @@ const AssetsTable = ({
                 />
               ),
             },
-            value: {
-              rawValue: rawFiatValue,
-              collapsed: item.tokenInfo.address === hidingAsset,
-              content: (
-                <>
-                  <FiatValue value={item.fiatBalance} />
-                  {rawFiatValue === 0 && (
-                    <Tooltip
-                      title="Provided values are indicative and we are unable to accommodate pricing requests for individual assets"
-                      placement="top"
-                      arrow
-                    >
-                      <span>
-                        <SvgIcon
-                          component={InfoIcon}
-                          inheritViewBox
-                          color="error"
-                          fontSize="small"
-                          sx={{ verticalAlign: 'middle', marginLeft: 0.5 }}
-                        />
-                      </span>
-                    </Tooltip>
-                  )}
-                </>
-              ),
-            },
             actions: {
               rawValue: '',
               sticky: true,
@@ -213,6 +179,7 @@ const AssetsTable = ({
                   <>
                     <SendButton tokenInfo={item.tokenInfo} onClick={() => onSendClick(item.tokenInfo.address)} />
 
+                    {/* TODO(devanon): Only show this for assets the user has added */}
                     {showHiddenAssets ? (
                       <Checkbox size="small" checked={isSelected} onClick={() => toggleAsset(item.tokenInfo.address)} />
                     ) : (

@@ -13,9 +13,10 @@ import TableSortLabel from '@mui/material/TableSortLabel'
 import Paper from '@mui/material/Paper'
 import { visuallyHidden } from '@mui/utils'
 import classNames from 'classnames'
+import PlusIcon from '@/public/images/common/plus.svg'
 
 import css from './styles.module.css'
-import { Collapse } from '@mui/material'
+import { Collapse, SvgIcon, Typography } from '@mui/material'
 
 type EnhancedCell = {
   content: ReactNode
@@ -168,6 +169,18 @@ function EnhancedTable({ rows, headCells, mobileVariant }: EnhancedTableProps) {
                 <TableCell />
               </TableRow>
             )}
+            {/* Row for entering a new token */}
+            <TableRow>
+              <TableCell colSpan={headCells.length}>
+                <Collapse in={true}>
+                  <div className={css.token}>
+                    <SvgIcon component={PlusIcon} inheritViewBox fontSize="small" sx={{ ml: 1 }} />
+
+                    <Typography>Add Token</Typography>
+                  </div>
+                </Collapse>
+              </TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </TableContainer>

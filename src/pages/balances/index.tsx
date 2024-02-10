@@ -10,7 +10,7 @@ import PagePlaceholder from '@/components/common/PagePlaceholder'
 import NoAssetsIcon from '@/public/images/balances/no-assets.svg'
 // import HiddenTokenButton from '@/components/balances/HiddenTokenButton'
 // import CurrencySelect from '@/components/balances/CurrencySelect'
-// import TokenListSelect from '@/components/balances/TokenListSelect'
+import TokenListSelect from '@/components/balances/TokenListSelect'
 
 const Balances: NextPage = () => {
   const { error } = useBalances()
@@ -25,7 +25,7 @@ const Balances: NextPage = () => {
 
       <AssetsHeader>
         {/* <HiddenTokenButton showHiddenAssets={showHiddenAssets} toggleShowHiddenAssets={toggleShowHiddenAssets} /> */}
-        {/* <TokenListSelect /> */}
+        <TokenListSelect />
         {/* <CurrencySelect /> */}
       </AssetsHeader>
       {/* <AssetsHeader /> */}

@@ -9,8 +9,8 @@ import { useHasFeature } from '@/hooks/useChains'
 const LS_TOKENLIST_ONBOARDING = 'tokenlist_onboarding'
 
 const TokenListLabel = {
-  [TOKEN_LISTS.TRUSTED]: 'Default tokens',
-  [TOKEN_LISTS.ALL]: 'All tokens',
+  [TOKEN_LISTS.TRUSTED]: 'None',
+  [TOKEN_LISTS.ALL]: 'Uniswap Labs',
 }
 
 const TokenListSelect = () => {
@@ -35,9 +35,9 @@ const TokenListSelect = () => {
         widgetLocalStorageId={LS_TOKENLIST_ONBOARDING}
         text={
           <>
-            By default, we show only the most popular tokens.
+            By default, we show only tokens you add.
             <br />
-            You can manually add tokens if they are not listed here.
+            You can also use the Uniswap Labs token list (but be aware this will rely on external sites for logos).
           </>
         }
       >
