@@ -1,18 +1,18 @@
 ### Todo
 
+- [ ] Query balances from chain
+- [ ] Query transactions from chain
+- [ ] Implement magic link with signatures
 - [ ] Ask for RPC URL in Safe Loading flow
 - [ ] Rip out Safe creation
 - [ ] Update terms and other imprint
-- [ ] Implement magic link with signatures
-- [ ] Query all data via contracts rather than API
 - [ ] Change favicon
 - [ ] Remove unused tests
 - [ ] Add Eternal Safe specific tests
 
-### In Progress
-
 ### Done ✓
 
+- [x] Query Safe Info from chain
 - [x] Rip out notifications
 - [x] Rip out social login
 - [x] Rip out Safe Apps
