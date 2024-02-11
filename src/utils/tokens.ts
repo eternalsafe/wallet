@@ -1,8 +1,7 @@
-import { getWeb3ReadOnly } from '@/hooks/wallets/web3'
+import { getMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { ERC20__factory } from '@/types/contracts'
 import { type TokenInfo, TokenType } from '@safe-global/safe-gateway-typescript-sdk'
 import { constants, BigNumber } from 'ethers'
-import { type MulticallProvider } from 'ethers-multicall-provider'
 
 export const UNLIMITED_APPROVAL_AMOUNT = BigNumber.from(2).pow(256).sub(1)
 
@@ -10,18 +9,17 @@ export const UNLIMITED_APPROVAL_AMOUNT = BigNumber.from(2).pow(256).sub(1)
  * Fetches ERC20 token symbol and decimals from on-chain.
  * @param address address of erc20 token
  */
-export const getERC20TokenInfoOnChain = async (
-  address: string,
-): Promise<Omit<TokenInfo, 'name' | 'logoUri'> | undefined> => {
-  const web3 = getWeb3ReadOnly()
+export const getERC20TokenInfoOnChain = async (address: string): Promise<Omit<TokenInfo, 'logoUri'> | undefined> => {
+  const web3 = getMultiWeb3ReadOnly()
   if (!web3) return
 
   const erc20 = ERC20__factory.connect(address, web3)
-  const [symbol, decimals] = await Promise.all([erc20.symbol(), erc20.decimals()])
+  const [symbol, decimals, name] = await Promise.all([erc20.symbol(), erc20.decimals(), erc20.name()])
   return {
     address,
     symbol,
     decimals,
+    name,
     type: TokenType.ERC20,
   }
 }
@@ -32,18 +30,15 @@ export const getERC20TokenInfoOnChain = async (
  * @param address address to check balance of
  * @param multicallProvider provider to use for multicall
  */
-export const getERC20Balance = async (
-  token: string,
-  address: string,
-  multicallProvider: MulticallProvider | undefined,
-): Promise<BigNumber | undefined> => {
-  if (!multicallProvider) return
+export const getERC20Balance = async (token: string, address: string): Promise<BigNumber | undefined> => {
+  const web3 = getMultiWeb3ReadOnly()
+  if (!web3) return
 
   if (token === constants.AddressZero) {
-    const balance = await multicallProvider.getBalance(address)
+    const balance = await web3.getBalance(address)
     return balance
   }
 
-  const erc20 = ERC20__factory.connect(token, multicallProvider)
+  const erc20 = ERC20__factory.connect(token, web3)
   return erc20.balanceOf(address)
 }

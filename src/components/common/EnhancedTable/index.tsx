@@ -13,10 +13,9 @@ import TableSortLabel from '@mui/material/TableSortLabel'
 import Paper from '@mui/material/Paper'
 import { visuallyHidden } from '@mui/utils'
 import classNames from 'classnames'
-import PlusIcon from '@/public/images/common/plus.svg'
 
 import css from './styles.module.css'
-import { Collapse, SvgIcon, Typography } from '@mui/material'
+import { Collapse } from '@mui/material'
 
 type EnhancedCell = {
   content: ReactNode
@@ -106,11 +105,12 @@ export type EnhancedTableProps = {
   rows: EnhancedRow[]
   headCells: EnhancedHeadCell[]
   mobileVariant?: boolean
+  children?: ReactNode
 }
 
 const pageSizes = [10, 25, 100]
 
-function EnhancedTable({ rows, headCells, mobileVariant }: EnhancedTableProps) {
+function EnhancedTable({ rows, headCells, mobileVariant, children }: EnhancedTableProps) {
   const [order, setOrder] = useState<'asc' | 'desc'>('asc')
   const [orderBy, setOrderBy] = useState<string>('')
   const [page, setPage] = useState<number>(0)
@@ -140,47 +140,36 @@ function EnhancedTable({ rows, headCells, mobileVariant }: EnhancedTableProps) {
         <Table aria-labelledby="tableTitle" className={mobileVariant ? css.mobileColumn : undefined}>
           <EnhancedTableHead headCells={headCells} order={order} orderBy={orderBy} onRequestSort={handleRequestSort} />
           <TableBody>
-            {pagedRows.length > 0 ? (
-              pagedRows.map((row, index) => (
-                <TableRow
-                  tabIndex={-1}
-                  key={row.key ?? index}
-                  selected={row.selected}
-                  className={row.collapsed ? css.collapsedRow : undefined}
-                >
-                  {Object.entries(row.cells).map(([key, cell]) => (
-                    <TableCell
-                      key={key}
-                      className={classNames({
-                        sticky: cell.sticky,
-                        [css.collapsedCell]: row.collapsed,
-                      })}
-                    >
-                      <Collapse key={index} in={!row.collapsed} enter={false}>
-                        {cell.content}
-                      </Collapse>
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              // Prevent no `tbody` rows hydration error
-              <TableRow>
-                <TableCell />
-              </TableRow>
-            )}
-            {/* Row for entering a new token */}
-            <TableRow>
-              <TableCell colSpan={headCells.length}>
-                <Collapse in={true}>
-                  <div className={css.token}>
-                    <SvgIcon component={PlusIcon} inheritViewBox fontSize="small" sx={{ ml: 1 }} />
-
-                    <Typography>Add Token</Typography>
-                  </div>
-                </Collapse>
-              </TableCell>
-            </TableRow>
+            {pagedRows.length > 0
+              ? pagedRows.map((row, index) => (
+                  <TableRow
+                    tabIndex={-1}
+                    key={row.key ?? index}
+                    selected={row.selected}
+                    className={row.collapsed ? css.collapsedRow : undefined}
+                  >
+                    {Object.entries(row.cells).map(([key, cell]) => (
+                      <TableCell
+                        key={key}
+                        className={classNames({
+                          sticky: cell.sticky,
+                          [css.collapsedCell]: row.collapsed,
+                        })}
+                      >
+                        <Collapse key={index} in={!row.collapsed} enter={false}>
+                          {cell.content}
+                        </Collapse>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              : !!children && (
+                  // Prevent no `tbody` rows hydration error
+                  <TableRow>
+                    <TableCell />
+                  </TableRow>
+                )}
+            {children}
           </TableBody>
         </Table>
       </TableContainer>

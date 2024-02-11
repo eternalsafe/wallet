@@ -8,7 +8,6 @@ import { useCurrentChain } from '../useChains'
 import { FEATURES, hasFeature } from '@/utils/chains'
 import { DEFAULT_IPFS_GATEWAY, DEFAULT_TOKENLIST_IPNS } from '@/config/constants'
 import useSafeInfo from '../useSafeInfo'
-import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { getERC20Balance } from '@/utils/tokens'
 import { useTokenList } from '@/hooks/useTokenList'
 import { constants } from 'ethers'
@@ -41,7 +40,6 @@ export const useLoadBalances = (): AsyncResult<SafeBalanceResponse> => {
   const { safe, safeAddress } = useSafeInfo()
   const chainId = safe.chainId
 
-  const multiWeb3ReadOnly = useMultiWeb3ReadOnly()
   // TODO(devanon): get IPFS gateway from env or fallback to default, need method for this
   // TODO(devanon): make this load only if chosen
   const tokens = useTokenList(
@@ -57,7 +55,7 @@ export const useLoadBalances = (): AsyncResult<SafeBalanceResponse> => {
       if (!chainId || !safeAddress || !tokens) return
 
       const requests = tokens.map(async (token) => {
-        let balance = await getERC20Balance(token.address, safeAddress, multiWeb3ReadOnly)
+        let balance = await getERC20Balance(token.address, safeAddress)
         if (balance === undefined || balance.eq(0)) return
         return {
           tokenInfo: {
@@ -82,7 +80,7 @@ export const useLoadBalances = (): AsyncResult<SafeBalanceResponse> => {
         items: filteredBalances,
       }
     },
-    [safeAddress, chainId, tokens, multiWeb3ReadOnly],
+    [safeAddress, chainId, tokens],
     true,
   )
 

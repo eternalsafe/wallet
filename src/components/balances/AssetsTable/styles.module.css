@@ -14,6 +14,13 @@
   gap: var(--space-1);
 }
 
+.add-token {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+}
+
 @media (max-width: 599.95px) {
   .container td:last-of-type,
   .container th:last-of-type {

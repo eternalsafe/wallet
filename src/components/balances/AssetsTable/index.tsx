@@ -16,7 +16,7 @@ import CheckWallet from '@/components/common/CheckWallet'
 import useSpendingLimit from '@/hooks/useSpendingLimit'
 import { TxModalContext } from '@/components/tx-flow'
 import { TokenTransferFlow } from '@/components/tx-flow/flows'
-import NoAssets from './NoAssets'
+import AddToken from '@/components/balances/AssetsTable/AddToken'
 
 const skeletonCells: EnhancedTableProps['rows'][0]['cells'] = {
   asset: {
@@ -127,8 +127,6 @@ const AssetsTable = ({
     [hiddenAssets, balances.items, showHiddenAssets],
   )
 
-  const hasNoAssets = balances.items.length === 1 && balances.items[0].balance === '0'
-
   const selectedAssetCount = visibleAssets?.filter((item) => isAssetSelected(item.tokenInfo.address)).length || 0
 
   const onSendClick = (tokenAddress: string) => {
@@ -211,13 +209,11 @@ const AssetsTable = ({
         showHiddenAssets={showHiddenAssets}
       />
 
-      {hasNoAssets ? (
-        <NoAssets />
-      ) : (
-        <div className={css.container}>
-          <EnhancedTable rows={rows} headCells={headCells} />
-        </div>
-      )}
+      <div className={css.container}>
+        <EnhancedTable rows={rows} headCells={headCells}>
+          <AddToken columns={headCells.length} />
+        </EnhancedTable>
+      </div>
     </>
   )
 }
