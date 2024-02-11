@@ -73,15 +73,13 @@ export const initSafeSDK = async ({
   isL1SafeMasterCopy = sameAddress(masterCopy, safeL1Deployment?.networkAddresses[chainId])
   const isL2SafeMasterCopy = sameAddress(masterCopy, safeL2Deployment?.networkAddresses[chainId])
 
-  // Unknown deployment, which we do not want to support
-  if (!isL1SafeMasterCopy && !isL2SafeMasterCopy) {
-    // TODO(devanon): Let the user know
-    return Promise.resolve(undefined)
-  }
-
   // Legacy Safe contracts
   if (isLegacyVersion(safeVersion)) {
     isL1SafeMasterCopy = true
+  } else if (!isL1SafeMasterCopy && !isL2SafeMasterCopy) {
+    // Unknown deployment, which we do not want to support
+    // TODO(devanon): Let the user know
+    return Promise.resolve(undefined)
   }
 
   return Safe.create({

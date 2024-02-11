@@ -116,9 +116,7 @@ describe('safeCoreSDK', () => {
           provider: mockProvider,
           chainId,
           address: ethers.utils.hexZeroPad('0x1', 20),
-          version,
           implementation: MAINNET_MASTER_COPY,
-          implementationVersionState: ImplementationVersionState.UP_TO_DATE,
         })
 
         expect(sdk).toBeInstanceOf(Safe)
@@ -134,9 +132,7 @@ describe('safeCoreSDK', () => {
           provider: mockProvider,
           chainId,
           address: ethers.utils.hexZeroPad('0x1', 20),
-          version,
           implementation: MAINNET_MASTER_COPY,
-          implementationVersionState: ImplementationVersionState.UP_TO_DATE,
         })
 
         expect(sdk).toBeInstanceOf(Safe)
@@ -153,9 +149,7 @@ describe('safeCoreSDK', () => {
           provider: mockProvider,
           chainId,
           address: ethers.utils.hexZeroPad('0x1', 20),
-          version: `${version}+L2`,
           implementation: POLYGON_MASTER_COPY,
-          implementationVersionState: ImplementationVersionState.UP_TO_DATE,
         })
 
         expect(sdk).toBeInstanceOf(Safe)
@@ -172,9 +166,7 @@ describe('safeCoreSDK', () => {
           provider: mockProvider,
           chainId,
           address: ethers.utils.hexZeroPad('0x1', 20),
-          version,
           implementation: POLYGON_MASTER_COPY,
-          implementationVersionState: ImplementationVersionState.OUTDATED,
         })
 
         expect(sdk).toBeInstanceOf(Safe)
@@ -194,9 +186,7 @@ describe('safeCoreSDK', () => {
           provider: mockProvider,
           chainId: '1',
           address: ethers.utils.hexZeroPad('0x1', 20),
-          version: null, // Indexer returns null if unsupported contract version
           implementation: MAINNET_MASTER_COPY,
-          implementationVersionState: ImplementationVersionState.UNKNOWN,
         })
 
         expect(sdk).toBeInstanceOf(Safe)
@@ -212,9 +202,7 @@ describe('safeCoreSDK', () => {
           provider: mockProvider,
           chainId,
           address: ethers.utils.hexZeroPad('0x1', 20),
-          version: null,
           implementation: MAINNET_MASTER_COPY,
-          implementationVersionState: ImplementationVersionState.UNKNOWN,
         })
 
         expect(sdk).toBeInstanceOf(Safe)
@@ -231,9 +219,7 @@ describe('safeCoreSDK', () => {
           provider: mockProvider,
           chainId,
           address: ethers.utils.hexZeroPad('0x1', 20),
-          version: null,
           implementation: '0xinvalid',
-          implementationVersionState: ImplementationVersionState.UNKNOWN,
         })
 
         expect(sdk).toBeUndefined()

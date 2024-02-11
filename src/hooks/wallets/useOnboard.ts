@@ -136,11 +136,11 @@ export const switchWallet = async (onboard: OnboardAPI) => {
   const newWalletLabel = newWallets ? getConnectedWallet(newWallets)?.label : undefined
 
   // If the wallet actually changed we disconnect the old connected wallet.
-  if (!newWalletLabel || !oldWalletLabel) {
+  if (!newWalletLabel || oldWalletLabel) {
     return
   }
 
-  if (newWalletLabel !== oldWalletLabel) {
+  if (newWalletLabel !== oldWalletLabel && oldWalletLabel) {
     await onboard.disconnectWallet({ label: oldWalletLabel })
   }
 }

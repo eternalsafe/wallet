@@ -1,7 +1,7 @@
 import { act, render, waitFor } from '@/tests/test-utils'
 import * as useConnectWallet from '@/components/common/ConnectWallet/useConnectWallet'
 import * as useWallet from '@/hooks/wallets/useWallet'
-import WalletLogin from '../LoadSafe'
+import WalletLogin from '../WalletLogin'
 import { hexZeroPad } from '@ethersproject/bytes'
 import { type EIP1193Provider } from '@web3-onboard/common'
 import { shortenAddress } from '@/utils/formatters'

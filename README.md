@@ -3,12 +3,13 @@
 [![License](https://img.shields.io/github/license/devanoneth/eternal-safe)](https://github.com/devanoneth/eternal-safe/blob/main/LICENSE)
 ![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/devanoneth/eternal-safe)
 
-Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-global/safe-wallet-web). Funded by the [Safe Grants Program](https://app.charmverse.io/safe-grants-program/page-005239065690887612).
+Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-global/safe-wallet-web) as per v1.27.0. Funded by the [Safe Grants Program](https://app.charmverse.io/safe-grants-program/page-005239065690887612).
 
-## Differences with Safe{Wallet}
+## Differences from Safe{Wallet}
 
-- No analytics
+- No analytics/tracking
 - No backend services needed, directly read/write onchain
+- Runs on IPFS or locally
 
 ## Contributing
 

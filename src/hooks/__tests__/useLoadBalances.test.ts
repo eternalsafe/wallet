@@ -58,15 +58,15 @@ const mockSafeInfo = {
   loading: false,
 }
 
-const mockBalanceDefaultList = { ...mockBalanceUSD, fiatTotal: '1003' }
+const mockBalanceDefaultList = { ...mockBalanceUSD, fiatTotal: '' }
 
 const mockBalanceAllTokens = {
-  fiatTotal: '1004',
+  fiatTotal: '',
   items: [
     {
       balance: '1',
-      fiatBalance: '1000',
-      fiatConversion: '1000',
+      fiatBalance: '',
+      fiatConversion: '',
       tokenInfo: {
         address: hexZeroPad('0x1', 20),
         decimals: 18,
@@ -92,6 +92,25 @@ const mockBalanceAllTokens = {
   ],
 }
 
+const mockTokenList = [
+  {
+    chainId: 5,
+    address: hexZeroPad('0x1', 20),
+    name: 'First token',
+    symbol: 'FIRST',
+    decimals: 18,
+    logoURI: 'https://safe-transaction-assets.safe.global/tokens/logos/0x5aFE3855358E112B5647B952709E6165e1c1eEEe.png',
+  },
+  {
+    chainId: 5,
+    address: hexZeroPad('0x2', 20),
+    name: 'Second token',
+    symbol: '2ND',
+    decimals: 18,
+    logoURI: 'https://safe-transaction-assets.safe.global/tokens/logos/0x5aFE3855358E112B5647B952709E6165e1c1eEEe.png',
+  },
+]
+
 describe('useLoadBalances', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -100,6 +119,22 @@ describe('useLoadBalances', () => {
   })
 
   test('without selected Safe', async () => {
+    // Mock fetch
+    Object.defineProperty(window, 'fetch', {
+      writable: true,
+      value: jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              data: {
+                tokens: [mockTokenList],
+              },
+            }),
+        }),
+      ),
+    })
+
     jest.spyOn(store, 'useAppSelector').mockImplementation((selector) =>
       selector({
         chains: {
@@ -137,94 +172,6 @@ describe('useLoadBalances', () => {
       expect(result.current[0]).toBeUndefined()
       expect(result.current[1]).toBeUndefined()
       expect(result.current[2]).toBeFalsy()
-    })
-  })
-
-  test('pass correct currency and reload on currency change', async () => {
-    const safeAddress = hexZeroPad('0x1234', 20)
-    const mockGetBalances = jest
-      .spyOn(SafeGatewaySDK, 'getBalances')
-      .mockImplementation(async (chainId, address, currency, query) => {
-        expect(chainId).toEqual('5')
-        expect(address).toEqual(safeAddress)
-        expect(currency).toEqual('EUR')
-        expect(query).toMatchObject({ trusted: false })
-
-        return mockBalanceEUR
-      })
-
-    const mockSelector = jest.spyOn(store, 'useAppSelector').mockImplementation((selector) =>
-      selector({
-        chains: {
-          data: [
-            {
-              chainId: '5',
-              features: [FEATURES.DEFAULT_TOKENLIST],
-              chainName: 'Görli',
-            } as any,
-          ],
-        },
-        safeInfo: mockSafeInfo,
-        settings: {
-          currency: 'EUR',
-          hiddenTokens: {},
-          shortName: {
-            copy: true,
-            qr: true,
-            show: true,
-          },
-          theme: {},
-          tokenList: TOKEN_LISTS.ALL,
-        },
-      } as store.RootState),
-    )
-    const { result, rerender } = renderHook(() => useLoadBalances())
-
-    await waitFor(async () => {
-      expect(result.current[0]?.fiatTotal).toEqual(mockBalanceEUR.fiatTotal)
-      expect(result.current[1]).toBeUndefined()
-    })
-
-    mockGetBalances.mockImplementation(async (chainId, address, currency, query) => {
-      expect(chainId).toEqual('5')
-      expect(address).toEqual(safeAddress)
-      expect(currency).toEqual('USD')
-      expect(query).toMatchObject({ trusted: false })
-
-      return mockBalanceUSD
-    })
-
-    mockSelector.mockImplementation((selector) =>
-      selector({
-        chains: {
-          data: [
-            {
-              chainId: '5',
-              features: [FEATURES.DEFAULT_TOKENLIST],
-              chainName: 'Görli',
-            } as any,
-          ],
-        },
-        safeInfo: mockSafeInfo,
-        settings: {
-          currency: 'USD',
-          hiddenTokens: {},
-          shortName: {
-            copy: true,
-            qr: true,
-            show: true,
-          },
-          theme: {},
-          tokenList: TOKEN_LISTS.ALL,
-        },
-      } as store.RootState),
-    )
-
-    act(() => rerender())
-
-    await waitFor(async () => {
-      expect(result.current[0]?.fiatTotal).toEqual(mockBalanceUSD.fiatTotal)
-      expect(result.current[1]).toBeUndefined()
     })
   })
 
@@ -272,16 +219,21 @@ describe('useLoadBalances', () => {
   })
 
   test('use trusted filter for default list and reload on settings change', async () => {
-    const mockGetBalances = jest
-      .spyOn(SafeGatewaySDK, 'getBalances')
-      .mockImplementation(async (chainId, address, currency, query) => {
-        expect(chainId).toEqual('5')
-        expect(address).toEqual(safeAddress)
-        expect(currency).toEqual('EUR')
-        expect(query).toMatchObject({ trusted: true })
-
-        return mockBalanceDefaultList
-      })
+    // Mock fetch
+    Object.defineProperty(window, 'fetch', {
+      writable: true,
+      value: jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              data: {
+                tokens: [mockTokenList],
+              },
+            }),
+        }),
+      ),
+    })
 
     const mockSelector = jest.spyOn(store, 'useAppSelector').mockImplementation((selector) =>
       selector({
@@ -316,15 +268,6 @@ describe('useLoadBalances', () => {
     await waitFor(async () => {
       expect(result.current[0]?.fiatTotal).toEqual(mockBalanceDefaultList.fiatTotal)
       expect(result.current[1]).toBeUndefined()
-    })
-
-    mockGetBalances.mockImplementation(async (chainId, address, currency, query) => {
-      expect(chainId).toEqual('5')
-      expect(address).toEqual(safeAddress)
-      expect(currency).toEqual('EUR')
-      expect(query).toMatchObject({ trusted: false })
-
-      return mockBalanceAllTokens
     })
 
     mockSelector.mockImplementation((selector) =>

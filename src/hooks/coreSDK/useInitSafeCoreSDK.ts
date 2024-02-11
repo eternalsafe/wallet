@@ -24,16 +24,20 @@ export const useInitSafeCoreSDK = () => {
       return
     }
 
+    console.log({ address, chainId, web3ReadOnly })
+
     // Get implementation address
     web3ReadOnly.getStorageAt(address, 0).then((impl) => {
       let implementation = bytes32ToAddress(impl)
       setSafeImplementation(implementation)
 
+      console.log({ implementation })
+
       // A read-only instance of the SDK is sufficient because we connect the signer to it when needed
       initSafeSDK({
         provider: web3ReadOnly,
-        chainId: chainId,
-        address: address,
+        chainId,
+        address,
         implementation,
       })
         .then(setSafeSDK)

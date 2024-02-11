@@ -7,17 +7,17 @@
 - [ ] Rip out Safe creation
 - [ ] Update terms and other imprint
 - [ ] Change favicon
-- [ ] Remove unused tests
-- [ ] Add Eternal Safe specific tests
 
 ### Done ✓
 
+- [x] Add Eternal Safe specific tests
+- [x] Remove unused tests
 - [x] Query Safe Info from chain
 - [x] Rip out notifications
 - [x] Rip out social login
 - [x] Rip out Safe Apps
 - [x] Rip out Wallet Connect
-- [x] Rip out Safe token
+- [x] Rip out Safe token claiming
 - [x] Rip out recovery module flow
 - [x] Rip out dashboard home page and default to assets
 - [x] Update welcome page for Eternal Safe and only allow loading an already existing Safe
