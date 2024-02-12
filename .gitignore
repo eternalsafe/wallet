@@ -43,10 +43,6 @@ yarn-error.log*
 yalc.lock
 .env
 
-/cypress/videos
-/cypress/screenshots
-/cypress/downloads
-
 /public/sw.js
 /public/sw.js.map
 /public/worker-*.js

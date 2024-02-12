@@ -2,15 +2,12 @@ import * as spendingLimit from '@/services/contracts/spendingLimitContracts'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { ZERO_ADDRESS } from '@safe-global/safe-core-sdk/dist/src/utils/constants'
 import type { AllowanceModule } from '@/types/contracts'
-import { ERC20__factory } from '@/types/contracts'
 import {
   getSpendingLimits,
   getTokenAllowanceForDelegate,
   getTokensForDelegate,
 } from '../loadables/useLoadSpendingLimits'
 import { BigNumber } from '@ethersproject/bignumber'
-import * as web3 from '../wallets/web3'
-import { keccak256, toUtf8Bytes } from 'ethers/lib/utils'
 import { TokenType } from '@safe-global/safe-gateway-typescript-sdk'
 
 const mockProvider = new JsonRpcProvider()

@@ -12,7 +12,6 @@ declare global {
       isConnected?: () => boolean
     }
     dataLayer?: any[]
-    Cypress?
   }
 }
 

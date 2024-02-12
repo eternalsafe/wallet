@@ -4,7 +4,6 @@ import {
   getProxyFactoryContract,
   getSafeContract,
 } from '@safe-global/safe-core-sdk/dist/src/contracts/safeDeploymentContracts'
-import { ImplementationVersionState } from '@safe-global/safe-gateway-typescript-sdk'
 import { Web3Provider } from '@ethersproject/providers'
 
 import { initSafeSDK, isValidSafeVersion } from '../safeCoreSDK'

@@ -7,9 +7,12 @@
 - [ ] Rip out Safe creation
 - [ ] Update terms and other imprint
 - [ ] Change favicon
+- [ ] Remove Safe Gateway SDK
+- [ ] Update env variables
 
 ### Done ✓
 
+- [x] Remove cypress
 - [x] Add Eternal Safe specific tests
 - [x] Remove unused tests
 - [x] Query Safe Info from chain

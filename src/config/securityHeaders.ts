@@ -1,4 +1,4 @@
-import { CYPRESS_MNEMONIC, IS_PRODUCTION } from '@/config/constants'
+import { IS_PRODUCTION } from '@/config/constants'
 
 /**
  * CSP Header notes:
@@ -11,11 +11,7 @@ import { CYPRESS_MNEMONIC, IS_PRODUCTION } from '@/config/constants'
 export const ContentSecurityPolicy = `
  default-src 'self';
  connect-src 'self' *;
- script-src 'self' ${
-   !IS_PRODUCTION || /* TODO: remove after moving cypress to görli and testing in staging again!! */ CYPRESS_MNEMONIC
-     ? "'unsafe-eval'"
-     : "'wasm-unsafe-eval'"
- };
+ script-src 'self' ${!IS_PRODUCTION ? "'unsafe-eval'" : "'wasm-unsafe-eval'"};
  frame-src *;
  style-src 'self' 'unsafe-inline';
  font-src 'self' data:;

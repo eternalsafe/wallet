@@ -1,15 +1,14 @@
 # WIP: Eternal Safe
 
 [![License](https://img.shields.io/github/license/devanoneth/eternal-safe)](https://github.com/devanoneth/eternal-safe/blob/main/LICENSE)
-![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/devanoneth/eternal-safe)
 
-Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-global/safe-wallet-web) as per v1.27.0. Funded by the [Safe Grants Program](https://app.charmverse.io/safe-grants-program/page-005239065690887612).
+Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-global/safe-wallet-web), forked at v1.27.0. Funded by the [Safe Grants Program](https://app.charmverse.io/safe-grants-program/page-005239065690887612).
 
 ## Differences from Safe{Wallet}
 
 - No analytics/tracking
-- No backend services needed, directly read/write onchain
-- Runs on IPFS or locally
+- No backend services needed
+- Easily runs on IPFS or locally
 
 ## Contributing
 
@@ -87,28 +86,6 @@ Unit tests:
 yarn test --watch
 ```
 
-### Cypress tests
-
-Build a static site:
-
-```
-yarn build
-```
-
-Serve the static files:
-
-```
-yarn serve
-```
-
-Launch the Cypress UI:
-
-```
-yarn cypress:open
-```
-
-You can then choose which e2e tests to run.
-
 ## Component template
 
 To create a new component from a template:
@@ -122,7 +99,6 @@ yarn cmp MyNewComponent
 This app is built using the following frameworks:
 
 - [Safe Core SDK](https://github.com/safe-global/safe-core-sdk)
-- [Safe Gateway SDK](https://github.com/safe-global/safe-gateway-typescript-sdk)
 - Next.js
 - React
 - Redux
