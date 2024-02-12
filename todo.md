@@ -5,13 +5,14 @@
 - [ ] Implement magic link with signatures
 - [ ] Ask for RPC URL in Safe Loading flow
 - [ ] Rip out Safe creation
+- [ ] Replace Safe branded assets in public/
 - [ ] Update terms and other imprint
-- [ ] Change favicon
 - [ ] Remove Safe Gateway SDK
 - [ ] Update env variables
 
 ### Done ✓
 
+- [x] Change favicon
 - [x] Remove cypress
 - [x] Add Eternal Safe specific tests
 - [x] Remove unused tests

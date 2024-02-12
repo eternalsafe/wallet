@@ -1,7 +1,7 @@
 {
-  "name": "Safe",
-  "short_name": "Safe",
-  "description": "Safe (prev. Gnosis Safe) is the most trusted platform to manage digital assets on Ethereum and multiple EVMs. Over $40B secured.",
+  "name": "Eternal Safe",
+  "short_name": "Eternal Safe",
+  "description": "Eternal Safe is a decentralized fork of Safe{Wallet}. ",
   "icons": [
     {
       "src": "/favicons/android-chrome-192x192.png",
@@ -9,8 +9,8 @@
       "type": "image/png"
     },
     {
-      "src": "/favicons/android-chrome-512x512.png",
-      "sizes": "512x512",
+      "src": "/favicons/android-chrome-384x384.png",
+      "sizes": "384x384",
       "type": "image/png"
     }
   ],
