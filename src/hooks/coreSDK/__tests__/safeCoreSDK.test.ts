@@ -208,20 +208,20 @@ describe('safeCoreSDK', () => {
         expect(sdk?.getContractManager().isL1SafeMasterCopy).toBe(true)
       })
 
-      it('should return undefined for unsupported mastercopies', async () => {
+      it('should throw an error for unsupported mastercopies', async () => {
         const chainId = '1'
         const version = '1.3.0'
 
         const mockProvider = getMockProvider(chainId, version)
 
-        const sdk = await initSafeSDK({
-          provider: mockProvider,
-          chainId,
-          address: ethers.utils.hexZeroPad('0x1', 20),
-          implementation: '0xinvalid',
-        })
-
-        expect(sdk).toBeUndefined()
+        await expect(
+          initSafeSDK({
+            provider: mockProvider,
+            chainId,
+            address: ethers.utils.hexZeroPad('0x1', 20),
+            implementation: '0xinvalid',
+          }),
+        ).rejects.toThrowError('Unknown Safe implementation: 0xinvalid')
       })
     })
   })

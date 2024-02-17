@@ -9,6 +9,7 @@ import { asError } from '@/services/exceptions/utils'
 import { useUrlChainId } from '@/hooks/useChainId'
 import useSafeAddress from '@/hooks/useSafeAddress'
 import { bytes32ToAddress } from '@/utils/addresses'
+import { ethers } from 'ethers'
 
 export const useInitSafeCoreSDK = () => {
   const dispatch = useAppDispatch()
@@ -24,35 +25,40 @@ export const useInitSafeCoreSDK = () => {
       return
     }
 
-    console.log({ address, chainId, web3ReadOnly })
-
     // Get implementation address
-    web3ReadOnly.getStorageAt(address, 0).then((impl) => {
-      let implementation = bytes32ToAddress(impl)
-      setSafeImplementation(implementation)
+    web3ReadOnly
+      .getStorageAt(address, 0)
+      .then((impl) => {
+        if (!impl || impl === ethers.constants.HashZero) {
+          throw new Error(`Nothing set on storage slot 0 in ${address}.`)
+        }
 
-      console.log({ implementation })
+        let implementation = bytes32ToAddress(impl)
+        setSafeImplementation(implementation)
 
-      // A read-only instance of the SDK is sufficient because we connect the signer to it when needed
-      initSafeSDK({
-        provider: web3ReadOnly,
-        chainId,
-        address,
-        implementation,
-      })
-        .then(setSafeSDK)
-        .catch((_e) => {
-          const e = asError(_e)
-          dispatch(
-            showNotification({
-              message: 'Please try connecting your wallet again.',
-              groupKey: 'core-sdk-init-error',
-              variant: 'error',
-              detailedMessage: e.message,
-            }),
-          )
-          trackError(ErrorCodes._105, e.message)
+        // A read-only instance of the SDK is sufficient because we connect the signer to it when needed
+        return initSafeSDK({
+          provider: web3ReadOnly,
+          chainId,
+          address,
+          implementation,
         })
-    })
+      })
+      .then(setSafeSDK)
+      .catch((_e) => {
+        setSafeImplementation(undefined)
+        setSafeSDK(undefined)
+
+        const e = asError(_e)
+        dispatch(
+          showNotification({
+            message: 'Please try connecting your Safe again, ensure the address and chain are correct.',
+            groupKey: 'core-sdk-init-error',
+            variant: 'error',
+            detailedMessage: e.message,
+          }),
+        )
+        trackError(ErrorCodes._105, e.message)
+      })
   }, [dispatch, address, chainId, web3ReadOnly])
 }

@@ -22,6 +22,8 @@ const nativeToken = {
   decimals: 18,
 }
 
+const defaultTokens = [safeToken, nativeToken]
+
 export function useTokenList(
   tokenListURI: string,
   chainId: number,
@@ -31,7 +33,7 @@ export function useTokenList(
 
   useEffect(() => {
     if (!isTokenListEnabled) {
-      setTokenList([nativeToken])
+      setTokenList(defaultTokens)
       return
     }
 
@@ -40,7 +42,7 @@ export function useTokenList(
         if (response.ok) {
           const { tokens } = await response.json()
           // TODO(devanon): consider what happens if Uniswap adds Safe Token
-          tokens.push(safeToken, nativeToken)
+          tokens.push(...defaultTokens)
           setTokenList(
             (tokens as TokenInfo[]).filter((token) => {
               const sameChainId = token.chainId === chainId

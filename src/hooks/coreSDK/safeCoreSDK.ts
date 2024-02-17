@@ -77,9 +77,7 @@ export const initSafeSDK = async ({
   if (isLegacyVersion(safeVersion)) {
     isL1SafeMasterCopy = true
   } else if (!isL1SafeMasterCopy && !isL2SafeMasterCopy) {
-    // Unknown deployment, which we do not want to support
-    // TODO(devanon): Let the user know
-    return Promise.resolve(undefined)
+    throw new Error(`Unknown Safe implementation: ${masterCopy}`)
   }
 
   return Safe.create({

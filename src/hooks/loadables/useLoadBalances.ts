@@ -41,7 +41,6 @@ export const useLoadBalances = (): AsyncResult<SafeBalanceResponse> => {
   const chainId = safe.chainId
 
   // TODO(devanon): get IPFS gateway from env or fallback to default, need method for this
-  // TODO(devanon): make this load only if chosen
   const tokens = useTokenList(
     `${DEFAULT_IPFS_GATEWAY}/${DEFAULT_TOKENLIST_IPNS}`,
     +chainId,
