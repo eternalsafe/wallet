@@ -13,7 +13,7 @@ import { UpdateSafeFlow } from '@/components/tx-flow/flows'
 import ExternalLink from '@/components/common/ExternalLink'
 import CheckWallet from '@/components/common/CheckWallet'
 
-// TODO(devanon): Remove safe gateway calls and lock Eternal Safe to support max v1.3.0
+// TODO(devanon): Show message if safe is >v1.3.0
 export const ContractVersion = () => {
   const { setTxFlow } = useContext(TxModalContext)
   const [masterCopies] = useMasterCopies()

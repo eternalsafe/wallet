@@ -37,21 +37,16 @@ const useTokenListSetting = (): boolean | undefined => {
 
 export const useLoadBalances = (): AsyncResult<SafeBalanceResponse> => {
   const isTokenListEnabled = useTokenListSetting()
-  const { safe, safeAddress } = useSafeInfo()
-  const chainId = safe.chainId
+  const { safeAddress } = useSafeInfo()
 
   // TODO(devanon): get IPFS gateway from env or fallback to default, need method for this
-  const tokens = useTokenList(
-    `${DEFAULT_IPFS_GATEWAY}/${DEFAULT_TOKENLIST_IPNS}`,
-    +chainId,
-    isTokenListEnabled ?? false,
-  )
+  const tokens = useTokenList(`${DEFAULT_IPFS_GATEWAY}/${DEFAULT_TOKENLIST_IPNS}`, isTokenListEnabled ?? false)
   // TODO(devanon): add on custom token list from state
 
   // Re-fetch assets when the entire SafeInfo updates
   const [data, error, loading] = useAsync<SafeBalanceResponse | undefined>(
     async () => {
-      if (!chainId || !safeAddress || !tokens) return
+      if (!safeAddress || !tokens) return
 
       const requests = tokens.map(async (token) => {
         let balance = await getERC20Balance(token.address, safeAddress)
@@ -79,7 +74,7 @@ export const useLoadBalances = (): AsyncResult<SafeBalanceResponse> => {
         items: filteredBalances,
       }
     },
-    [safeAddress, chainId, tokens],
+    [safeAddress, tokens],
     true,
   )
 

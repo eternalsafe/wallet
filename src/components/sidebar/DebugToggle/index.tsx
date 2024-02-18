@@ -10,6 +10,7 @@ const LS_KEY = 'debugProdCgw'
 
 export const cgwDebugStorage = localItem<boolean>(LS_KEY)
 
+// TODO(devanon): Remove Gateway completely
 const DebugToggle = (): ReactElement => {
   const dispatch = useAppDispatch()
   const isDarkMode = useDarkMode()

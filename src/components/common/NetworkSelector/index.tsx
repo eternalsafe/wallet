@@ -12,17 +12,15 @@ import { useChainId } from '@/hooks/useChainId'
 import { type ReactElement, useMemo } from 'react'
 import { useCallback } from 'react'
 import { AppRoutes } from '@/config/routes'
-import useWallet from '@/hooks/wallets/useWallet'
 
 const keepPathRoutes = [AppRoutes.welcome.index, AppRoutes.newSafe.create, AppRoutes.newSafe.load]
 
-const testNets = ['gor', 'base-gor', 'sep']
+const testNets = ['gor', 'sep']
 const isTestnet = (shortName: string) => {
   return testNets.includes(shortName)
 }
 
 const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement => {
-  const wallet = useWallet()
   const { configs } = useChains()
   const chainId = useChainId()
   const router = useRouter()

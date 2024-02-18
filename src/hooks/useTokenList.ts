@@ -1,51 +1,63 @@
 import { useEffect, useState } from 'react'
 import { type TokenInfo } from '@uniswap/token-lists'
 import { SAFE_TOKEN_ADDRESSES } from '@/config/constants'
-import chains from '@/config/chains'
 import { constants } from 'ethers'
+import { useCurrentChain } from '@/hooks/useChains'
+import { type NativeCurrency } from '@safe-global/safe-gateway-typescript-sdk'
+import { Errors, logError } from '@/services/exceptions'
 
-const safeToken = {
-  chainId: 1,
-  address: SAFE_TOKEN_ADDRESSES[chains.eth],
-  name: 'Safe Token',
-  symbol: 'SAFE',
-  decimals: 18,
-  logoURI: 'https://safe-transaction-assets.safe.global/tokens/logos/0x5aFE3855358E112B5647B952709E6165e1c1eEEe.png',
+const safeTokenFromChain = (chainId: string): TokenInfo => {
+  return {
+    chainId: parseInt(chainId),
+    address: SAFE_TOKEN_ADDRESSES[chainId],
+    name: 'Safe Token',
+    symbol: 'SAFE',
+    decimals: 18,
+    // always use mainnet logo for Safe Token
+    logoURI: `https://safe-transaction-assets.safe.global/tokens/logos/${SAFE_TOKEN_ADDRESSES['1']}.png`,
+  }
 }
 
-// TODO(devanon): Support other chains
-const nativeToken = {
-  chainId: 1,
-  address: constants.AddressZero,
-  name: 'Ether',
-  symbol: 'ETH',
-  decimals: 18,
+const tokenFromNativeCurrency = (chainId: string, nativeCurrency: NativeCurrency): TokenInfo => {
+  return {
+    chainId: parseInt(chainId),
+    address: constants.AddressZero,
+    name: nativeCurrency.name,
+    symbol: nativeCurrency.symbol,
+    decimals: nativeCurrency.decimals,
+    logoURI: nativeCurrency.logoUri,
+  }
 }
 
-const defaultTokens = [safeToken, nativeToken]
+export function useTokenList(tokenListURI: string, isTokenListEnabled: boolean): TokenInfo[] | undefined {
+  const chain = useCurrentChain()
 
-export function useTokenList(
-  tokenListURI: string,
-  chainId: number,
-  isTokenListEnabled: boolean,
-): TokenInfo[] | undefined {
   const [tokenList, setTokenList] = useState<TokenInfo[]>()
 
   useEffect(() => {
-    if (!isTokenListEnabled) {
-      setTokenList(defaultTokens)
+    if (!chain) {
+      setTokenList(undefined)
       return
     }
+
+    const nativeToken = tokenFromNativeCurrency(chain.chainId, chain.nativeCurrency)
+
+    if (!isTokenListEnabled) {
+      setTokenList([nativeToken])
+      return
+    }
+
+    const safeToken = safeTokenFromChain(chain.chainId)
 
     fetch(tokenListURI)
       .then(async (response) => {
         if (response.ok) {
           const { tokens } = await response.json()
           // TODO(devanon): consider what happens if Uniswap adds Safe Token
-          tokens.push(...defaultTokens)
+          tokens.push(...[nativeToken, safeToken])
           setTokenList(
             (tokens as TokenInfo[]).filter((token) => {
-              const sameChainId = token.chainId === chainId
+              const sameChainId = token.chainId === parseInt(chain.chainId)
               return sameChainId
             }),
           )
@@ -55,10 +67,10 @@ export function useTokenList(
         }
       })
       .catch((err) => {
-        console.log(err)
+        logError(Errors._601, err.message)
         setTokenList(undefined)
       })
-  }, [tokenListURI, chainId, isTokenListEnabled])
+  }, [tokenListURI, chain, isTokenListEnabled])
 
   return tokenList
 }
