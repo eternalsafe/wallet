@@ -22,6 +22,9 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { useToken } from '@/hooks/useToken'
 import NameInput from '@/components/common/NameInput'
 import NumberInput from '@/components/common/NumberInput'
+import { useAppDispatch } from '@/store'
+import { add } from '@/store/customTokensSlice'
+import { TokenType } from '@safe-global/safe-apps-sdk'
 
 export type TokenEntry = {
   address: string
@@ -42,6 +45,8 @@ const AddToken = ({
   columns: number
   defaultValues?: TokenEntry
 }): ReactElement => {
+  const dispatch = useAppDispatch()
+
   const [showAddToken, setShowAddToken] = useState<boolean>(false)
 
   const handleClickAddToken = () => {
@@ -58,11 +63,14 @@ const AddToken = ({
   const submitCallback = handleSubmit((inputData: TokenEntry) => {
     const token = {
       address: inputData.address,
-      name: inputData.name || data?.name,
-      symbol: inputData.symbol || data?.symbol,
-      decimals: inputData.decimals || data?.decimals,
+      name: inputData.name || data?.name || '',
+      symbol: inputData.symbol || data?.symbol || '',
+      decimals: inputData.decimals || data?.decimals || 18,
+      logoUri: '',
+      type: TokenType.ERC20,
     }
-    // TODO(devanon): Add token to slice
+
+    dispatch(add(token))
   })
 
   const onSubmit = (e: BaseSyntheticEvent) => {
