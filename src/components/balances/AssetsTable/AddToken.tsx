@@ -6,15 +6,28 @@ import TableRow from '@mui/material/TableRow'
 import PlusIcon from '@/public/images/common/plus.svg'
 
 import css from './styles.module.css'
-import { Button, Collapse, DialogActions, DialogContent, SvgIcon, Typography } from '@mui/material'
+import {
+  Button,
+  CircularProgress,
+  Collapse,
+  DialogActions,
+  DialogContent,
+  Grid,
+  InputAdornment,
+  SvgIcon,
+  Typography,
+} from '@mui/material'
 import AddressInput from '@/components/common/AddressInput'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useToken } from '@/hooks/useToken'
+import NameInput from '@/components/common/NameInput'
+import NumberInput from '@/components/common/NumberInput'
 
 export type TokenEntry = {
   address: string
   name: string
   symbol: string
+  decimals: number | undefined
 }
 
 const AddToken = ({
@@ -23,6 +36,7 @@ const AddToken = ({
     address: '',
     name: '',
     symbol: '',
+    decimals: undefined,
   },
 }: {
   columns: number
@@ -41,16 +55,22 @@ const AddToken = ({
 
   const { handleSubmit, formState, watch } = methods
 
-  const submitCallback = handleSubmit((data: TokenEntry) => {})
+  const submitCallback = handleSubmit((inputData: TokenEntry) => {
+    const token = {
+      address: inputData.address,
+      name: inputData.name || data?.name,
+      symbol: inputData.symbol || data?.symbol,
+      decimals: inputData.decimals || data?.decimals,
+    }
+    // TODO(devanon): Add token to slice
+  })
 
   const onSubmit = (e: BaseSyntheticEvent) => {
     e.stopPropagation()
-    // submitCallback(e)
+    submitCallback(e)
   }
 
-  const [data, error, loading] = useToken(watch('address'))
-
-  console.log({ data })
+  const [data, , loading] = useToken(watch('address'))
 
   return (
     <TableRow>
@@ -70,11 +90,62 @@ const AddToken = ({
               </DialogContent>
 
               <Collapse in={!!data}>
-                <Box>
-                  <Typography>
-                    {data?.name} ({data?.symbol})
-                  </Typography>
-                </Box>
+                <DialogContent>
+                  <Grid
+                    container
+                    spacing={3}
+                    alignItems="center"
+                    marginBottom={3}
+                    flexWrap={['wrap', undefined, 'nowrap']}
+                  >
+                    <Grid item xs={12}>
+                      <NameInput
+                        name="name"
+                        label="Token name"
+                        InputLabelProps={{ shrink: true }}
+                        placeholder={data?.name || 'Token name'}
+                        InputProps={{
+                          endAdornment: loading ? (
+                            <InputAdornment position="end">
+                              <CircularProgress size={20} />
+                            </InputAdornment>
+                          ) : null,
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <NameInput
+                        name="symbol"
+                        label="Token symbol"
+                        InputLabelProps={{ shrink: true }}
+                        placeholder={data?.symbol || 'Token symbol'}
+                        InputProps={{
+                          endAdornment: loading ? (
+                            <InputAdornment position="end">
+                              <CircularProgress size={20} />
+                            </InputAdornment>
+                          ) : null,
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <NumberInput
+                        name="decimals"
+                        label="Token decimals"
+                        InputLabelProps={{ shrink: true }}
+                        placeholder={data?.decimals.toString() || 'Token decimals'}
+                        InputProps={{
+                          endAdornment: loading ? (
+                            <InputAdornment position="end">
+                              <CircularProgress size={20} />
+                            </InputAdornment>
+                          ) : null,
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+                </DialogContent>
               </Collapse>
 
               <DialogActions>

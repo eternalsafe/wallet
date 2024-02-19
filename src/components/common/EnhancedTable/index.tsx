@@ -163,7 +163,7 @@ function EnhancedTable({ rows, headCells, mobileVariant, children }: EnhancedTab
                     ))}
                   </TableRow>
                 ))
-              : !!children && (
+              : !children && (
                   // Prevent no `tbody` rows hydration error
                   <TableRow>
                     <TableCell />
