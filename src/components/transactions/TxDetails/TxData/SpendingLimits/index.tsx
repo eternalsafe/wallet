@@ -107,7 +107,7 @@ const TEST_RESET_TIME_OPTIONS = [
 ]
 
 export const getResetTimeOptions = (chainId = ''): { label: string; value: string }[] => {
-  return chainId === chains.gor || chainId === chains.sep ? TEST_RESET_TIME_OPTIONS : RESET_TIME_OPTIONS
+  return chainId === chains.sep ? TEST_RESET_TIME_OPTIONS : RESET_TIME_OPTIONS
 }
 
 export default SpendingLimits

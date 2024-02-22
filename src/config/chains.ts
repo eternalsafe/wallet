@@ -27,7 +27,6 @@ const ChainLogos = {
   [chains.zkevm]: '/images/networks/polygon.svg',
   [chains.zksync]: '/images/networks/zksync.svg',
   [chains.celo]: '/images/networks/celo.svg',
-  [chains.gor]: '/images/networks/gor.svg',
   [chains.arb1]: '/images/networks/arb.svg',
   [chains.avax]: '/images/networks/avax.svg',
   [chains.sep]: '/images/networks/sep.png',
