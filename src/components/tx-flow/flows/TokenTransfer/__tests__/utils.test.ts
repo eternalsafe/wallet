@@ -1,12 +1,13 @@
 import { connectedWalletBuilder } from '@/tests/builders/wallet'
-import { type SafeBalanceResponse, type TokenInfo, TokenType } from '@safe-global/safe-gateway-typescript-sdk'
+import { type TokenInfo, TokenType } from '@safe-global/safe-gateway-typescript-sdk'
 import { BigNumber } from 'ethers'
 import { useTokenAmount, useVisibleTokens } from '@/components/tx-flow/flows/TokenTransfer/utils'
 import { renderHook } from '@/tests/test-utils'
 import * as spendingLimit from '@/hooks/useSpendingLimit'
 import * as spendingLimitBeneficiary from '@/hooks/useIsOnlySpendingLimitBeneficiary'
-import * as visibleBalances from '@/hooks/useVisibleBalances'
+import * as balances from '@/hooks/useBalances'
 import * as wallet from '@/hooks/wallets/useWallet'
+import type { SafeBalanceResponse } from '@/hooks/loadables/useLoadBalances'
 
 describe('TokenTransfer utils', () => {
   describe('useTokenAmount', () => {
@@ -94,7 +95,7 @@ describe('TokenTransfer utils', () => {
       }
 
       jest.spyOn(spendingLimitBeneficiary, 'default').mockReturnValue(false)
-      jest.spyOn(visibleBalances, 'useVisibleBalances').mockReturnValue({
+      jest.spyOn(balances, 'default').mockReturnValue({
         balances: balance,
         loading: false,
       })
@@ -148,7 +149,7 @@ describe('TokenTransfer utils', () => {
       }
 
       jest.spyOn(spendingLimitBeneficiary, 'default').mockReturnValue(true)
-      jest.spyOn(visibleBalances, 'useVisibleBalances').mockReturnValue({
+      jest.spyOn(balances, 'default').mockReturnValue({
         balances: balance,
         loading: false,
       })

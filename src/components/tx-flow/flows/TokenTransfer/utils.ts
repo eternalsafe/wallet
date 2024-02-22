@@ -1,6 +1,6 @@
+import useBalances from '@/hooks/useBalances'
 import useIsOnlySpendingLimitBeneficiary from '@/hooks/useIsOnlySpendingLimitBeneficiary'
 import useSpendingLimit from '@/hooks/useSpendingLimit'
-import { useVisibleBalances } from '@/hooks/useVisibleBalances'
 import useWallet from '@/hooks/wallets/useWallet'
 import { useAppSelector } from '@/store'
 import { selectSpendingLimits } from '@/store/spendingLimitsSlice'
@@ -19,7 +19,7 @@ export const useTokenAmount = (selectedToken: SafeBalanceResponse['items'][0] | 
 
 export const useVisibleTokens = () => {
   const isOnlySpendingLimitBeneficiary = useIsOnlySpendingLimitBeneficiary()
-  const { balances } = useVisibleBalances()
+  const { balances } = useBalances()
   const spendingLimits = useAppSelector(selectSpendingLimits)
   const wallet = useWallet()
 

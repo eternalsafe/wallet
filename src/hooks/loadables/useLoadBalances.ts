@@ -1,47 +1,33 @@
-import { useEffect, useMemo } from 'react'
-import { type TokenInfo, TokenType, type SafeBalanceResponse } from '@safe-global/safe-gateway-typescript-sdk'
-import { useAppSelector } from '@/store'
+import { useEffect } from 'react'
+import { type TokenInfo, TokenType } from '@safe-global/safe-gateway-typescript-sdk'
 import useAsync, { type AsyncResult } from '../useAsync'
 import { Errors, logError } from '@/services/exceptions'
-import { selectSettings, TOKEN_LISTS } from '@/store/settingsSlice'
-import { useCurrentChain } from '../useChains'
-import { FEATURES, hasFeature } from '@/utils/chains'
-import { DEFAULT_IPFS_GATEWAY, DEFAULT_TOKENLIST_IPNS } from '@/config/constants'
 import useSafeInfo from '../useSafeInfo'
 import { getERC20Balance } from '@/utils/tokens'
-import { useTokenList } from '@/hooks/useTokenList'
 import { constants } from 'ethers'
+import { useTokens } from '@/hooks/useTokens'
 
-type TokenItem = {
+export type SafeBalanceResponse = {
+  fiatTotal: string
+  items: Array<TokenItem>
+}
+
+export type TokenItem = {
   tokenInfo: TokenInfo
   balance: string
   fiatBalance: string
   fiatConversion: string
+  custom?: boolean
 }
 
 const isTokenItem = (item: TokenItem | undefined): item is TokenItem => {
   return !!item
 }
 
-const useTokenListSetting = (): boolean | undefined => {
-  const chain = useCurrentChain()
-  const settings = useAppSelector(selectSettings)
-
-  const isTokenListEnabled = useMemo(() => {
-    if (settings.tokenList === TOKEN_LISTS.TRUSTED) return false
-    return chain ? hasFeature(chain, FEATURES.DEFAULT_TOKENLIST) : undefined
-  }, [chain, settings.tokenList])
-
-  return isTokenListEnabled
-}
-
 export const useLoadBalances = (): AsyncResult<SafeBalanceResponse> => {
-  const isTokenListEnabled = useTokenListSetting()
   const { safeAddress } = useSafeInfo()
 
-  // TODO(devanon): get IPFS gateway from env or fallback to default, need method for this
-  const tokens = useTokenList(`${DEFAULT_IPFS_GATEWAY}/${DEFAULT_TOKENLIST_IPNS}`, isTokenListEnabled ?? false)
-  // TODO(devanon): add on custom token list from state
+  const tokens = useTokens()
 
   // Re-fetch assets when the entire SafeInfo updates
   const [data, error, loading] = useAsync<SafeBalanceResponse | undefined>(
@@ -63,6 +49,7 @@ export const useLoadBalances = (): AsyncResult<SafeBalanceResponse> => {
           balance: balance.toString(),
           fiatBalance: '',
           fiatConversion: '',
+          custom: token.extensions?.custom ?? false,
         } as TokenItem
       })
 

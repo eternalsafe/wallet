@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { type TokenInfo } from '@uniswap/token-lists'
 import { SAFE_TOKEN_ADDRESSES } from '@/config/constants'
-import { constants } from 'ethers'
 import { useCurrentChain } from '@/hooks/useChains'
-import { type NativeCurrency } from '@safe-global/safe-gateway-typescript-sdk'
 import { Errors, logError } from '@/services/exceptions'
+import { getAddress } from 'ethers/lib/utils'
 
 const safeTokenFromChain = (chainId: string): TokenInfo => {
   return {
@@ -18,32 +17,14 @@ const safeTokenFromChain = (chainId: string): TokenInfo => {
   }
 }
 
-const tokenFromNativeCurrency = (chainId: string, nativeCurrency: NativeCurrency): TokenInfo => {
-  return {
-    chainId: parseInt(chainId),
-    address: constants.AddressZero,
-    name: nativeCurrency.name,
-    symbol: nativeCurrency.symbol,
-    decimals: nativeCurrency.decimals,
-    logoURI: nativeCurrency.logoUri,
-  }
-}
-
-export function useTokenList(tokenListURI: string, isTokenListEnabled: boolean): TokenInfo[] | undefined {
+export function useTokenList(tokenListURI: string, isTokenListEnabled: boolean): Array<TokenInfo> | undefined {
   const chain = useCurrentChain()
 
-  const [tokenList, setTokenList] = useState<TokenInfo[]>()
+  const [tokenList, setTokenList] = useState<Array<TokenInfo>>()
 
   useEffect(() => {
-    if (!chain) {
+    if (!chain || !isTokenListEnabled) {
       setTokenList(undefined)
-      return
-    }
-
-    const nativeToken = tokenFromNativeCurrency(chain.chainId, chain.nativeCurrency)
-
-    if (!isTokenListEnabled) {
-      setTokenList([nativeToken])
       return
     }
 
@@ -52,15 +33,23 @@ export function useTokenList(tokenListURI: string, isTokenListEnabled: boolean):
     fetch(tokenListURI)
       .then(async (response) => {
         if (response.ok) {
-          const { tokens } = await response.json()
-          // TODO(devanon): consider what happens if Uniswap adds Safe Token
-          tokens.push(...[nativeToken, safeToken])
-          setTokenList(
-            (tokens as TokenInfo[]).filter((token) => {
+          const { tokens }: { tokens: TokenInfo[] } = await response.json()
+
+          const tokenList = tokens
+            .filter((token) => {
               const sameChainId = token.chainId === parseInt(chain.chainId)
-              return sameChainId
-            }),
-          )
+              const isSafeToken = getAddress(token.address) === getAddress(safeToken.address)
+              return sameChainId && !isSafeToken
+            })
+            .map((token) => {
+              return {
+                ...token,
+                address: getAddress(token.address),
+              }
+            })
+          tokenList.push(safeToken)
+
+          setTokenList(tokenList)
         } else {
           const errorMessage = await response.text()
           return Promise.reject(new Error(errorMessage))

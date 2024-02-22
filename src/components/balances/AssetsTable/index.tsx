@@ -1,5 +1,5 @@
-import { type ReactElement, useMemo, useContext } from 'react'
-import { Button, Tooltip, Typography, IconButton, Box, Checkbox, Skeleton } from '@mui/material'
+import { type ReactElement, useContext } from 'react'
+import { Button, Tooltip, Typography, IconButton, Box, Skeleton } from '@mui/material'
 import type { TokenInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import { TokenType } from '@safe-global/safe-gateway-typescript-sdk'
 import css from './styles.module.css'
@@ -8,10 +8,8 @@ import TokenIcon from '@/components/common/TokenIcon'
 import EnhancedTable, { type EnhancedTableProps } from '@/components/common/EnhancedTable'
 import TokenExplorerLink from '@/components/common/TokenExplorerLink'
 import { VisibilityOutlined } from '@mui/icons-material'
-import TokenMenu from '../TokenMenu'
 import useBalances from '@/hooks/useBalances'
-import useHiddenTokens from '@/hooks/useHiddenTokens'
-import { useHideAssets } from './useHideAssets'
+import { useRemoveToken } from './useRemoveToken'
 import CheckWallet from '@/components/common/CheckWallet'
 import useSpendingLimit from '@/hooks/useSpendingLimit'
 import { TxModalContext } from '@/components/tx-flow'
@@ -104,30 +102,11 @@ const SendButton = ({
   )
 }
 
-const AssetsTable = ({
-  showHiddenAssets,
-  setShowHiddenAssets,
-}: {
-  showHiddenAssets: boolean
-  setShowHiddenAssets: (hidden: boolean) => void
-}): ReactElement => {
-  const hiddenAssets = useHiddenTokens()
+const AssetsTable = (): ReactElement => {
   const { balances, loading } = useBalances()
   const { setTxFlow } = useContext(TxModalContext)
 
-  const { isAssetSelected, toggleAsset, hidingAsset, hideAsset, cancel, deselectAll, saveChanges } = useHideAssets(() =>
-    setShowHiddenAssets(false),
-  )
-
-  const visibleAssets = useMemo(
-    () =>
-      showHiddenAssets
-        ? balances.items
-        : balances.items?.filter((item) => !hiddenAssets.includes(item.tokenInfo.address)),
-    [hiddenAssets, balances.items, showHiddenAssets],
-  )
-
-  const selectedAssetCount = visibleAssets?.filter((item) => isAssetSelected(item.tokenInfo.address)).length || 0
+  const { removingToken, removeToken } = useRemoveToken()
 
   const onSendClick = (tokenAddress: string) => {
     setTxFlow(<TokenTransferFlow tokenAddress={tokenAddress} />)
@@ -135,18 +114,16 @@ const AssetsTable = ({
 
   const rows = loading
     ? skeletonRows
-    : (visibleAssets || []).map((item) => {
+    : (balances.items || []).map((item) => {
         const isNative = isNativeToken(item.tokenInfo)
-        const isSelected = isAssetSelected(item.tokenInfo.address)
 
         return {
           key: item.tokenInfo.address,
-          selected: isSelected,
-          collapsed: item.tokenInfo.address === hidingAsset,
+          collapsed: item.tokenInfo.address === removingToken,
           cells: {
             asset: {
               rawValue: item.tokenInfo.name,
-              collapsed: item.tokenInfo.address === hidingAsset,
+              collapsed: item.tokenInfo.address === removingToken,
               content: (
                 <div className={css.token}>
                   <TokenIcon logoUri={item.tokenInfo.logoUri} tokenSymbol={item.tokenInfo.symbol} />
@@ -159,7 +136,7 @@ const AssetsTable = ({
             },
             balance: {
               rawValue: Number(item.balance) / 10 ** item.tokenInfo.decimals,
-              collapsed: item.tokenInfo.address === hidingAsset,
+              collapsed: item.tokenInfo.address === removingToken,
               content: (
                 <TokenAmount
                   value={item.balance}
@@ -171,21 +148,18 @@ const AssetsTable = ({
             actions: {
               rawValue: '',
               sticky: true,
-              collapsed: item.tokenInfo.address === hidingAsset,
+              collapsed: item.tokenInfo.address === removingToken,
               content: (
                 <Box display="flex" flexDirection="row" gap={1} alignItems="center">
                   <>
                     <SendButton tokenInfo={item.tokenInfo} onClick={() => onSendClick(item.tokenInfo.address)} />
 
-                    {/* TODO(devanon): Only show this for assets the user has added */}
-                    {showHiddenAssets ? (
-                      <Checkbox size="small" checked={isSelected} onClick={() => toggleAsset(item.tokenInfo.address)} />
-                    ) : (
+                    {item.custom && (
                       <Tooltip title="Hide asset" arrow disableInteractive>
                         <IconButton
-                          disabled={hidingAsset !== undefined}
+                          disabled={removingToken !== undefined}
                           size="medium"
-                          onClick={() => hideAsset(item.tokenInfo.address)}
+                          onClick={() => removeToken(item.tokenInfo.address)}
                         >
                           <VisibilityOutlined fontSize="small" />
                         </IconButton>
@@ -201,14 +175,6 @@ const AssetsTable = ({
 
   return (
     <>
-      <TokenMenu
-        saveChanges={saveChanges}
-        cancel={cancel}
-        deselectAll={deselectAll}
-        selectedAssetCount={selectedAssetCount}
-        showHiddenAssets={showHiddenAssets}
-      />
-
       <div className={css.container}>
         <EnhancedTable rows={rows} headCells={headCells}>
           <AddToken columns={headCells.length} />

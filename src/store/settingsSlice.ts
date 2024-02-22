@@ -23,10 +23,6 @@ export enum TOKEN_LISTS {
 export type SettingsState = {
   currency: string
 
-  hiddenTokens: {
-    [chainId: string]: string[]
-  }
-
   tokenList: TOKEN_LISTS
 
   shortName: {
@@ -48,8 +44,6 @@ export const initialState: SettingsState = {
   currency: 'usd',
 
   tokenList: TOKEN_LISTS.TRUSTED,
-
-  hiddenTokens: {},
 
   shortName: {
     show: true,
@@ -92,10 +86,6 @@ export const settingsSlice = createSlice({
     setDarkMode: (state, { payload }: PayloadAction<SettingsState['theme']['darkMode']>) => {
       state.theme.darkMode = payload
     },
-    setHiddenTokensForChain: (state, { payload }: PayloadAction<{ chainId: string; assets: string[] }>) => {
-      const { chainId, assets } = payload
-      state.hiddenTokens[chainId] = assets
-    },
     setTokenList: (state, { payload }: PayloadAction<SettingsState['tokenList']>) => {
       state.tokenList = payload
     },
@@ -127,7 +117,6 @@ export const {
   setCopyShortName,
   setQrShortName,
   setDarkMode,
-  setHiddenTokensForChain,
   setTokenList,
   setRpc,
   setTenderly,
@@ -144,13 +133,6 @@ export const selectCurrency = (state: RootState): SettingsState['currency'] => {
 export const selectTokenList = (state: RootState): SettingsState['tokenList'] => {
   return state[settingsSlice.name].tokenList || initialState.tokenList
 }
-
-export const selectHiddenTokensPerChain = createSelector(
-  [selectSettings, (_, chainId) => chainId],
-  (settings, chainId) => {
-    return settings.hiddenTokens?.[chainId] || []
-  },
-)
 
 export const selectRpc = createSelector(selectSettings, (settings) => settings.env.rpc)
 

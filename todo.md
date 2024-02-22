@@ -1,6 +1,5 @@
 ### Todo
 
-- [ ] Query balances from chain
 - [ ] Query transactions from chain
 - [ ] Implement magic link with signatures
 - [ ] Ask for RPC URL in Safe Loading flow
@@ -12,6 +11,7 @@
 
 ### Done ✓
 
+- [x] Query balances from chain
 - [x] Change favicon
 - [x] Remove cypress
 - [x] Add Eternal Safe specific tests

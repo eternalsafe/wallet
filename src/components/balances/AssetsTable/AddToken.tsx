@@ -25,6 +25,8 @@ import NumberInput from '@/components/common/NumberInput'
 import { useAppDispatch } from '@/store'
 import { add } from '@/store/customTokensSlice'
 import { TokenType } from '@safe-global/safe-apps-sdk'
+import { useCurrentChain } from '@/hooks/useChains'
+import { getAddress } from 'ethers/lib/utils'
 
 export type TokenEntry = {
   address: string
@@ -46,6 +48,7 @@ const AddToken = ({
   defaultValues?: TokenEntry
 }): ReactElement => {
   const dispatch = useAppDispatch()
+  const chain = useCurrentChain()
 
   const [showAddToken, setShowAddToken] = useState<boolean>(false)
 
@@ -58,11 +61,14 @@ const AddToken = ({
     mode: 'onChange',
   })
 
-  const { handleSubmit, formState, watch } = methods
+  const { handleSubmit, formState, watch, reset } = methods
 
   const submitCallback = handleSubmit((inputData: TokenEntry) => {
+    if (!chain) return // TODO(devanon): show an error message
+
     const token = {
-      address: inputData.address,
+      chainId: parseInt(chain.chainId),
+      address: getAddress(inputData.address),
       name: inputData.name || data?.name || '',
       symbol: inputData.symbol || data?.symbol || '',
       decimals: inputData.decimals || data?.decimals || 18,
@@ -70,7 +76,9 @@ const AddToken = ({
       type: TokenType.ERC20,
     }
 
-    dispatch(add(token))
+    dispatch(add([chain.chainId, token]))
+    reset()
+    setShowAddToken(false)
   })
 
   const onSubmit = (e: BaseSyntheticEvent) => {

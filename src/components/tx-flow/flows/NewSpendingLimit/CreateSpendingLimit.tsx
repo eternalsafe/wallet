@@ -7,13 +7,13 @@ import { defaultAbiCoder, parseUnits } from 'ethers/lib/utils'
 import AddressBookInput from '@/components/common/AddressBookInput'
 import useChainId from '@/hooks/useChainId'
 import { getResetTimeOptions } from '@/components/transactions/TxDetails/TxData/SpendingLimits'
-import { useVisibleBalances } from '@/hooks/useVisibleBalances'
 import type { NewSpendingLimitFlowProps } from '.'
 import TxCard from '../../common/TxCard'
 import css from '@/components/tx/ExecuteCheckbox/styles.module.css'
 import TokenAmountInput from '@/components/common/TokenAmountInput'
 import { SpendingLimitFields } from '.'
 import { validateAmount, validateDecimalLength } from '@/utils/validation'
+import useBalances from '@/hooks/useBalances'
 
 export const _validateSpendingLimit = (val: string, decimals?: number) => {
   // Allowance amount is uint96 https://github.com/safe-global/safe-modules/blob/master/allowances/contracts/AlowanceModule.sol#L52
@@ -33,7 +33,7 @@ export const CreateSpendingLimit = ({
   onSubmit: (data: NewSpendingLimitFlowProps) => void
 }) => {
   const chainId = useChainId()
-  const { balances } = useVisibleBalances()
+  const { balances } = useBalances()
 
   const resetTimeOptions = useMemo(() => getResetTimeOptions(chainId), [chainId])
 

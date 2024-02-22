@@ -1,6 +1,7 @@
-import { type TokenInfo, type SafeBalanceResponse } from '@safe-global/safe-gateway-typescript-sdk'
+import { type TokenInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import { createSelector } from '@reduxjs/toolkit'
 import { makeLoadableSlice } from './common'
+import type { SafeBalanceResponse } from '@/hooks/loadables/useLoadBalances'
 
 export const initialBalancesState: SafeBalanceResponse = {
   items: [],

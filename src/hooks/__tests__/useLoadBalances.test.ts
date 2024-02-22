@@ -140,9 +140,9 @@ describe('useLoadBalances', () => {
         chains: {
           data: [
             {
-              chainId: '5',
+              chainId: '11155111',
               features: [FEATURES.DEFAULT_TOKENLIST],
-              chainName: 'Görli',
+              chainName: 'Sepolia',
             } as any,
           ],
         },
@@ -155,7 +155,6 @@ describe('useLoadBalances', () => {
         },
         settings: {
           currency: 'USD',
-          hiddenTokens: {},
           shortName: {
             copy: true,
             qr: true,
@@ -164,6 +163,7 @@ describe('useLoadBalances', () => {
           theme: {},
           tokenList: 'ALL',
         },
+        customTokens: {},
       } as store.RootState),
     )
     const { result } = renderHook(() => useLoadBalances())
@@ -190,16 +190,15 @@ describe('useLoadBalances', () => {
         chains: {
           data: [
             {
-              chainId: '5',
-              features: [],
-              chainName: 'Görli',
+              chainId: '11155111',
+              features: [FEATURES.DEFAULT_TOKENLIST],
+              chainName: 'Sepolia',
             } as any,
           ],
         },
         safeInfo: mockSafeInfo,
         settings: {
           currency: 'EUR',
-          hiddenTokens: {},
           shortName: {
             copy: true,
             qr: true,
@@ -208,6 +207,7 @@ describe('useLoadBalances', () => {
           theme: {},
           tokenList: TOKEN_LISTS.TRUSTED,
         },
+        customTokens: {},
       } as store.RootState),
     )
     const { result } = renderHook(() => useLoadBalances())
@@ -240,9 +240,9 @@ describe('useLoadBalances', () => {
         chains: {
           data: [
             {
-              chainId: '5',
+              chainId: '11155111',
               features: [FEATURES.DEFAULT_TOKENLIST],
-              chainName: 'Görli',
+              chainName: 'Sepolia',
             } as any,
           ],
         },
@@ -252,7 +252,6 @@ describe('useLoadBalances', () => {
         safeInfo: mockSafeInfo,
         settings: {
           currency: 'EUR',
-          hiddenTokens: {},
           shortName: {
             copy: true,
             qr: true,
@@ -261,6 +260,7 @@ describe('useLoadBalances', () => {
           theme: {},
           tokenList: TOKEN_LISTS.TRUSTED,
         },
+        customTokens: {},
       } as store.RootState),
     )
     const { result, rerender } = renderHook(() => useLoadBalances())
@@ -275,16 +275,15 @@ describe('useLoadBalances', () => {
         chains: {
           data: [
             {
-              chainId: '5',
+              chainId: '11155111',
               features: [FEATURES.DEFAULT_TOKENLIST],
-              chainName: 'Görli',
+              chainName: 'Sepolia',
             } as any,
           ],
         },
         safeInfo: mockSafeInfo,
         settings: {
           currency: 'EUR',
-          hiddenTokens: {},
           shortName: {
             copy: true,
             qr: true,
@@ -293,6 +292,7 @@ describe('useLoadBalances', () => {
           theme: {},
           tokenList: TOKEN_LISTS.ALL,
         },
+        customTokens: {},
       } as store.RootState),
     )
 
