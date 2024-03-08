@@ -1,6 +1,6 @@
 import ErrorMessage from '@/components/tx/ErrorMessage'
 import useWalletCanPay from '@/hooks/useWalletCanPay'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Button, Grid, Typography, Divider, Box } from '@mui/material'
 import lightPalette from '@/components/theme/lightPalette'
 import ChainIndicator from '@/components/common/ChainIndicator'
@@ -22,24 +22,12 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import NetworkWarning from '@/components/new-safe/create/NetworkWarning'
 import useIsWrongChain from '@/hooks/useIsWrongChain'
 import ReviewRow from '@/components/new-safe/ReviewRow'
-import { ExecutionMethodSelector, ExecutionMethod } from '@/components/tx/ExecutionMethodSelector'
-import { useLeastRemainingRelays } from '@/hooks/useRemainingRelays'
-import classnames from 'classnames'
-import { hasRemainingRelays } from '@/utils/relaying'
 import { BigNumber } from 'ethers'
 import { usePendingSafe } from '../StatusStep/usePendingSafe'
 import { LATEST_SAFE_VERSION } from '@/config/constants'
 import { type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 
-export const NetworkFee = ({
-  totalFee,
-  chain,
-  willRelay,
-}: {
-  totalFee: string
-  chain: ChainInfo | undefined
-  willRelay: boolean
-}) => {
+export const NetworkFee = ({ totalFee, chain }: { totalFee: string; chain: ChainInfo | undefined }) => {
   return (
     <Box
       p={1}
@@ -50,7 +38,7 @@ export const NetworkFee = ({
         borderRadius: '6px',
       }}
     >
-      <Typography variant="body1" className={classnames({ [css.sponsoredFee]: willRelay })}>
+      <Typography variant="body1">
         <b>
           &asymp; {totalFee} {chain?.nativeCurrency.symbol}
         </b>
@@ -68,14 +56,6 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
   const [gasPrice] = useGasPrice()
   const saltNonce = useMemo(() => Date.now(), [])
   const [_, setPendingSafe] = usePendingSafe()
-  const [executionMethod, setExecutionMethod] = useState(ExecutionMethod.RELAY)
-
-  const ownerAddresses = useMemo(() => data.owners.map((owner) => owner.address), [data.owners])
-  const [minRelays] = useLeastRemainingRelays(ownerAddresses)
-
-  // Every owner has remaining relays and relay method is selected
-  const canRelay = hasRemainingRelays(minRelays)
-  const willRelay = canRelay && executionMethod === ExecutionMethod.RELAY
 
   const safeParams = useMemo(() => {
     return {
@@ -131,7 +111,6 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
       ...data,
       saltNonce,
       safeAddress,
-      willRelay,
     }
 
     setPendingSafe(pendingSafe)
@@ -178,33 +157,16 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
 
       <Divider />
       <Box className={layoutCss.row} display="flex" flexDirection="column" gap={3}>
-        {canRelay && (
-          <Grid container spacing={3}>
-            <ReviewRow
-              name="Execution method"
-              value={
-                <ExecutionMethodSelector
-                  executionMethod={executionMethod}
-                  setExecutionMethod={setExecutionMethod}
-                  relays={minRelays}
-                />
-              }
-            />
-          </Grid>
-        )}
-
         <Grid data-testid="network-fee-section" container spacing={3}>
           <ReviewRow
             name="Est. network fee"
             value={
               <>
-                <NetworkFee totalFee={totalFee} willRelay={willRelay} chain={chain} />
+                <NetworkFee totalFee={totalFee} chain={chain} />
 
-                {!willRelay && (
-                  <Typography variant="body2" color="text.secondary" mt={1}>
-                    You will have to confirm a transaction with your connected wallet.
-                  </Typography>
-                )}
+                <Typography variant="body2" color="text.secondary" mt={1}>
+                  You will have to confirm a transaction with your connected wallet.
+                </Typography>
               </>
             }
           />
@@ -212,7 +174,7 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
 
         {isWrongChain && <NetworkWarning />}
 
-        {!walletCanPay && !willRelay && (
+        {!walletCanPay && (
           <ErrorMessage>Your connected wallet doesn&apos;t have enough funds to execute this transaction</ErrorMessage>
         )}
       </Box>

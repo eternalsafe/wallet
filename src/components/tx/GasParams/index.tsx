@@ -28,7 +28,6 @@ type GasParamsProps = {
   isEIP1559: boolean
   onEdit: () => void
   gasLimitError?: Error
-  willRelay?: boolean
 }
 
 export const _GasParams = ({
@@ -37,7 +36,6 @@ export const _GasParams = ({
   isEIP1559,
   onEdit,
   gasLimitError,
-  willRelay,
   chain,
 }: GasParamsProps & { chain?: ChainInfo }): ReactElement => {
   const { nonce, userNonce, safeTxGas, gasLimit, maxFeePerGas, maxPriorityFeePerGas } = params
@@ -69,7 +67,7 @@ export const _GasParams = ({
             {gasLimitError ? null : isLoading ? (
               <Skeleton variant="text" sx={{ display: 'inline-block', minWidth: '7em' }} />
             ) : (
-              <span>{willRelay ? 'Free' : `${totalFee} ${chain?.nativeCurrency.symbol}`}</span>
+              <span>{`${totalFee} ${chain?.nativeCurrency.symbol}`}</span>
             )}
           </Typography>
         ) : (

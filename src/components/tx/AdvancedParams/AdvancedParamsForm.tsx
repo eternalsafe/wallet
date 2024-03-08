@@ -17,7 +17,6 @@ type AdvancedParamsFormProps = {
   recommendedGasLimit?: AdvancedParameters['gasLimit']
   isExecution: boolean
   isEIP1559: boolean
-  willRelay?: boolean
 }
 
 type FormData = {
@@ -83,7 +82,6 @@ const AdvancedParamsForm = ({ params, ...props }: AdvancedParamsFormProps) => {
               <Grid item xs={6}>
                 <FormControl fullWidth>
                   <NumberField
-                    disabled={props.willRelay}
                     label={errors.userNonce?.message || 'Wallet nonce'}
                     error={!!errors.userNonce}
                     {...register(AdvancedField.userNonce)}
@@ -101,7 +99,6 @@ const AdvancedParamsForm = ({ params, ...props }: AdvancedParamsFormProps) => {
                 <Grid item xs={6}>
                   <FormControl fullWidth>
                     <NumberField
-                      disabled={props.willRelay}
                       label={errors.maxPriorityFeePerGas?.message || 'Max priority fee (Gwei)'}
                       error={!!errors.maxPriorityFeePerGas}
                       required
@@ -118,7 +115,6 @@ const AdvancedParamsForm = ({ params, ...props }: AdvancedParamsFormProps) => {
               <Grid item xs={6}>
                 <FormControl fullWidth>
                   <NumberField
-                    disabled={props.willRelay}
                     label={errors.maxFeePerGas?.message || props.isEIP1559 ? 'Max fee (Gwei)' : 'Gas price (Gwei)'}
                     error={!!errors.maxFeePerGas}
                     required

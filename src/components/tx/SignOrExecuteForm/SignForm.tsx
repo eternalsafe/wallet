@@ -14,7 +14,6 @@ import { asError } from '@/services/exceptions/utils'
 import commonCss from '@/components/tx-flow/common/styles.module.css'
 import { TxSecurityContext } from '../security/shared/TxSecurityContext'
 import NonOwnerError from '@/components/tx/SignOrExecuteForm/NonOwnerError'
-import BatchButton from './BatchButton'
 
 export const SignForm = ({
   safeTx,
@@ -102,13 +101,14 @@ export const SignForm = ({
       <CardActions>
         <Box display="flex" gap={2}>
           {/* Batch button */}
-          {isCreation && !isBatch && (
+          {/* TOOD(devanon): Re-introduce batching */}
+          {/* {isCreation && !isBatch && (
             <BatchButton
               onClick={onBatchClick}
               disabled={submitDisabled || !isBatchable}
               tooltip={!isBatchable ? `Cannot batch this type of transaction` : undefined}
             />
-          )}
+          )} */}
 
           {/* Submit button */}
           <CheckWallet>

@@ -3,40 +3,27 @@ import type { Dispatch, SetStateAction, ReactElement, ChangeEvent } from 'react'
 
 import useWallet from '@/hooks/wallets/useWallet'
 import WalletIcon from '@/components/common/WalletIcon'
-import SponsoredBy from '../SponsoredBy'
-import RemainingRelays from '../RemainingRelays'
-import type { RelayResponse } from '@/services/tx/relaying'
 
 import css from './styles.module.css'
-import BalanceInfo from '@/components/tx/BalanceInfo'
 import madProps from '@/utils/mad-props'
-import { useCurrentChain } from '@/hooks/useChains'
-import type { ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import type { ConnectedWallet } from '@/hooks/wallets/useOnboard'
 
 export const enum ExecutionMethod {
-  RELAY = 'RELAY',
   WALLET = 'WALLET',
 }
 
 const _ExecutionMethodSelector = ({
   wallet,
-  chain,
   executionMethod,
   setExecutionMethod,
-  relays,
   noLabel,
-  tooltip,
 }: {
   wallet: ConnectedWallet | null
-  chain?: ChainInfo
   executionMethod: ExecutionMethod
   setExecutionMethod: Dispatch<SetStateAction<ExecutionMethod>>
-  relays?: RelayResponse
   noLabel?: boolean
-  tooltip?: string
 }): ReactElement | null => {
-  const shouldRelay = executionMethod === ExecutionMethod.RELAY
+  const shouldRelay = false
 
   const onChooseExecutionMethod = (_: ChangeEvent<HTMLInputElement>, newExecutionMethod: string) => {
     setExecutionMethod(newExecutionMethod as ExecutionMethod)
@@ -54,18 +41,6 @@ const _ExecutionMethodSelector = ({
 
           <RadioGroup row value={executionMethod} onChange={onChooseExecutionMethod}>
             <FormControlLabel
-              sx={{ flex: 1 }}
-              value={ExecutionMethod.RELAY}
-              label={
-                <Typography className={css.radioLabel}>
-                  Sponsored by
-                  <SponsoredBy chainId={chain?.chainId ?? ''} />
-                </Typography>
-              }
-              control={<Radio />}
-            />
-
-            <FormControlLabel
               data-testid="connected-wallet-execution-method"
               sx={{ flex: 1 }}
               value={ExecutionMethod.WALLET}
@@ -80,13 +55,10 @@ const _ExecutionMethodSelector = ({
           </RadioGroup>
         </FormControl>
       </div>
-
-      {shouldRelay && relays ? <RemainingRelays relays={relays} tooltip={tooltip} /> : wallet ? <BalanceInfo /> : null}
     </Box>
   )
 }
 
 export const ExecutionMethodSelector = madProps(_ExecutionMethodSelector, {
   wallet: useWallet,
-  chain: useCurrentChain,
 })

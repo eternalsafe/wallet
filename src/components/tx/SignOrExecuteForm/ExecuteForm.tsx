@@ -11,10 +11,6 @@ import { getTxOptions } from '@/utils/transactions'
 import useIsValidExecution from '@/hooks/useIsValidExecution'
 import CheckWallet from '@/components/common/CheckWallet'
 import { useIsExecutionLoop, useTxActions } from './hooks'
-import { useRelaysBySafe } from '@/hooks/useRemainingRelays'
-import useWalletCanRelay from '@/hooks/useWalletCanRelay'
-import { ExecutionMethod, ExecutionMethodSelector } from '../ExecutionMethodSelector'
-import { hasRemainingRelays } from '@/utils/relaying'
 import type { SignOrExecuteProps } from '.'
 import type { SafeTransaction } from '@safe-global/safe-core-sdk-types'
 import { TxModalContext } from '@/components/tx-flow'
@@ -39,13 +35,11 @@ export const ExecuteForm = ({
   isCreation,
   isOwner,
   isExecutionLoop,
-  relays,
   txActions,
   txSecurity,
 }: SignOrExecuteProps & {
   isOwner: ReturnType<typeof useIsSafeOwner>
   isExecutionLoop: ReturnType<typeof useIsExecutionLoop>
-  relays: ReturnType<typeof useRelaysBySafe>
   txActions: ReturnType<typeof useTxActions>
   txSecurity: ReturnType<typeof useTxSecurityContext>
   safeTx?: SafeTransaction
@@ -59,16 +53,6 @@ export const ExecuteForm = ({
   const { executeTx } = txActions
   const { setTxFlow } = useContext(TxModalContext)
   const { needsRiskConfirmation, isRiskConfirmed, setIsRiskIgnored } = txSecurity
-
-  // We default to relay, but the option is only shown if we canRelay
-  const [executionMethod, setExecutionMethod] = useState(ExecutionMethod.RELAY)
-
-  // SC wallets can relay fully signed transactions
-  const [walletCanRelay] = useWalletCanRelay(safeTx)
-
-  // The transaction can/will be relayed
-  const canRelay = walletCanRelay && hasRemainingRelays(relays[0])
-  const willRelay = canRelay && executionMethod === ExecutionMethod.RELAY
 
   // Estimate gas limit
   const { gasLimit, gasLimitError } = useGasLimit(safeTx)
@@ -93,7 +77,7 @@ export const ExecuteForm = ({
 
     let executedTxId: string
     try {
-      executedTxId = await executeTx(txOptions, safeTx, txId, origin, willRelay)
+      executedTxId = await executeTx(txOptions, safeTx, txId, origin)
     } catch (_err) {
       const err = asError(_err)
       trackError(Errors._804, err)
@@ -125,27 +109,15 @@ export const ExecuteForm = ({
   return (
     <>
       <form onSubmit={handleSubmit}>
-        <div className={classNames(css.params, { [css.noBottomBorderRadius]: canRelay })}>
+        <div className={classNames(css.params)}>
           <AdvancedParams
             willExecute
             params={advancedParams}
             recommendedGasLimit={gasLimit}
             onFormSubmit={setAdvancedParams}
             gasLimitError={gasLimitError}
-            willRelay={willRelay}
           />
-
-          {canRelay && (
-            <div className={css.noTopBorder}>
-              <ExecutionMethodSelector
-                executionMethod={executionMethod}
-                setExecutionMethod={setExecutionMethod}
-                relays={relays[0]}
-              />
-            </div>
-          )}
         </div>
-
         {/* Error messages */}
         {cannotPropose ? (
           <NonOwnerError />
@@ -153,7 +125,7 @@ export const ExecuteForm = ({
           <ErrorMessage>
             Cannot execute a transaction from the Safe Account itself, please connect a different account.
           </ErrorMessage>
-        ) : !walletCanPay && !willRelay ? (
+        ) : !walletCanPay ? (
           <ErrorMessage>Your connected wallet doesn&apos;t have enough funds to execute this transaction.</ErrorMessage>
         ) : (
           (executionValidationError || gasLimitError) && (
@@ -163,15 +135,12 @@ export const ExecuteForm = ({
             </ErrorMessage>
           )
         )}
-
         {submitError && (
           <Box mt={1}>
             <ErrorMessage error={submitError}>Error submitting the transaction. Please try again.</ErrorMessage>
           </Box>
         )}
-
         <Divider className={commonCss.nestedDivider} sx={{ pt: 3 }} />
-
         <CardActions>
           {/* Submit button */}
           <CheckWallet allowNonOwner={onlyExecute}>
@@ -192,7 +161,6 @@ const useTxSecurityContext = () => useContext(TxSecurityContext)
 export default madProps(ExecuteForm, {
   isOwner: useIsSafeOwner,
   isExecutionLoop: useIsExecutionLoop,
-  relays: useRelaysBySafe,
   txActions: useTxActions,
   txSecurity: useTxSecurityContext,
 })

@@ -11,17 +11,9 @@ type Props = {
   willExecute: boolean
   onFormSubmit: (data: AdvancedParameters) => void
   gasLimitError?: Error
-  willRelay?: boolean
 }
 
-const AdvancedParams = ({
-  params,
-  recommendedGasLimit,
-  willExecute,
-  onFormSubmit,
-  gasLimitError,
-  willRelay,
-}: Props) => {
+const AdvancedParams = ({ params, recommendedGasLimit, willExecute, onFormSubmit, gasLimitError }: Props) => {
   const [isEditing, setIsEditing] = useState<boolean>(false)
   const isEIP1559 = useHasFeature(FEATURES.EIP1559)
 
@@ -41,7 +33,6 @@ const AdvancedParams = ({
       recommendedGasLimit={recommendedGasLimit}
       onSubmit={onAdvancedSubmit}
       isEIP1559={isEIP1559}
-      willRelay={willRelay}
     />
   ) : (
     <GasParams
@@ -50,7 +41,6 @@ const AdvancedParams = ({
       isEIP1559={isEIP1559}
       gasLimitError={gasLimitError}
       onEdit={onEditOpen}
-      willRelay={willRelay}
     />
   )
 }

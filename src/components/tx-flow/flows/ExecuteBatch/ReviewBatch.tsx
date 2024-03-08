@@ -9,15 +9,12 @@ import { useState, useMemo, useContext } from 'react'
 import type { SyntheticEvent } from 'react'
 import { generateDataRowValue } from '@/components/transactions/TxDetails/Summary/TxDataRow'
 import ErrorMessage from '@/components/tx/ErrorMessage'
-import { ExecutionMethod, ExecutionMethodSelector } from '@/components/tx/ExecutionMethodSelector'
 import DecodedTxs from '@/components/tx-flow/flows/ExecuteBatch/DecodedTxs'
 import { TxSimulation } from '@/components/tx/security/tenderly'
 import { WrongChainWarning } from '@/components/tx/WrongChainWarning'
-import { useRelaysBySafe } from '@/hooks/useRemainingRelays'
 import useOnboard from '@/hooks/wallets/useOnboard'
 import { logError, Errors } from '@/services/exceptions'
-import { dispatchBatchExecution, dispatchBatchExecutionRelay } from '@/services/tx/tx-sender'
-import { hasRemainingRelays } from '@/utils/relaying'
+import { dispatchBatchExecution } from '@/services/tx/tx-sender'
 import { getTxsWithDetails, getMultiSendTxs } from '@/utils/transactions'
 import TxCard from '../../common/TxCard'
 import CheckWallet from '@/components/common/CheckWallet'
@@ -34,10 +31,8 @@ import type { PayableOverrides } from 'ethers'
 export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
   const [isSubmittable, setIsSubmittable] = useState<boolean>(true)
   const [submitError, setSubmitError] = useState<Error | undefined>()
-  const [executionMethod, setExecutionMethod] = useState(ExecutionMethod.RELAY)
   const chain = useCurrentChain()
   const { safe } = useSafeInfo()
-  const [relays] = useRelaysBySafe()
   const { setTxFlow } = useContext(TxModalContext)
   const [gasPrice] = useGasPrice()
 
@@ -46,9 +41,6 @@ export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
 
   const isEIP1559 = chain && hasFeature(chain, FEATURES.EIP1559)
 
-  // Chain has relaying feature and available relays
-  const canRelay = hasRemainingRelays(relays)
-  const willRelay = canRelay && executionMethod === ExecutionMethod.RELAY
   const onboard = useOnboard()
 
   const [txsWithDetails, error, loading] = useAsync<TransactionDetails[]>(() => {
@@ -89,25 +81,13 @@ export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
     )
   }
 
-  const onRelay = async () => {
-    if (!multiSendTxData || !multiSendContract || !txsWithDetails) return
-
-    await dispatchBatchExecutionRelay(
-      txsWithDetails,
-      multiSendContract,
-      multiSendTxData,
-      safe.chainId,
-      safe.address.value,
-    )
-  }
-
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault()
     setIsSubmittable(false)
     setSubmitError(undefined)
 
     try {
-      await (willRelay ? onRelay() : onExecute())
+      await onExecute()
       setTxFlow(undefined)
     } catch (_err) {
       const err = asError(_err)
@@ -158,17 +138,6 @@ export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
         <ConfirmationTitle variant={ConfirmationTitleTypes.execute} />
 
         <WrongChainWarning />
-
-        {canRelay ? (
-          <>
-            <ExecutionMethodSelector
-              executionMethod={executionMethod}
-              setExecutionMethod={setExecutionMethod}
-              relays={relays}
-              tooltip="You can only relay multisend transactions containing executions from the same Safe Account."
-            />
-          </>
-        ) : null}
 
         <Alert severity="warning">
           Be aware that if any of the included transactions revert, none of them will be executed. This will result in

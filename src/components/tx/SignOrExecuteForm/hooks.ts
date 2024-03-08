@@ -9,7 +9,6 @@ import {
   dispatchOnChainSigning,
   dispatchTxExecution,
   dispatchTxProposal,
-  dispatchTxRelay,
   dispatchTxSigning,
 } from '@/services/tx/tx-sender'
 import { useHasPendingTxs } from '@/hooks/usePendingTxs'
@@ -28,7 +27,6 @@ type TxActions = {
     safeTx?: SafeTransaction,
     txId?: string,
     origin?: string,
-    isRelayed?: boolean,
   ) => Promise<string>
 }
 
@@ -72,18 +70,6 @@ export const useTxActions = (): TxActions => {
       return tx.txId
     }
 
-    const signRelayedTx = async (safeTx: SafeTransaction, txId?: string): Promise<SafeTransaction> => {
-      assertTx(safeTx)
-      assertWallet(wallet)
-      assertOnboard(onboard)
-
-      // Smart contracts cannot sign transactions off-chain
-      if (await isSmartContractWallet(wallet.chainId, wallet.address)) {
-        throw new Error('Cannot relay an unsigned transaction from a smart contract wallet')
-      }
-      return await dispatchTxSigning(safeTx, version, onboard, chainId, txId)
-    }
-
     const signTx: TxActions['signTx'] = async (safeTx, txId, origin) => {
       assertTx(safeTx)
       assertWallet(wallet)
@@ -105,18 +91,12 @@ export const useTxActions = (): TxActions => {
       return tx.txId
     }
 
-    const executeTx: TxActions['executeTx'] = async (txOptions, safeTx, txId, origin, isRelayed) => {
+    const executeTx: TxActions['executeTx'] = async (txOptions, safeTx, txId, origin) => {
       assertTx(safeTx)
       assertWallet(wallet)
       assertOnboard(onboard)
 
       let tx: TransactionDetails | undefined
-      // Relayed transactions must be fully signed, so request a final signature if needed
-      if (isRelayed && safeTx.signatures.size < safe.threshold) {
-        safeTx = await signRelayedTx(safeTx)
-        tx = await proposeTx(wallet.address, safeTx, txId, origin)
-        txId = tx.txId
-      }
 
       // Propose the tx if there's no id yet ("immediate execution")
       if (!txId) {
@@ -124,12 +104,8 @@ export const useTxActions = (): TxActions => {
         txId = tx.txId
       }
 
-      // Relay or execute the tx via connected wallet
-      if (isRelayed) {
-        await dispatchTxRelay(safeTx, safe, txId, txOptions.gasLimit)
-      } else {
-        await dispatchTxExecution(safeTx, txOptions, txId, onboard, chainId, safeAddress)
-      }
+      // Execute the tx via connected wallet
+      await dispatchTxExecution(safeTx, txOptions, txId, onboard, chainId, safeAddress)
 
       return txId
     }
