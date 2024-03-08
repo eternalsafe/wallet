@@ -7,7 +7,6 @@ import { type ReactElement } from 'react'
 import { ExecuteForm } from '@/components/tx/SignOrExecuteForm/ExecuteForm'
 import * as useGasLimit from '@/hooks/useGasLimit'
 import * as useIsValidExecution from '@/hooks/useIsValidExecution'
-import * as walletCanPay from '@/hooks/useWalletCanPay'
 import { render } from '@/tests/test-utils'
 import { fireEvent, waitFor } from '@testing-library/react'
 
