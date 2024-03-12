@@ -24,6 +24,7 @@ describe('useInitSafeCoreSDK hook', () => {
     mockProvider = jest.fn().mockImplementation(() => {
       return {
         getStorageAt: jest.fn().mockResolvedValue(ethers.utils.hexZeroPad(mockImplementation, 32)),
+        network: { chainId: Number(mockChainId) },
       }
     })() as unknown as JsonRpcProvider
 

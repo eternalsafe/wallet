@@ -5,15 +5,11 @@ import { Button, Drawer, Typography } from '@mui/material'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import { useAppSelector } from '@/store'
 import { selectTotalAdded } from '@/store/addedSafesSlice'
-import useOwnedSafes from '@/hooks/useOwnedSafes'
 import drawerCSS from '@/components/sidebar/Sidebar/styles.module.css'
 import css from './styles.module.css'
 
 const SafeListDrawer = () => {
-  const numberOfAddedSafes = useAppSelector(selectTotalAdded)
-  const ownedSafes = useOwnedSafes()
-  const numberOfOwnedSafes = Object.values(ownedSafes).reduce((acc, curr) => acc + curr.length, 0)
-  const totalNumberOfSafes = numberOfOwnedSafes + numberOfAddedSafes
+  const totalNumberOfSafes = useAppSelector(selectTotalAdded)
   const [showSidebar, setShowSidebar] = useState(false)
 
   const closeSidebar = () => setShowSidebar(false)

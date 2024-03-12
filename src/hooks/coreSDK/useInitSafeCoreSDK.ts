@@ -18,10 +18,16 @@ export const useInitSafeCoreSDK = () => {
   const chainId = useUrlChainId()
 
   useEffect(() => {
+    console.log({ web3ReadOnly, address, chainId })
     if (!web3ReadOnly || !address || !chainId) {
       // If we don't reset the SDK, a previous Safe could remain in the store
       setSafeImplementation(undefined)
       setSafeSDK(undefined)
+      return
+    }
+
+    if (!web3ReadOnly.network || web3ReadOnly.network.chainId !== Number(chainId)) {
+      // web3ReadOnly is updated by a hook which does not update as quickly as this hook
       return
     }
 

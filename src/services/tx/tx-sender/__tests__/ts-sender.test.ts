@@ -16,13 +16,6 @@ import {
 import { ErrorCode } from '@ethersproject/logger'
 import { waitFor } from '@/tests/test-utils'
 
-const setupFetchStub = (data: any) => (_url: string) => {
-  return Promise.resolve({
-    json: () => Promise.resolve(data),
-    status: 200,
-    ok: true,
-  })
-}
 import type { EIP1193Provider, OnboardAPI, WalletState, AppState } from '@web3-onboard/core'
 import { hexZeroPad } from 'ethers/lib/utils'
 import { generatePreValidatedSignature } from '@safe-global/safe-core-sdk/dist/src/utils/signatures'
