@@ -54,6 +54,7 @@ export const selectAllAddedTxs = (state: RootState): AddedTxsState => {
 
 export const selectTotalAddedTxs = (state: RootState): number => {
   return Object.values(state[addedTxsSlice.name])
+    .map((item) => Object.values(item))
     .map((item) => Object.keys(item))
     .flat().length
 }

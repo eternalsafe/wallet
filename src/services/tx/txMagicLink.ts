@@ -17,10 +17,8 @@ export const decodeTransactionMagicLink = (link: string): TransactionMagicLink |
 }
 
 export const transactionKey = (tx: TransactionMagicLink): string => {
-  let utf8Encode = new TextEncoder()
-
   return keccak256(
-    utf8Encode.encode(
+    new TextEncoder().encode(
       tx.txParams.to +
         tx.txParams.value +
         tx.txParams.data +

@@ -33,6 +33,7 @@ import useSafeMessagePendingStatuses from '@/hooks/messages/useSafeMessagePendin
 import useChangedValue from '@/hooks/useChangedValue'
 import { TxModalProvider } from '@/components/tx-flow'
 import WalletProvider from '@/components/common/WalletProvider'
+import { useMagicLink } from '@/hooks/useMagicLink'
 
 // TODO(devanon): Remove Gateway completely
 const GATEWAY_URL = IS_PRODUCTION || cgwDebugStorage.get() ? GATEWAY_URL_PRODUCTION : GATEWAY_URL_STAGING
@@ -50,6 +51,7 @@ const InitApp = (): null => {
   useSafeNotifications()
   useTxPendingStatuses()
   useSafeMessagePendingStatuses()
+  useMagicLink()
 
   return null
 }
