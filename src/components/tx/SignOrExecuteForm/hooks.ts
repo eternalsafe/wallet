@@ -17,10 +17,17 @@ import type { OnboardAPI } from '@web3-onboard/core'
 import { getSafeTxGas, getNonces } from '@/services/tx/tx-sender/recommendedNonce'
 import useAsync from '@/hooks/useAsync'
 import { useUpdateBatch } from '@/hooks/useDraftBatch'
-import { type TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
+import {
+  TransactionInfoType,
+  TransactionStatus,
+  type TransactionDetails,
+} from '@safe-global/safe-gateway-typescript-sdk'
+import { useAddOrUpdateTx } from '@/hooks/useMagicLink'
+import { addressEx } from '@/utils/addresses'
+import { txDispatch, TxEvent } from '@/services/tx/txEvents'
+import { extractTxDetails } from '@/services/tx/extractTxInfo'
 
 type TxActions = {
-  addToBatch: (safeTx?: SafeTransaction, origin?: string) => Promise<string>
   signTx: (safeTx?: SafeTransaction, txId?: string, origin?: string) => Promise<string>
   executeTx: (
     txOptions: TransactionOptions,
@@ -44,30 +51,32 @@ export const useTxActions = (): TxActions => {
   const { safe } = useSafeInfo()
   const onboard = useOnboard()
   const wallet = useWallet()
-  const [addTxToBatch] = useUpdateBatch()
+  const addOrUpdateTx = useAddOrUpdateTx()
 
   return useMemo<TxActions>(() => {
     const safeAddress = safe.address.value
     const { chainId, version } = safe
 
-    const proposeTx = async (sender: string, safeTx: SafeTransaction, txId?: string, origin?: string) => {
-      return dispatchTxProposal({
-        chainId,
-        safeAddress,
-        sender,
-        safeTx,
-        txId,
-        origin,
-      })
-    }
+    const proposeTx = async (
+      sender: string,
+      safeTx: SafeTransaction,
+      txId?: string,
+      origin?: string, // TODO(devanon): check if we need this
+    ): Promise<TransactionDetails> => {
+      console.log({ safeTx })
+      const txKey = await addOrUpdateTx(safeTx)
+      const proposedTxId = txId ?? `multisig_${safe.address.value}_${txKey}`
 
-    const addToBatch: TxActions['addToBatch'] = async (safeTx, origin) => {
-      assertTx(safeTx)
-      assertWallet(wallet)
+      // Dispatch a success event only if the tx is signed
+      // Unsigned txs are proposed only temporarily and won't appear in the queue
+      if (safeTx.signatures.size > 0) {
+        txDispatch(txId ? TxEvent.SIGNATURE_PROPOSED : TxEvent.PROPOSED, {
+          txId: proposedTxId,
+          signerAddress: txId ? sender : undefined,
+        })
+      }
 
-      const tx = await proposeTx(wallet.address, safeTx, undefined, origin)
-      await addTxToBatch(tx)
-      return tx.txId
+      return await extractTxDetails(safeAddress, safeTx, proposedTxId)
     }
 
     const signTx: TxActions['signTx'] = async (safeTx, txId, origin) => {
@@ -110,8 +119,8 @@ export const useTxActions = (): TxActions => {
       return txId
     }
 
-    return { addToBatch, signTx, executeTx }
-  }, [safe, onboard, wallet, addTxToBatch])
+    return { signTx, executeTx }
+  }, [safe, onboard, wallet])
 }
 
 export const useValidateNonce = (safeTx: SafeTransaction | undefined): boolean => {

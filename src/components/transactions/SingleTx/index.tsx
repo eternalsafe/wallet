@@ -6,7 +6,7 @@ import type { Label, Transaction, TransactionDetails } from '@safe-global/safe-g
 import { LabelValue } from '@safe-global/safe-gateway-typescript-sdk'
 import { getTransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
 import { sameAddress } from '@/utils/addresses'
-import type { ReactElement } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import { makeTxFromDetails } from '@/utils/transactions'
 import { TxListGrid } from '@/components/transactions/TxList'
 import ExpandableTransactionItem, {
@@ -14,6 +14,9 @@ import ExpandableTransactionItem, {
 } from '@/components/transactions/TxListItem/ExpandableTransactionItem'
 import GroupLabel from '../GroupLabel'
 import { isMultisigDetailedExecutionInfo } from '@/utils/transaction-guards'
+import { useAppSelector } from '@/store'
+import { selectAddedTx } from '@/store/addedTxsSlice'
+import { extractTxDetails } from '@/services/tx/extractTxInfo'
 
 const SingleTxGrid = ({ txDetails }: { txDetails: TransactionDetails }): ReactElement => {
   const tx: Transaction = makeTxFromDetails(txDetails)
@@ -38,24 +41,17 @@ const SingleTx = () => {
   const router = useRouter()
   const { id } = router.query
   const transactionId = Array.isArray(id) ? id[0] : id
+  const transactionKey = transactionId ? transactionId.split('_')[2] : undefined
   const { safe, safeAddress } = useSafeInfo()
+  const transaction = useAppSelector((state) => selectAddedTx(state, safe.chainId, safeAddress, transactionKey ?? ''))
 
-  const [txDetails, txDetailsError] = useAsync<TransactionDetails>(
-    () => {
-      if (!transactionId || !safeAddress) return
+  const [txDetails, setTxDetails] = useState<TransactionDetails | undefined>(undefined)
+  const [txDetailsError, setTxDetailsError] = useState<Error | undefined>(undefined)
 
-      return getTransactionDetails(safe.chainId, transactionId).then((details) => {
-        // If the transaction is not related to the current safe, throw an error
-        if (!sameAddress(details.safeAddress, safeAddress)) {
-          return Promise.reject(new Error('Transaction with this id was not found in this Safe Account'))
-        }
-        return details
-      })
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [transactionId, safe.chainId, safe.txQueuedTag, safe.txHistoryTag, safeAddress],
-    false,
-  )
+  useEffect(() => {
+    if (!transaction || !safeAddress) return
+    extractTxDetails(safeAddress, transaction, transactionId).then(setTxDetails).catch(setTxDetailsError)
+  }, [transaction, safe.chainId, safeAddress])
 
   if (txDetailsError) {
     return <ErrorMessage error={txDetailsError}>Failed to load transaction</ErrorMessage>

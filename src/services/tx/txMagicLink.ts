@@ -1,34 +1,40 @@
-import { type SafeTransactionData } from '@safe-global/safe-core-sdk-types'
-import { keccak256 } from 'ethers/lib/utils'
+import { type SafeTransaction } from '@safe-global/safe-core-sdk-types'
 import { encodeURI, decode } from 'js-base64'
+import { getAndValidateSafeSDK } from './tx-sender/sdk'
 
-export type TransactionMagicLink = { txParams: SafeTransactionData; signatures: Record<string, string> }
-
-export const encodeTransactionMagicLink = (tx: TransactionMagicLink): string => {
-  return encodeURI(JSON.stringify(tx))
+export const encodeTransactionMagicLink = (tx: SafeTransaction): string => {
+  return encodeURI(JSON.stringify(tx, replacer))
 }
 
-export const decodeTransactionMagicLink = (link: string): TransactionMagicLink | undefined => {
+export const decodeTransactionMagicLink = (link: string): SafeTransaction | undefined => {
   try {
-    return JSON.parse(decode(link))
+    return JSON.parse(decode(link), reviver)
   } catch (e) {
     console.error(e)
   }
 }
 
-export const transactionKey = (tx: TransactionMagicLink): string => {
-  return keccak256(
-    new TextEncoder().encode(
-      tx.txParams.to +
-        tx.txParams.value +
-        tx.txParams.data +
-        tx.txParams.operation +
-        tx.txParams.nonce +
-        tx.txParams.safeTxGas +
-        tx.txParams.baseGas +
-        tx.txParams.gasPrice +
-        tx.txParams.gasToken +
-        tx.txParams.refundReceiver,
-    ),
-  )
+export const transactionKey = async (tx: SafeTransaction): Promise<string> => {
+  const safeSDK = getAndValidateSafeSDK()
+  return await safeSDK.getTransactionHash(tx)
+}
+
+function replacer(_key: string, value: any) {
+  if (value instanceof Map) {
+    return {
+      dataType: 'Map',
+      value: Array.from(value.entries()),
+    }
+  } else {
+    return value
+  }
+}
+
+function reviver(_key: string, value: any) {
+  if (typeof value === 'object' && value !== null) {
+    if (value.dataType === 'Map') {
+      return new Map(value.value)
+    }
+  }
+  return value
 }

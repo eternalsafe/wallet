@@ -1,12 +1,13 @@
 import { useParams } from 'next/navigation'
 import { parse, type ParsedUrlQuery } from 'querystring'
 import { prefixedAddressRe } from '@/utils/url'
-import { decodeTransactionMagicLink, transactionKey, type TransactionMagicLink } from '@/services/tx/txMagicLink'
-import { useEffect, useState } from 'react'
+import { decodeTransactionMagicLink, transactionKey } from '@/services/tx/txMagicLink'
+import { useEffect, useState, useCallback } from 'react'
 import { addOrUpdateTx, selectAllAddedTxs } from '@/store/addedTxsSlice'
 import { useAppDispatch, useAppSelector } from '@/store'
 import useChainId from './useChainId'
 import useSafeAddress from './useSafeAddress'
+import { type SafeTransaction } from '@safe-global/safe-core-sdk-types'
 
 // Use the location object directly because Next.js's router.query is available only on mount
 const getLocationQuery = (): ParsedUrlQuery => {
@@ -27,14 +28,14 @@ const getLocationQuery = (): ParsedUrlQuery => {
   return query
 }
 
-export const useTransactionMagicLink = (): { tx: TransactionMagicLink | undefined; txKey: string | undefined } => {
+export const useTransactionMagicLink = (): { tx: SafeTransaction | undefined; txKey: string | undefined } => {
   const queryParams = useParams()
 
   // Dynamic query params
   const query = queryParams && queryParams.tx ? queryParams : getLocationQuery()
   const encodedTx = query.tx?.toString() ?? undefined
 
-  const [tx, setTx] = useState<TransactionMagicLink | undefined>()
+  const [tx, setTx] = useState<SafeTransaction | undefined>()
   const [txKey, setTxKey] = useState<string | undefined>()
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export const useTransactionMagicLink = (): { tx: TransactionMagicLink | undefine
 
   useEffect(() => {
     if (tx) {
-      setTxKey(transactionKey(tx))
+      transactionKey(tx).then(setTxKey).catch(console.error)
     }
   }, [tx])
 
@@ -57,17 +58,35 @@ export const useMagicLink = () => {
   const chainId = useChainId()
   const safeAddress = useSafeAddress()
 
-  const { tx } = useTransactionMagicLink()
+  const { tx, txKey } = useTransactionMagicLink()
 
   useEffect(() => {
-    if (chainId && safeAddress && tx) {
-      dispatch(addOrUpdateTx({ chainId, safeAddress, tx }))
+    if (chainId && safeAddress && tx && txKey) {
+      dispatch(addOrUpdateTx({ chainId, safeAddress, tx, txKey }))
     }
-  }, [chainId, safeAddress, tx, dispatch])
+  }, [chainId, safeAddress, tx, txKey, dispatch])
 
   const addedTxs = useAppSelector(selectAllAddedTxs)
 
   useEffect(() => {
     console.log({ addedTxs })
   }, [addedTxs])
+}
+
+export const useAddOrUpdateTx = () => {
+  const dispatch = useAppDispatch()
+  const chainId = useChainId()
+  const safeAddress = useSafeAddress()
+
+  const addOrUpdate = useCallback(
+    async (tx: SafeTransaction) => {
+      const txKey = await transactionKey(tx)
+      dispatch(addOrUpdateTx({ chainId, safeAddress, tx, txKey }))
+
+      return txKey
+    },
+    [dispatch, chainId, safeAddress],
+  )
+
+  return addOrUpdate
 }
