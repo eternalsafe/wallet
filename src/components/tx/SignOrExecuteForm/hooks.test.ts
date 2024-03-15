@@ -220,6 +220,7 @@ describe('SignOrExecute hooks', () => {
       expect(result.current.executeTx).toBeDefined()
     })
 
+    // TODO(devanon): need to mock getSafeSDK() to test this
     it('should sign a tx with or without an id', async () => {
       jest.spyOn(walletHooks, 'isSmartContractWallet').mockReturnValue(Promise.resolve(false))
 

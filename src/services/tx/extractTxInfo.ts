@@ -10,7 +10,7 @@ import { Operation } from '@safe-global/safe-gateway-typescript-sdk'
 import { isMultisigDetailedExecutionInfo, isNativeTokenTransfer } from '@/utils/transaction-guards'
 import { transactionKey } from './txMagicLink'
 import { addressEx } from '@/utils/addresses'
-import { Custom, MultisigExecutionDetails, TransactionData } from '@safe-global/safe-apps-sdk'
+import type { Custom, MultisigExecutionDetails, TransactionData } from '@safe-global/safe-apps-sdk'
 
 const ZERO_ADDRESS: string = '0x0000000000000000000000000000000000000000'
 const EMPTY_DATA: string = '0x'

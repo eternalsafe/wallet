@@ -5,25 +5,14 @@ import useSafeInfo from '@/hooks/useSafeInfo'
 import useWallet from '@/hooks/wallets/useWallet'
 import useOnboard from '@/hooks/wallets/useOnboard'
 import { isSmartContractWallet } from '@/utils/wallets'
-import {
-  dispatchOnChainSigning,
-  dispatchTxExecution,
-  dispatchTxProposal,
-  dispatchTxSigning,
-} from '@/services/tx/tx-sender'
+import { dispatchOnChainSigning, dispatchTxExecution, dispatchTxSigning } from '@/services/tx/tx-sender'
 import { useHasPendingTxs } from '@/hooks/usePendingTxs'
 import type { ConnectedWallet } from '@/hooks/wallets/useOnboard'
 import type { OnboardAPI } from '@web3-onboard/core'
 import { getSafeTxGas, getNonces } from '@/services/tx/tx-sender/recommendedNonce'
 import useAsync from '@/hooks/useAsync'
-import { useUpdateBatch } from '@/hooks/useDraftBatch'
-import {
-  TransactionInfoType,
-  TransactionStatus,
-  type TransactionDetails,
-} from '@safe-global/safe-gateway-typescript-sdk'
+import { type TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
 import { useAddOrUpdateTx } from '@/hooks/useMagicLink'
-import { addressEx } from '@/utils/addresses'
 import { txDispatch, TxEvent } from '@/services/tx/txEvents'
 import { extractTxDetails } from '@/services/tx/extractTxInfo'
 
@@ -61,7 +50,7 @@ export const useTxActions = (): TxActions => {
       sender: string,
       safeTx: SafeTransaction,
       txId?: string,
-      origin?: string, // TODO(devanon): check if we need this
+      _origin?: string, // TODO(devanon): check if we need this
     ): Promise<TransactionDetails> => {
       console.log({ safeTx })
       const txKey = await addOrUpdateTx(safeTx)
@@ -120,7 +109,7 @@ export const useTxActions = (): TxActions => {
     }
 
     return { signTx, executeTx }
-  }, [safe, onboard, wallet])
+  }, [safe, onboard, wallet, addOrUpdateTx])
 }
 
 export const useValidateNonce = (safeTx: SafeTransaction | undefined): boolean => {

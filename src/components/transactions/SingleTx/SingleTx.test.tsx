@@ -30,6 +30,8 @@ jest.mock('next/router', () => ({
   },
 }))
 
+// TODO(devanon): mock state instead of gateway SDK
+
 jest.mock('@safe-global/safe-gateway-typescript-sdk', () => ({
   ...jest.requireActual('@safe-global/safe-gateway-typescript-sdk'),
   getTransactionDetails: jest.fn(() => Promise.resolve(txDetails)),

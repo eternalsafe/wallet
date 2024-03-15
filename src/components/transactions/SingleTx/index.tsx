@@ -1,12 +1,9 @@
 import ErrorMessage from '@/components/tx/ErrorMessage'
 import { useRouter } from 'next/router'
 import useSafeInfo from '@/hooks/useSafeInfo'
-import useAsync from '@/hooks/useAsync'
 import type { Label, Transaction, TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
 import { LabelValue } from '@safe-global/safe-gateway-typescript-sdk'
-import { getTransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
-import { sameAddress } from '@/utils/addresses'
-import { ReactElement, useEffect, useState } from 'react'
+import { type ReactElement, useEffect, useState } from 'react'
 import { makeTxFromDetails } from '@/utils/transactions'
 import { TxListGrid } from '@/components/transactions/TxList'
 import ExpandableTransactionItem, {
@@ -49,9 +46,9 @@ const SingleTx = () => {
   const [txDetailsError, setTxDetailsError] = useState<Error | undefined>(undefined)
 
   useEffect(() => {
-    if (!transaction || !safeAddress) return
+    if (!safeAddress || !transaction || !transactionId) return
     extractTxDetails(safeAddress, transaction, transactionId).then(setTxDetails).catch(setTxDetailsError)
-  }, [transaction, safe.chainId, safeAddress])
+  }, [safeAddress, transaction, transactionId])
 
   if (txDetailsError) {
     return <ErrorMessage error={txDetailsError}>Failed to load transaction</ErrorMessage>

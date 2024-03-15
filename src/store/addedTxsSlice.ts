@@ -2,6 +2,7 @@ import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolki
 import type { RootState } from '.'
 import type { SafeTransactionData, SafeTransaction } from '@safe-global/safe-core-sdk-types'
 import EthSafeTransaction from '@safe-global/safe-core-sdk/dist/src/utils/transactions/SafeTransaction'
+import EthSignSignature from '@safe-global/safe-core-sdk/dist/src/utils/signatures/SafeSignature'
 
 export type StoredSafeTransaction = {
   data: SafeTransactionData
@@ -90,7 +91,7 @@ export const selectAddedTxs = createSelector(
     Object.keys(loaded).forEach((key) => {
       const safeTx = new EthSafeTransaction(loaded[key].data)
       Object.entries(loaded[key].signatures).forEach(([signer, data]) => {
-        safeTx.addSignature({ signer, data, staticPart: () => data, dynamicPart: () => '' })
+        safeTx.addSignature(new EthSignSignature(signer, data))
       })
       result[key] = safeTx
     })
@@ -110,7 +111,7 @@ export const selectAddedTx = createSelector(
     }
     const safeTx = new EthSafeTransaction(loaded.data)
     Object.entries(loaded.signatures).forEach(([signer, data]) => {
-      safeTx.addSignature({ signer, data, staticPart: () => data, dynamicPart: () => '' })
+      safeTx.addSignature(new EthSignSignature(signer, data))
     })
 
     return safeTx
