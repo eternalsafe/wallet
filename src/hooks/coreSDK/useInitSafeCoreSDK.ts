@@ -18,7 +18,6 @@ export const useInitSafeCoreSDK = () => {
   const chainId = useUrlChainId()
 
   useEffect(() => {
-    console.log({ web3ReadOnly, address, chainId })
     if (!web3ReadOnly || !address || !chainId) {
       // If we don't reset the SDK, a previous Safe could remain in the store
       setSafeImplementation(undefined)
@@ -26,14 +25,18 @@ export const useInitSafeCoreSDK = () => {
       return
     }
 
-    if (!web3ReadOnly.network || web3ReadOnly.network.chainId !== Number(chainId)) {
-      // web3ReadOnly is updated by a hook which does not update as quickly as this hook
-      return
-    }
-
-    // Get implementation address
     web3ReadOnly
-      .getStorageAt(address, 0)
+      .getNetwork()
+      .then((network) => {
+        if (network.chainId === Number(chainId)) {
+          // get implementation address
+          return web3ReadOnly.getStorageAt(address, 0)
+        } else {
+          throw {
+            skip: true,
+          }
+        }
+      })
       .then((impl) => {
         if (!impl || impl === ethers.constants.HashZero) {
           throw new Error(`Nothing set on storage slot 0 in ${address}.`)
@@ -52,6 +55,8 @@ export const useInitSafeCoreSDK = () => {
       })
       .then(setSafeSDK)
       .catch((_e) => {
+        if (_e?.skip) return
+
         setSafeImplementation(undefined)
         setSafeSDK(undefined)
 

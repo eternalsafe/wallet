@@ -1,9 +1,12 @@
 import { fireEvent, render } from '@/tests/test-utils'
 import SingleTx from '@/pages/transactions/tx'
+import * as extractTxInfo from '@/services/tx/extractTxInfo'
 import * as useSafeInfo from '@/hooks/useSafeInfo'
+import * as addedTxsSlice from '@/store/addedTxsSlice'
 import type { SafeInfo, TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
+import { OperationType, type SafeTransaction } from '@safe-global/safe-core-sdk-types'
+import EthSafeTransaction from '@safe-global/safe-core-sdk/dist/src/utils/transactions/SafeTransaction'
 
-const MOCK_SAFE_ADDRESS = '0x0000000000000000000000000000000000005AFE'
 const SAFE_ADDRESS = '0x87a57cBf742CC1Fc702D0E9BF595b1E056693e2f'
 
 // Minimum mock to render <SingleTx />
@@ -30,10 +33,28 @@ jest.mock('next/router', () => ({
   },
 }))
 
-jest.mock('@safe-global/safe-gateway-typescript-sdk', () => ({
-  ...jest.requireActual('@safe-global/safe-gateway-typescript-sdk'),
-  getTransactionDetails: jest.fn(() => Promise.resolve(txDetails)),
-}))
+jest
+  .spyOn(addedTxsSlice, 'selectAddedTx')
+  .mockImplementation((state: any, chainId: string, safeAddress: string, txKey: string) => {
+    return new EthSafeTransaction({
+      data: '0x',
+      baseGas: 21000,
+      gasPrice: 10000000000,
+      safeTxGas: 11000,
+      gasToken: '0x0000000000000000000000000000000000000000',
+      nonce: 0,
+      refundReceiver: '0x1234567890123456789012345678901234567890',
+      value: '1000000000000000000',
+      to: '0x1234567890123456789012345678901234567890',
+      operation: OperationType.Call,
+    })
+  })
+
+jest
+  .spyOn(extractTxInfo, 'extractTxDetails')
+  .mockImplementation((safeAddress: string, safeTx: SafeTransaction, txId?: string) => {
+    return Promise.resolve(txDetails)
+  })
 
 jest.spyOn(useSafeInfo, 'default').mockImplementation(() => ({
   safeAddress: SAFE_ADDRESS,
@@ -56,11 +77,11 @@ describe('SingleTx', () => {
   })
 
   it('shows an error when the transaction has failed to load', async () => {
-    const getTransactionDetails = jest.spyOn(
-      require('@safe-global/safe-gateway-typescript-sdk'),
-      'getTransactionDetails',
-    )
-    getTransactionDetails.mockImplementation(() => Promise.reject(new Error('Server error')))
+    jest
+      .spyOn(extractTxInfo, 'extractTxDetails')
+      .mockImplementation((safeAddress: string, safeTx: SafeTransaction, txId?: string) => {
+        return Promise.reject(new Error('Extract error'))
+      })
 
     const screen = render(<SingleTx />)
 
@@ -69,28 +90,6 @@ describe('SingleTx', () => {
     const button = screen.getByText('Details')
     fireEvent.click(button!)
 
-    expect(screen.getByText('Server error')).toBeInTheDocument()
-  })
-
-  it('shows an error when transaction is not from the opened Safe', async () => {
-    const getTransactionDetails = jest.spyOn(
-      require('@safe-global/safe-gateway-typescript-sdk'),
-      'getTransactionDetails',
-    )
-    getTransactionDetails.mockImplementation(() =>
-      Promise.resolve({
-        ...txDetails,
-        safeAddress: MOCK_SAFE_ADDRESS,
-      }),
-    )
-
-    const screen = render(<SingleTx />)
-
-    expect(await screen.findByText('Failed to load transaction')).toBeInTheDocument()
-
-    const button = screen.getByText('Details')
-    fireEvent.click(button!)
-
-    expect(screen.getByText('Transaction with this id was not found in this Safe Account')).toBeInTheDocument()
+    expect(screen.getByText('Extract error')).toBeInTheDocument()
   })
 })

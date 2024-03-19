@@ -28,6 +28,7 @@ import { safeMessagesListener, safeMessagesSlice } from './safeMessagesSlice'
 import { pendingSafeMessagesSlice } from './pendingSafeMessagesSlice'
 import { batchSlice } from './batchSlice'
 import { customTokensSlice } from './customTokensSlice'
+import { addedTxsSlice } from './addedTxsSlice'
 
 const rootReducer = combineReducers({
   [chainsSlice.name]: chainsSlice.reducer,
@@ -47,6 +48,7 @@ const rootReducer = combineReducers({
   [pendingSafeMessagesSlice.name]: pendingSafeMessagesSlice.reducer,
   [batchSlice.name]: batchSlice.reducer,
   [customTokensSlice.name]: customTokensSlice.reducer,
+  [addedTxsSlice.name]: addedTxsSlice.reducer,
 })
 
 const persistedSlices: (keyof PreloadedState<RootState>)[] = [
@@ -59,6 +61,7 @@ const persistedSlices: (keyof PreloadedState<RootState>)[] = [
   pendingSafeMessagesSlice.name,
   batchSlice.name,
   customTokensSlice.name,
+  addedTxsSlice.name,
 ]
 
 export const getPersistedState = () => {
