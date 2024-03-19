@@ -5,6 +5,7 @@ import {
   TransactionStatus,
   TransactionInfoType,
   DetailedExecutionInfoType,
+  type SafeInfo,
 } from '@safe-global/safe-gateway-typescript-sdk'
 import { Operation } from '@safe-global/safe-gateway-typescript-sdk'
 import { isMultisigDetailedExecutionInfo, isNativeTokenTransfer } from '@/utils/transaction-guards'
@@ -118,6 +119,7 @@ export default extractTxInfo
 export const extractTxDetails = async (
   safeAddress: string,
   safeTx: SafeTransaction,
+  safe: SafeInfo,
   txId?: string,
   transactionStatus?: TransactionStatus,
 ): Promise<TransactionDetails> => {
@@ -152,7 +154,7 @@ export const extractTxDetails = async (
   // TODO(devanon): compare with https://github.com/safe-global/safe-client-gateway/blob/5293d98286bee62f1a7d13c3a405ed8e73bcf770/src/routes/transactions/mappers/multisig-transactions/multisig-transaction-execution-details.mapper.ts#L26
   const detailedExecutionInfo: MultisigExecutionDetails = {
     type: DetailedExecutionInfoType.MULTISIG,
-    submittedAt: 0, // TOOD(devanon): implement this
+    submittedAt: 200, // TOOD(devanon): implement this
     nonce: safeTx.data.nonce,
     safeTxGas: safeTx.data.safeTxGas?.toString() ?? '0',
     baseGas: safeTx.data.baseGas?.toString() ?? '0',
@@ -161,8 +163,8 @@ export const extractTxDetails = async (
     refundReceiver: addressEx(safeTx.data.refundReceiver),
     safeTxHash: txKey,
     executor: undefined, // TOOD(devanon): implement this
-    signers: [], // TOOD(devanon): implement this, it should be the full list of owners of the Safe
-    confirmationsRequired: 2, // TOOD(devanon): implement this
+    signers: safe.owners,
+    confirmationsRequired: safe.threshold,
     confirmations: Array.from(safeTx.signatures.values()).map((signature) => ({
       signer: addressEx(signature.signer),
       signature: signature.data,

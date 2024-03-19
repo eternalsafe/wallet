@@ -47,8 +47,8 @@ const SingleTx = () => {
 
   useEffect(() => {
     if (!safeAddress || !transaction || !transactionId) return
-    extractTxDetails(safeAddress, transaction, transactionId).then(setTxDetails).catch(setTxDetailsError)
-  }, [safeAddress, transaction, transactionId])
+    extractTxDetails(safeAddress, transaction, safe, transactionId).then(setTxDetails).catch(setTxDetailsError)
+  }, [safeAddress, transaction, safe, transactionId])
 
   if (txDetailsError) {
     return <ErrorMessage error={txDetailsError}>Failed to load transaction</ErrorMessage>

@@ -85,6 +85,9 @@ export const selectAddedTxs = createSelector(
       }
     | undefined => {
     const loaded = allAddedTxs?.[chainId]?.[safeAddress]
+    if (!loaded) {
+      return
+    }
     const result: {
       [txKey: string]: SafeTransaction
     } = {}

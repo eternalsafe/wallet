@@ -68,7 +68,7 @@ export const useTxActions = (): TxActions => {
         })
       }
 
-      return await extractTxDetails(safeAddress, safeTx, proposedTxId)
+      return await extractTxDetails(safeAddress, safeTx, safe, proposedTxId)
     }
 
     const signTx: TxActions['signTx'] = async (safeTx, txId, origin) => {
