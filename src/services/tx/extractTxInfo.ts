@@ -154,9 +154,9 @@ export const extractTxDetails = async (
     type: DetailedExecutionInfoType.MULTISIG,
     submittedAt: 0, // TOOD(devanon): implement this
     nonce: safeTx.data.nonce,
-    safeTxGas: safeTx.data.safeTxGas.toString(),
-    baseGas: safeTx.data.baseGas.toString(),
-    gasPrice: safeTx.data.gasPrice.toString(),
+    safeTxGas: safeTx.data.safeTxGas?.toString() ?? '0',
+    baseGas: safeTx.data.baseGas?.toString() ?? '0',
+    gasPrice: safeTx.data.gasPrice?.toString() ?? '0',
     gasToken: safeTx.data.gasToken,
     refundReceiver: addressEx(safeTx.data.refundReceiver),
     safeTxHash: txKey,

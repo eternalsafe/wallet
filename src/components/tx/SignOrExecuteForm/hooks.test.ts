@@ -11,8 +11,13 @@ import * as txSender from '@/services/tx/tx-sender/dispatch'
 import * as onboardHooks from '@/hooks/wallets/useOnboard'
 import { type OnboardAPI } from '@web3-onboard/core'
 import { useAlreadySigned, useImmediatelyExecutable, useIsExecutionLoop, useTxActions, useValidateNonce } from './hooks'
+import type Safe from '@safe-global/safe-core-sdk'
+import type { SafeTransaction } from '@safe-global/safe-core-sdk-types'
+import * as safeCoreSDK from '@/hooks/coreSDK/safeCoreSDK'
 
 describe('SignOrExecute hooks', () => {
+  let mockSDK: Safe
+
   beforeEach(() => {
     jest.clearAllMocks()
 
@@ -39,6 +44,15 @@ describe('SignOrExecute hooks', () => {
       label: 'MetaMask',
       address: '0x1234567890000000000000000000000000000000',
     } as unknown as ConnectedWallet)
+
+    // SDK
+    mockSDK = {
+      getTransactionHash: (safeTransaction: SafeTransaction) => {
+        return '0x123'
+      },
+    } as unknown as Safe
+
+    jest.spyOn(safeCoreSDK, 'getSafeSDK').mockReturnValue(mockSDK)
   })
 
   describe('useValidateNonce', () => {
@@ -220,7 +234,6 @@ describe('SignOrExecute hooks', () => {
       expect(result.current.executeTx).toBeDefined()
     })
 
-    // TODO(devanon): need to mock getSafeSDK() to test this
     it('should sign a tx with or without an id', async () => {
       jest.spyOn(walletHooks, 'isSmartContractWallet').mockReturnValue(Promise.resolve(false))
 
@@ -239,10 +252,6 @@ describe('SignOrExecute hooks', () => {
         safeLoaded: true,
       }))
 
-      jest
-        .spyOn(txSender, 'dispatchTxProposal')
-        .mockImplementation((() => Promise.resolve({ txId: '123' })) as unknown as typeof txSender.dispatchTxProposal)
-
       const signSpy = jest
         .spyOn(txSender, 'dispatchTxSigning')
         .mockImplementation(() => Promise.resolve(createSafeTx()))
@@ -255,11 +264,11 @@ describe('SignOrExecute hooks', () => {
       const id = await signTx(createSafeTx())
       expect(signSpy).toHaveBeenCalled()
       expect(onchainSignSpy).not.toHaveBeenCalled()
-      expect(id).toBe('123')
+      expect(id).toBe('multisig_0x0000000000000000000000000000000000000000_0x123')
 
       const id2 = await signTx(createSafeTx(), '456')
       expect(signSpy).toHaveBeenCalled()
-      expect(id2).toBe('123')
+      expect(id2).toBe('multisig_0x0000000000000000000000000000000000000000_0x123')
     })
 
     it('should sign a tx on-chain', async () => {
@@ -280,9 +289,6 @@ describe('SignOrExecute hooks', () => {
         safeLoaded: true,
       }))
 
-      jest
-        .spyOn(txSender, 'dispatchTxProposal')
-        .mockImplementation((() => Promise.resolve({ txId: '123' })) as unknown as typeof txSender.dispatchTxProposal)
       const signSpy = jest.spyOn(txSender, 'dispatchOnChainSigning').mockImplementation(() => Promise.resolve())
 
       const { result } = renderHook(() => useTxActions())
@@ -309,9 +315,6 @@ describe('SignOrExecute hooks', () => {
         safeLoaded: true,
       }))
 
-      const proposeSpy = jest
-        .spyOn(txSender, 'dispatchTxProposal')
-        .mockImplementation((() => Promise.resolve({ txId: '123' })) as unknown as typeof txSender.dispatchTxProposal)
       const executeSpy = jest
         .spyOn(txSender, 'dispatchTxExecution')
         .mockImplementation((() => Promise.resolve(createSafeTx())) as unknown as typeof txSender.dispatchTxExecution)
@@ -320,9 +323,8 @@ describe('SignOrExecute hooks', () => {
       const { executeTx } = result.current
 
       const id = await executeTx({ gasPrice: 1 }, createSafeTx())
-      expect(proposeSpy).toHaveBeenCalled()
       expect(executeSpy).toHaveBeenCalled()
-      expect(id).toEqual('123')
+      expect(id).toEqual('multisig_0x0000000000000000000000000000000000000000_0x123')
     })
 
     it('should execute a tx with an id (existing tx)', async () => {
@@ -341,9 +343,6 @@ describe('SignOrExecute hooks', () => {
         safeLoaded: true,
       }))
 
-      const proposeSpy = jest
-        .spyOn(txSender, 'dispatchTxProposal')
-        .mockImplementation((() => Promise.resolve({ txId: '123' })) as unknown as typeof txSender.dispatchTxProposal)
       const executeSpy = jest
         .spyOn(txSender, 'dispatchTxExecution')
         .mockImplementation((() => Promise.resolve(createSafeTx())) as unknown as typeof txSender.dispatchTxExecution)
@@ -352,7 +351,6 @@ describe('SignOrExecute hooks', () => {
       const { executeTx } = result.current
 
       const id = await executeTx({ gasPrice: 1 }, createSafeTx(), '455')
-      expect(proposeSpy).not.toHaveBeenCalled()
       expect(executeSpy).toHaveBeenCalled()
       expect(id).toEqual('455')
     })

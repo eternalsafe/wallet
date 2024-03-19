@@ -1,31 +1,25 @@
 import { transactionKey } from '@/services/tx/txMagicLink'
-import { OperationType } from '@safe-global/safe-core-sdk-types'
+import { OperationType, type SafeTransaction } from '@safe-global/safe-core-sdk-types'
 import EthSignSignature from '@safe-global/safe-core-sdk/dist/src/utils/signatures/SafeSignature'
 import EthSafeTransaction from '@safe-global/safe-core-sdk/dist/src/utils/transactions/SafeTransaction'
 import { addedTxsSlice, addOrUpdateTx } from '../addedTxsSlice'
+import * as safeCoreSDK from '@/hooks/coreSDK/safeCoreSDK'
+import type Safe from '@safe-global/safe-core-sdk'
 
 describe('addedTxsSlice', () => {
   describe('addOrUpdateTx', () => {
+    let mockSDK: Safe
+
     beforeEach(() => {
       jest.resetAllMocks()
 
-      // TODO(devanon): mock getSafeSDK
-      // mockCreateEnableModuleTx = jest.fn(() => ({
-      //   data: {
-      //     data: '0x',
-      //     to: '0x',
-      //   },
-      // }))
+      mockSDK = {
+        getTransactionHash: (safeTransaction: SafeTransaction) => {
+          return '0x123'
+        },
+      } as unknown as Safe
 
-      // mockSDK = {
-      //   isModuleEnabled: jest.fn(() => false),
-      //   createEnableModuleTx: mockCreateEnableModuleTx,
-      //   createTransaction: jest.fn(() => 'asd'),
-      // } as unknown as Safe
-
-      // jest.spyOn(txSender, 'createMultiSendCallOnlyTx').mockImplementation(jest.fn())
-      // jest.spyOn(safeCoreSDK, 'getSafeSDK').mockReturnValue(mockSDK)
-      // jest.spyOn(spendingLimit, 'getSpendingLimitModuleAddress').mockReturnValue(ZERO_ADDRESS)
+      jest.spyOn(safeCoreSDK, 'getSafeSDK').mockReturnValue(mockSDK)
     })
 
     it('should add a tx to the store', async () => {
@@ -52,7 +46,7 @@ describe('addedTxsSlice', () => {
           '0x0': {
             [txKey]: {
               data: tx.data,
-              signature: {
+              signatures: {
                 '0x1234567890123456789012345678901234567890': '0x123',
               },
             },
@@ -67,7 +61,7 @@ describe('addedTxsSlice', () => {
           '0x0': {
             [txKey]: {
               data: tx.data,
-              signature: {
+              signatures: {
                 '0x1234567890123456789012345678901234567890': '0x123',
                 '0x4567890123456789012345678901234567890123': '0x456',
               },
@@ -83,7 +77,7 @@ describe('addedTxsSlice', () => {
           '0x0': {
             [txKey]: {
               data: tx.data,
-              signature: {
+              signatures: {
                 '0x1234567890123456789012345678901234567890': '0x123',
                 '0x4567890123456789012345678901234567890123': '0x456',
               },
@@ -105,7 +99,7 @@ describe('addedTxsSlice', () => {
         operation: OperationType.Call,
       })
       tx2.addSignature(new EthSignSignature('0x1234567890123456789012345678901234567890', '0x123'))
-      tx2.addSignature(new EthSignSignature('0x4567890123456789012345678901234567890123', '0x456'))
+      tx2.addSignature(new EthSignSignature('0x4567890123456789012345678901234567890123', '0x457'))
 
       expect(transactionKey(tx)).toEqual(transactionKey(tx2))
 
@@ -114,7 +108,7 @@ describe('addedTxsSlice', () => {
           '0x0': {
             [txKey]: {
               data: tx.data,
-              signature: {
+              signatures: {
                 '0x1234567890123456789012345678901234567890': '0x123',
                 '0x4567890123456789012345678901234567890123': '0x457',
               },
@@ -130,7 +124,7 @@ describe('addedTxsSlice', () => {
           '0x0': {
             [txKey]: {
               data: tx.data,
-              signature: {
+              signatures: {
                 '0x1234567890123456789012345678901234567890': '0x123',
                 '0x4567890123456789012345678901234567890123': '0x457',
               },

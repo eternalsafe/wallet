@@ -46,15 +46,18 @@ export const useTxActions = (): TxActions => {
     const safeAddress = safe.address.value
     const { chainId, version } = safe
 
+    /**
+     * Propose a transaction
+     * If txId is passed, it's an existing tx being signed
+     */
     const proposeTx = async (
       sender: string,
       safeTx: SafeTransaction,
       txId?: string,
       _origin?: string, // TODO(devanon): check if we need this
     ): Promise<TransactionDetails> => {
-      console.log({ safeTx })
       const txKey = await addOrUpdateTx(safeTx)
-      const proposedTxId = txId ?? `multisig_${safe.address.value}_${txKey}`
+      const proposedTxId = `multisig_${safe.address.value}_${txKey}`
 
       // Dispatch a success event only if the tx is signed
       // Unsigned txs are proposed only temporarily and won't appear in the queue

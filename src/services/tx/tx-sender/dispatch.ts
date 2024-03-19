@@ -7,64 +7,11 @@ import { type SpendingLimitTxParams } from '@/components/tx-flow/flows/TokenTran
 import { getSpendingLimitContract } from '@/services/contracts/spendingLimitContracts'
 import type { ContractTransaction, PayableOverrides } from 'ethers'
 import type { RequestId } from '@safe-global/safe-apps-sdk'
-import proposeTx from '../proposeTransaction'
 import { txDispatch, TxEvent } from '../txEvents'
-import {
-  getAndValidateSafeSDK,
-  getSafeSDKWithSigner,
-  getUncheckedSafeSDK,
-  assertWalletChain,
-  tryOffChainTxSigning,
-} from './sdk'
+import { getSafeSDKWithSigner, getUncheckedSafeSDK, assertWalletChain, tryOffChainTxSigning } from './sdk'
 import { createWeb3 } from '@/hooks/wallets/web3'
 import { type OnboardAPI } from '@web3-onboard/core'
 import { asError } from '@/services/exceptions/utils'
-
-/**
- * Propose a transaction
- * If txId is passed, it's an existing tx being signed
- */
-export const dispatchTxProposal = async ({
-  chainId,
-  safeAddress,
-  sender,
-  safeTx,
-  txId,
-  origin,
-}: {
-  chainId: string
-  safeAddress: string
-  sender: string
-  safeTx: SafeTransaction
-  txId?: string
-  origin?: string
-}): Promise<TransactionDetails> => {
-  const safeSDK = getAndValidateSafeSDK()
-  const safeTxHash = await safeSDK.getTransactionHash(safeTx)
-
-  let proposedTx: TransactionDetails | undefined
-  try {
-    proposedTx = await proposeTx(chainId, safeAddress, sender, safeTx, safeTxHash, origin)
-  } catch (error) {
-    if (txId) {
-      txDispatch(TxEvent.SIGNATURE_PROPOSE_FAILED, { txId, error: asError(error) })
-    } else {
-      txDispatch(TxEvent.PROPOSE_FAILED, { error: asError(error) })
-    }
-    throw error
-  }
-
-  // Dispatch a success event only if the tx is signed
-  // Unsigned txs are proposed only temporarily and won't appear in the queue
-  if (safeTx.signatures.size > 0) {
-    txDispatch(txId ? TxEvent.SIGNATURE_PROPOSED : TxEvent.PROPOSED, {
-      txId: proposedTx.txId,
-      signerAddress: txId ? sender : undefined,
-    })
-  }
-
-  return proposedTx
-}
 
 /**
  * Sign a transaction
