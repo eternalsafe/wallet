@@ -18,6 +18,28 @@ The latest version is always accesible at [https://eternalsafe.eth.limo](https:/
 
 Eternal Safe relies completely on the provided RPC URL. It is very important to provide a stable and performant RPC node. Typically, public RPC URLs are not sufficient, and it is recommended to run against a private RPC URL or your own node directly.
 
+### Adding Custom Networks
+
+You can add custom networks to Eternal Safe by including network parameters in the URL. Here's an example:
+
+```
+https://eternalsafe.eth.limo?chainId=100&rpc=https%3A%2F%2Frpc.gnosis.gateway.fm&currency=xDAI&symbol=xDAI&expAddr=https%3A%2F%2Fgnosisscan.io%2Faddress%2F%7B%7Baddress%7D%7D&expTx=https%3A%2F%2Fgnosisscan.io%2Ftx%2F%7B%7Bhash%7D%7D
+```
+
+Required URL parameters:
+- `chainId`: The chain ID of the network
+- `chain`: The short name of the network (e.g. 'eth')
+- `rpc`: The RPC URL (must be URL-encoded)
+- `currency`: The name of the native currency
+- `symbol`: The symbol of the native currency
+
+Optional URL parameters:
+- `logo`: URL to the currency logo image (URL-encoded)
+- `expAddr`: Block explorer URL template for addresses (URL-encoded)
+- `expTx`: Block explorer URL template for transactions (URL-encoded)
+
+Note: For explorer URLs, use `{{address}}` and `{{hash}}` as placeholders that will be replaced with actual values.
+
 ## Contributing
 
 Contributions, be it a bug report or a pull request, are very welcome. Please check our [contribution guidelines](CONTRIBUTING.md) beforehand.
