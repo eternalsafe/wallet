@@ -43,7 +43,7 @@ export const useMagicNetwork = (): void => {
         chainId: chainIdParam,
         chainName: currencyName,
         description: '',
-        chainLogoUri: null,
+        chainLogoUri: currencyLogo || null,
         l2: false,
         isTestnet: false,
         nativeCurrency: {
