@@ -33,6 +33,9 @@ const ChainLogos = {
 }
 
 export const getChainLogo = (chainId: string) => {
+  if (!ChainLogos[chainId]) {
+    return '/images/networks/unknown.png'
+  }
   return ChainLogos[chainId]
 }
 

@@ -35,7 +35,7 @@ export const chainsSlice = {
 
 
 // Export all actions including the base loading actions
-export const { addChain } = customSlice.actions
+export const { addChain } = chainsSlice.actions
 export const selectChains = selector
 
 export const selectChainById = createSelector(

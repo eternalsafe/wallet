@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAppDispatch } from '@/store'
 import { setRpc } from '@/store/settingsSlice'
@@ -6,11 +6,15 @@ import { addChain } from '@/store/chainsSlice'
 import { type ChainInfo, type RPC_AUTHENTICATION } from '@safe-global/safe-gateway-typescript-sdk'
 import { getChainsConfig } from '@/config/supportedChains'
 import useChainId from '@/hooks/useChainId'
+import useLocalStorage from '@/services/local-storage/useLocalStorage'
+
+const CHAINS_STORAGE_KEY = 'chains'
 
 export const useMagicNetwork = (): void => {
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
   const chainId = useChainId()
+  const [storedChains, setStoredChains] = useLocalStorage<ChainInfo[]>(CHAINS_STORAGE_KEY)
 
   useEffect(() => {
     // Get params
@@ -76,6 +80,11 @@ export const useMagicNetwork = (): void => {
 
       // Add the chain to Redux store
       dispatch(addChain(newChain))
+
+      // Add the chain to local storage if it's not already in supported chains
+      if (!(storedChains || []).find((chain) => chain.chainId === newChain.chainId)) {
+        setStoredChains([...(storedChains || []), newChain])
+      }
     }
 
     // Store RPC URL in settings
@@ -85,7 +94,7 @@ export const useMagicNetwork = (): void => {
         rpc: decodeURIComponent(rpcUrl),
       }),
     )
-  }, [searchParams, dispatch, chainId])
+  }, [searchParams, dispatch, chainId, storedChains, setStoredChains])
 }
 
 export default useMagicNetwork 

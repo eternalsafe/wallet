@@ -31,6 +31,7 @@ import { TxModalProvider } from '@/components/tx-flow'
 import WalletProvider from '@/components/common/WalletProvider'
 import { useMagicLink } from '@/hooks/useMagicLink'
 import { useMagicNetwork } from '@/hooks/useMagicNetwork'
+import { usePersistChains, useLoadStoredChains } from '@/store/chainsSlice'
 
 const InitApp = (): null => {
   useAdjustUrl()
