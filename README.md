@@ -38,7 +38,7 @@ Optional URL parameters:
 - `expAddr`: Block explorer URL template for addresses (URL-encoded)
 - `expTx`: Block explorer URL template for transactions (URL-encoded)
 
-Note: For explorer URLs, use `{{address}}` and `{{hash}}` as placeholders that will be replaced with actual values.
+Note: For explorer URLs, use `{{address}}` and `{{txHash}}` as placeholders that will be replaced with actual values.
 
 ## Contributing
 
