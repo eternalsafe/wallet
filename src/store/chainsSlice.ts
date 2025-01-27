@@ -1,5 +1,6 @@
 import { type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import { createSelector, createSlice, } from '@reduxjs/toolkit'
+import { getChainsConfig } from '@/config/supportedChains'
 import type { RootState } from '.'
 import { makeLoadableSlice } from './common'
 
@@ -37,6 +38,20 @@ export const chainsSlice = {
 // Export all actions including the base loading actions
 export const { addChain } = chainsSlice.actions
 export const selectChains = selector
+export const partialPersistChains = {
+  toPersist: (state: any) => {
+    return {
+      ...state,
+      data: state.data.filter((chain: ChainInfo) => Boolean(chain.custom))
+    }
+  },
+  toHydrate: (state: any) => {
+    return {
+      ...state,
+      data: [...getChainsConfig(), ...state.data]
+    }
+  },
+}
 
 export const selectChainById = createSelector(
   [selectChains, (_: RootState, chainId: string) => chainId],

@@ -4,9 +4,8 @@ import { useAppDispatch } from '@/store'
 import { setRpc } from '@/store/settingsSlice'
 import { addChain } from '@/store/chainsSlice'
 import { type ChainInfo, type RPC_AUTHENTICATION } from '@safe-global/safe-gateway-typescript-sdk'
-import { getChainsConfig } from '@/config/supportedChains'
 import useChainId from '@/hooks/useChainId'
-import useLocalStorage from '@/services/local-storage/useLocalStorage'
+import useChains from './useChains'
 
 const CHAINS_STORAGE_KEY = 'chains'
 
@@ -14,7 +13,7 @@ export const useMagicNetwork = (): void => {
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
   const chainId = useChainId()
-  const [storedChains, setStoredChains] = useLocalStorage<ChainInfo[]>(CHAINS_STORAGE_KEY)
+  const supportedChains = useChains()
 
   useEffect(() => {
     // Get params
@@ -31,8 +30,7 @@ export const useMagicNetwork = (): void => {
     if (!rpcUrl || !chainIdParam) return
 
     // Check if chain already exists in supported chains
-    const supportedChains = getChainsConfig()
-    const existingChain = supportedChains.find((chain) => chain.chainId === chainIdParam)
+    const existingChain = supportedChains.configs.find((chain) => chain.chainId === chainIdParam)
 
     if (!existingChain) {
       // Return if no currency info
@@ -40,6 +38,7 @@ export const useMagicNetwork = (): void => {
 
       // Create a new chain configuration
       const newChain: ChainInfo = {
+        custom: true,
         chainId: chainIdParam,
         chainName: currencyName,
         description: '',
@@ -80,11 +79,6 @@ export const useMagicNetwork = (): void => {
 
       // Add the chain to Redux store
       dispatch(addChain(newChain))
-
-      // Add the chain to local storage if it's not already in supported chains
-      if (!(storedChains || []).find((chain) => chain.chainId === newChain.chainId)) {
-        setStoredChains([...(storedChains || []), newChain])
-      }
     }
 
     // Store RPC URL in settings
@@ -94,7 +88,7 @@ export const useMagicNetwork = (): void => {
         rpc: decodeURIComponent(rpcUrl),
       }),
     )
-  }, [searchParams, dispatch, chainId, storedChains, setStoredChains])
+  }, [searchParams, dispatch, chainId, supportedChains])
 }
 
 export default useMagicNetwork 
