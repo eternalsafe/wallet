@@ -6,8 +6,8 @@ import { addChain } from '@/store/chainsSlice'
 import { type ChainInfo, type RPC_AUTHENTICATION } from '@safe-global/safe-gateway-typescript-sdk'
 import useChainId from '@/hooks/useChainId'
 import useChains from './useChains'
+import { showNotification } from '@/store/notificationsSlice'
 
-const CHAINS_STORAGE_KEY = 'chains'
 
 export const useMagicNetwork = (): void => {
   const searchParams = useSearchParams()
@@ -25,6 +25,8 @@ export const useMagicNetwork = (): void => {
     const currencyLogo = searchParams.get('logo')
     const explorerAddr = searchParams.get('expAddr')
     const explorerTx = searchParams.get('expTx')
+    const l2 = searchParams.get('l2')
+    const isTestnet = searchParams.get('testnet')
 
     // Return if no RPC param or chainId
     if (!rpcUrl || !chainIdParam) return
@@ -34,7 +36,21 @@ export const useMagicNetwork = (): void => {
 
     if (!existingChain) {
       // Return if no currency info
-      if (!currencyName || !currencySymbol || !shortName) return
+      if (!currencyName || !currencySymbol || !shortName) {
+        const missingParams = [
+          !currencyName ? 'currency' : '',
+          !currencySymbol ? 'symbol' : '',
+          !shortName ? 'chain' : '',
+        ].filter(Boolean).join(', ')
+        dispatch(
+          showNotification({
+            message: `Missing required network params: ${missingParams}`,
+            groupKey: 'missing-network-params',
+            variant: 'error',
+          }),
+        )
+        return
+      }
 
       // Create a new chain configuration
       const newChain: ChainInfo = {
@@ -43,8 +59,8 @@ export const useMagicNetwork = (): void => {
         chainName: currencyName,
         description: '',
         chainLogoUri: currencyLogo || null,
-        l2: false,
-        isTestnet: false,
+        l2: l2 === 'true',
+        isTestnet: isTestnet === 'true',
         nativeCurrency: {
           name: currencyName,
           symbol: currencySymbol,

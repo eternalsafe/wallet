@@ -37,6 +37,8 @@ Optional URL parameters:
 - `logo`: URL to the currency logo image (URL-encoded)
 - `expAddr`: Block explorer URL template for addresses (URL-encoded)
 - `expTx`: Block explorer URL template for transactions (URL-encoded)
+- `l2`: Whether the network is a Layer 2 network (boolean, defaults to false)
+- `testnet`: Whether the network is a testnet (boolean, defaults to false)
 
 Note: For explorer URLs, use `{{address}}` and `{{txHash}}` as placeholders that will be replaced with actual values.
 
