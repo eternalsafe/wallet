@@ -6,7 +6,7 @@ import * as useSafeAddress from '@/hooks/useSafeAddress'
 import * as useChainId from '@/hooks/useChainId'
 import * as coreSDK from '@/hooks/coreSDK/safeCoreSDK'
 import { waitFor } from '@testing-library/react'
-import type Safe from '@safe-global/safe-core-sdk'
+import type Safe from '@safe-global/protocol-kit'
 import { ethers } from 'ethers'
 import type { MulticallProvider } from 'ethers-multicall-provider'
 

@@ -2,7 +2,7 @@ import { TokenTransferType } from '@/components/tx-flow/flows/TokenTransfer'
 import { CreateTokenTransfer } from '@/components/tx-flow/flows/TokenTransfer/CreateTokenTransfer'
 import * as tokenUtils from '@/components/tx-flow/flows/TokenTransfer/utils'
 import { render } from '@/tests/test-utils'
-import { ZERO_ADDRESS } from '@safe-global/safe-core-sdk/dist/src/utils/constants'
+import { ZERO_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
 import { BigNumber } from 'ethers'
 
 describe('CreateTokenTransfer', () => {

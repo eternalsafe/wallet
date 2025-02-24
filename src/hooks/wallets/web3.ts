@@ -1,7 +1,7 @@
 import { type EIP1193Provider } from '@web3-onboard/core'
 import { JsonRpcProvider, Web3Provider, type Network } from '@ethersproject/providers'
 import ExternalStore from '@/services/ExternalStore'
-import { EMPTY_DATA } from '@safe-global/safe-core-sdk/dist/src/utils/constants'
+import { EMPTY_DATA } from '@safe-global/protocol-kit/dist/src/utils/constants'
 import { type MulticallProvider, MulticallWrapper } from 'ethers-multicall-provider'
 
 export const createWeb3ReadOnly = (customRpc: string): JsonRpcProvider => {

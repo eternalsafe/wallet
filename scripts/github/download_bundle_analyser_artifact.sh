@@ -1,12 +1,12 @@
 # We use this instead of action-download-artifact. See discussion on
 # https://github.com/dawidd6/action-download-artifact/issues/240
 set -xe
-ORG="safe-global"
-REPO="safe-wallet-web"
+ORG="eternalsafe"
+REPO="wallet"
 WORKFLOW="nextjs-bundle-analysis.yml"
 ARTIFACT_NAME="bundle"
 DESTINATION=".next/analyze/base"
-BASE_BRANCH="dev"
+BASE_BRANCH="eternalsafe"
 
 ARTIFACTS_URL=$(
   gh api \

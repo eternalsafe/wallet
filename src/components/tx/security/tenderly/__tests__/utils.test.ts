@@ -8,9 +8,9 @@ import {
 } from '@/components/tx/security/tenderly/utils'
 import * as safeContracts from '@/services/contracts/safeContracts'
 import { getMultiSendCallOnlyDeployment, getSafeSingletonDeployment } from '@safe-global/safe-deployments'
-import EthSafeTransaction from '@safe-global/safe-core-sdk/dist/src/utils/transactions/SafeTransaction'
-import { ZERO_ADDRESS } from '@safe-global/safe-core-sdk/dist/src/utils/constants'
-import { generatePreValidatedSignature } from '@safe-global/safe-core-sdk/dist/src/utils/signatures'
+import EthSafeTransaction from '@safe-global/protocol-kit/dist/src/utils/transactions/SafeTransaction'
+import { ZERO_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
+import { generatePreValidatedSignature } from '@safe-global/protocol-kit/dist/src/utils'
 import { hexZeroPad } from 'ethers/lib/utils'
 import * as Web3 from '@/hooks/wallets/web3'
 
@@ -37,7 +37,7 @@ describe('simulation utils', () => {
         multiSendContractInterface.encodeFunctionData(functionFragment, values),
       getAddress: () => mockMultisendAddress,
     }
-    jest.spyOn(safeContracts, 'getReadOnlyCurrentGnosisSafeContract').mockImplementation(() => safeContractMock as any)
+    jest.spyOn(safeContracts, 'getReadOnlyCurrentSafeContract').mockImplementation(() => safeContractMock as any)
     jest
       .spyOn(safeContracts, 'getReadOnlyMultiSendCallOnlyContract')
       .mockImplementation(() => multisendContractMock as any)
@@ -65,13 +65,13 @@ describe('simulation utils', () => {
         to: ZERO_ADDRESS,
         value: '0x0',
         data: '0x',
-        baseGas: 0,
-        gasPrice: 0,
+        baseGas: '0',
+        gasPrice: '0',
         gasToken: ZERO_ADDRESS,
         nonce: 0,
         operation: 0,
         refundReceiver: ZERO_ADDRESS,
-        safeTxGas: 0,
+        safeTxGas: '0',
       })
 
       const tenderlyPayload = await getSimulationPayload({
@@ -130,13 +130,13 @@ describe('simulation utils', () => {
         to: ZERO_ADDRESS,
         value: '0x0',
         data: '0x',
-        baseGas: 0,
-        gasPrice: 0,
+        baseGas: '0',
+        gasPrice: '0',
         gasToken: ZERO_ADDRESS,
         nonce: 0,
         operation: 0,
         refundReceiver: ZERO_ADDRESS,
-        safeTxGas: 0,
+        safeTxGas: '0',
       })
 
       mockTx.addSignature(generatePreValidatedSignature(otherOwnerAddress1))
@@ -171,13 +171,13 @@ describe('simulation utils', () => {
         to: ZERO_ADDRESS,
         value: '0x0',
         data: '0x',
-        baseGas: 0,
-        gasPrice: 0,
+        baseGas: '0',
+        gasPrice: '0',
         gasToken: ZERO_ADDRESS,
         nonce: 1,
         operation: 0,
         refundReceiver: ZERO_ADDRESS,
-        safeTxGas: 0,
+        safeTxGas: '0',
       })
 
       mockTx.addSignature(generatePreValidatedSignature(otherOwnerAddress1))
@@ -215,13 +215,13 @@ describe('simulation utils', () => {
         to: ZERO_ADDRESS,
         value: '0x0',
         data: '0x',
-        baseGas: 0,
-        gasPrice: 0,
+        baseGas: '0',
+        gasPrice: '0',
         gasToken: ZERO_ADDRESS,
         nonce: 0,
         operation: 0,
         refundReceiver: ZERO_ADDRESS,
-        safeTxGas: 0,
+        safeTxGas: '0',
       })
 
       mockTx.addSignature(generatePreValidatedSignature(otherOwnerAddress1))
@@ -255,13 +255,13 @@ describe('simulation utils', () => {
         to: ZERO_ADDRESS,
         value: '0x0',
         data: '0x',
-        baseGas: 0,
-        gasPrice: 0,
+        baseGas: '0',
+        gasPrice: '0',
         gasToken: ZERO_ADDRESS,
         nonce: 0,
         operation: 0,
         refundReceiver: ZERO_ADDRESS,
-        safeTxGas: 0,
+        safeTxGas: '0',
       })
 
       const tenderlyPayload = await getSimulationPayload({

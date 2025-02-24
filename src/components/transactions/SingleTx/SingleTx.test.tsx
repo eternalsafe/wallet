@@ -5,7 +5,7 @@ import * as useSafeInfo from '@/hooks/useSafeInfo'
 import * as addedTxsSlice from '@/store/addedTxsSlice'
 import type { SafeInfo, TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
 import { OperationType, type SafeTransaction } from '@safe-global/safe-core-sdk-types'
-import EthSafeTransaction from '@safe-global/safe-core-sdk/dist/src/utils/transactions/SafeTransaction'
+import EthSafeTransaction from '@safe-global/protocol-kit/dist/src/utils/transactions/SafeTransaction'
 
 const SAFE_ADDRESS = '0x87a57cBf742CC1Fc702D0E9BF595b1E056693e2f'
 
@@ -38,9 +38,9 @@ jest
   .mockImplementation((state: any, chainId: string, safeAddress: string, txKey: string) => {
     return new EthSafeTransaction({
       data: '0x',
-      baseGas: 21000,
-      gasPrice: 10000000000,
-      safeTxGas: 11000,
+      baseGas: '21000',
+      gasPrice: '10000000000',
+      safeTxGas: '11000',
       gasToken: '0x0000000000000000000000000000000000000000',
       nonce: 0,
       refundReceiver: '0x1234567890123456789012345678901234567890',

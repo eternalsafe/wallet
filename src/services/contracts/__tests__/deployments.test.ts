@@ -67,7 +67,7 @@ describe('deployments', () => {
       expect(getSafeSpy).toHaveBeenCalledTimes(1)
 
       expect(getSafeSpy).toHaveBeenNthCalledWith(1, {
-        version: '1.3.0',
+        version: '1.4.1',
         network: '1',
       })
     })
@@ -83,7 +83,7 @@ describe('deployments', () => {
 
       expect(getSafeSpy).toHaveBeenNthCalledWith(1, {
         network: '69420',
-        version: '1.3.0',
+        version: '1.4.1',
       })
     })
   })

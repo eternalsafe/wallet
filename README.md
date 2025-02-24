@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/github/license/eternalsafe/wallet)](https://github.com/eternalsafe/wallet/blob/eternal-safe/LICENSE)
 ![Tests](https://img.shields.io/github/actions/workflow/status/eternalsafe/wallet/unit-tests.yml?branch=eternal-safe&label=tests)
 
-Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-global/safe-wallet-web), forked at v1.26.2. Funded by the [Safe Grants Program](https://app.charmverse.io/safe-grants-program/page-005239065690887612).
+Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-global/safe-wallet-monorepo), forked at v1.26.2. Funded by the [Safe Grants Program](https://app.charmverse.io/safe-grants-program/page-005239065690887612).
 
 The latest version is always accesible at [https://eternalsafe.eth.limo](https://eternalsafe.eth.limo). For the IPFS CID or pinned ENS subdomain, please check the [latest release](https://github.com/eternalsafe/wallet/releases/latest).
 
@@ -13,6 +13,9 @@ The latest version is always accesible at [https://eternalsafe.eth.limo](https:/
 - No backend services needed, only an RPC URL
 - Easily runs on IPFS or locally
 - And more: [full list of changes](./todo.md)
+
+You can view the diff from the original Safe{Wallet} here: [https://github.com/eternalsafe/wallet/compare/eternalsafe..safe-global:safe-wallet-monorepo:v1.26.2](https://github.com/eternalsafe/wallet/compare/eternalsafe..safe-global:safe-wallet-monorepo:v1.26.2).  
+**Note**: This diff is viewed backwards, i.e. additions in this diff are actually lines which are removed in Eternal Safe, and vice versa. [Seems to be a bug in GitHub](https://github.com/eternalsafe/wallet/issues/18#issuecomment-2558403419).
 
 ### RPC
 
@@ -112,14 +115,10 @@ yarn cmp MyNewComponent
 
 This app is built using the following frameworks:
 
-- [Safe Core SDK](https://github.com/safe-global/safe-core-sdk)
+- [Safe Core SDK (Protocol Kit)](https://github.com/safe-global/safe-core-sdk)
 - Next.js
 - React
 - Redux
 - MUI
 - ethers.js
 - web3-onboard
-
-### Notes
-
-- Currently need to use the [`legacy-safe-core-sdk`](https://github.com/safe-global/safe-core-sdk/tree/legacy-safe-core-sdk) branch, as that's what Safe{Wallet} depended on at time of fork.

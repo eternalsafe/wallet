@@ -11,9 +11,9 @@ import type { ConnectedWallet } from '@/hooks/wallets/useOnboard'
 import { chainBuilder } from '@/tests/builders/chains'
 import { BigNumber } from '@ethersproject/bignumber'
 import { waitFor } from '@testing-library/react'
-import type Safe from '@safe-global/safe-core-sdk'
+import type Safe from '@safe-global/protocol-kit'
 import { hexZeroPad } from 'ethers/lib/utils'
-import type CompatibilityFallbackHandlerEthersContract from '@safe-global/safe-ethers-lib/dist/src/contracts/CompatibilityFallbackHandler/CompatibilityFallbackHandlerEthersContract'
+import type CompatibilityFallbackHandlerEthersContract from '@safe-global/protocol-kit/dist/src/adapters/ethers/contracts/CompatibilityFallbackHandler/CompatibilityFallbackHandlerEthersContract'
 import { FEATURES } from '@safe-global/safe-gateway-typescript-sdk'
 import * as gasPrice from '@/hooks/useGasPrice'
 
@@ -54,7 +54,7 @@ describe('useSafeCreation', () => {
     jest.spyOn(logic, 'estimateSafeCreationGas').mockReturnValue(Promise.resolve(BigNumber.from(200000)))
     jest
       .spyOn(contracts, 'getReadOnlyFallbackHandlerContract')
-      .mockReturnValue({ getAddress: () => hexZeroPad('0x123', 20) } as CompatibilityFallbackHandlerEthersContract)
+      .mockResolvedValue({ getAddress: () => hexZeroPad('0x123', 20) } as CompatibilityFallbackHandlerEthersContract)
     jest
       .spyOn(gasPrice, 'default')
       .mockReturnValue([{ maxFeePerGas: BigNumber.from(123), maxPriorityFeePerGas: undefined }, undefined, false])
