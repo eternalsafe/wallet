@@ -14,9 +14,8 @@ interface PartialPersist {
 
 export const getPreloadedState = <K extends keyof PreloadedRootState>(
   sliceNames: K[],
-  partialPersist?: PartialPersist
+  partialPersist?: PartialPersist,
 ): PreloadedRootState => {
-
   return sliceNames.reduce<PreloadedRootState>((preloadedState, sliceName) => {
     const sliceState = local.getItem<PreloadedRootState[K]>(sliceName)
 
@@ -34,7 +33,7 @@ export const getPreloadedState = <K extends keyof PreloadedRootState>(
 
 export const persistState = <K extends keyof PreloadedRootState>(
   sliceNames: K[],
-  partialPersist?: PartialPersist
+  partialPersist?: PartialPersist,
 ): Middleware<{}, RootState> => {
   return (store) => (next) => (action) => {
     const result = next(action)

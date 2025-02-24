@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAppDispatch } from '@/store'
 import { setRpc } from '@/store/settingsSlice'
@@ -7,7 +7,6 @@ import { type ChainInfo, type RPC_AUTHENTICATION } from '@safe-global/safe-gatew
 import useChainId from '@/hooks/useChainId'
 import useChains from './useChains'
 import { showNotification } from '@/store/notificationsSlice'
-
 
 export const useMagicNetwork = (): void => {
   const searchParams = useSearchParams()
@@ -41,7 +40,9 @@ export const useMagicNetwork = (): void => {
           !currencyName ? 'currency' : '',
           !currencySymbol ? 'symbol' : '',
           !shortName ? 'chain' : '',
-        ].filter(Boolean).join(', ')
+        ]
+          .filter(Boolean)
+          .join(', ')
         dispatch(
           showNotification({
             message: `Missing required network params: ${missingParams}`,
@@ -53,7 +54,8 @@ export const useMagicNetwork = (): void => {
       }
 
       // Create a new chain configuration
-      const newChain: ChainInfo = {
+      // @ts-ignore - custom is not a valid property in ChainInfo
+      const newChain = {
         custom: true,
         chainId: chainIdParam,
         chainName: currencyName,
@@ -91,7 +93,7 @@ export const useMagicNetwork = (): void => {
           value: decodeURIComponent(rpcUrl),
         },
         shortName,
-      }
+      } as ChainInfo
 
       // Add the chain to Redux store
       dispatch(addChain(newChain))
@@ -107,4 +109,4 @@ export const useMagicNetwork = (): void => {
   }, [searchParams, dispatch, chainId, supportedChains])
 }
 
-export default useMagicNetwork 
+export default useMagicNetwork

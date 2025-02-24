@@ -1,5 +1,5 @@
 import { type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
-import { createSelector, createSlice, } from '@reduxjs/toolkit'
+import { createSelector, createSlice } from '@reduxjs/toolkit'
 import { getChainsConfig } from '@/config/supportedChains'
 import type { RootState } from '.'
 import { makeLoadableSlice } from './common'
@@ -7,7 +7,6 @@ import { makeLoadableSlice } from './common'
 const initialState: ChainInfo[] = []
 
 const { slice: baseSlice, selector } = makeLoadableSlice('chains', initialState)
-
 
 const customSlice = createSlice({
   name: 'chains',
@@ -34,7 +33,6 @@ export const chainsSlice = {
   },
 }
 
-
 // Export all actions including the base loading actions
 export const { addChain } = chainsSlice.actions
 export const selectChains = selector
@@ -42,13 +40,14 @@ export const partialPersistChains = {
   toPersist: (state: any) => {
     return {
       ...state,
-      data: state.data.filter((chain: ChainInfo) => Boolean(chain.custom))
+      // @ts-expect-error - custom is not a valid property in ChainInfo
+      data: state.data.filter((chain: ChainInfo) => Boolean(chain?.custom)),
     }
   },
   toHydrate: (state: any) => {
     return {
       ...state,
-      data: [...getChainsConfig(), ...state.data]
+      data: [...getChainsConfig(), ...state.data],
     }
   },
 }
