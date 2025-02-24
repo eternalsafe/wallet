@@ -81,7 +81,11 @@ export const useSafeCreation = (
         saltNonce,
       }
 
-      const safeDeployProps = getSafeDeployProps(safeParams, (txHash) => createSafeCallback(txHash, tx), chain.chainId)
+      const safeDeployProps = await getSafeDeployProps(
+        safeParams,
+        (txHash) => createSafeCallback(txHash, tx),
+        chain.chainId,
+      )
 
       const gasLimit = await estimateSafeCreationGas(chain, provider, tx.from, safeParams)
 

@@ -106,13 +106,13 @@ const getSignatures = (confirmations: Record<string, string>) => {
     }, '0x')
 }
 
-export const getMultiSendTxs = (
+export const getMultiSendTxs = async (
   txs: TransactionDetails[],
   chain: ChainInfo,
   safeAddress: string,
   safeVersion: string,
-): MetaTransactionData[] => {
-  const readOnlySafeContract = getReadOnlyGnosisSafeContract(chain, safeVersion)
+): Promise<MetaTransactionData[]> => {
+  const readOnlySafeContract = await getReadOnlyGnosisSafeContract(chain, safeVersion)
 
   return txs
     .map((tx) => {

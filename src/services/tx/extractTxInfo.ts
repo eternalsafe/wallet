@@ -40,16 +40,16 @@ const extractTxInfo = (
   const data = txDetails.txData?.hexData ?? EMPTY_DATA
 
   const baseGas = isMultisigDetailedExecutionInfo(txDetails.detailedExecutionInfo)
-    ? Number(txDetails.detailedExecutionInfo.baseGas)
-    : 0
+    ? txDetails.detailedExecutionInfo.baseGas
+    : '0'
 
   const gasPrice = isMultisigDetailedExecutionInfo(txDetails.detailedExecutionInfo)
-    ? Number(txDetails.detailedExecutionInfo.gasPrice)
-    : 0
+    ? txDetails.detailedExecutionInfo.gasPrice
+    : '0'
 
   const safeTxGas = isMultisigDetailedExecutionInfo(txDetails.detailedExecutionInfo)
-    ? Number(txDetails.detailedExecutionInfo.safeTxGas)
-    : 0
+    ? txDetails.detailedExecutionInfo.safeTxGas
+    : '0'
 
   const gasToken = isMultisigDetailedExecutionInfo(txDetails.detailedExecutionInfo)
     ? txDetails.detailedExecutionInfo.gasToken
@@ -205,10 +205,10 @@ function isCancellation(safe: string, transactionData: SafeTransactionData, data
     dataSize === 0 &&
     (!value || Number(value) === 0) &&
     operation === 0 &&
-    (!baseGas || Number(baseGas) === 0) &&
-    (!gasPrice || Number(gasPrice) === 0) &&
+    (!baseGas || baseGas === '0') &&
+    (!gasPrice || gasPrice === '0') &&
     (!gasToken || gasToken === ethers.constants.AddressZero) &&
     (!refundReceiver || refundReceiver === ethers.constants.AddressZero) &&
-    (!safeTxGas || safeTxGas === 0)
+    (!safeTxGas || safeTxGas === '0')
   )
 }

@@ -39,12 +39,12 @@ export type SafeCreationProps = {
 /**
  * Prepare data for creating a Safe for the Core SDK
  */
-export const getSafeDeployProps = (
+export const getSafeDeployProps = async (
   safeParams: SafeCreationProps,
   callback: (txHash: string) => void,
   chainId: string,
-): DeploySafeProps => {
-  const readOnlyFallbackHandlerContract = getReadOnlyFallbackHandlerContract(chainId, LATEST_SAFE_VERSION)
+): Promise<DeploySafeProps> => {
+  const readOnlyFallbackHandlerContract = await getReadOnlyFallbackHandlerContract(chainId, LATEST_SAFE_VERSION)
 
   return {
     safeAccountConfig: {
@@ -89,7 +89,7 @@ export const encodeSafeCreationTx = async ({
 }: SafeCreationProps & { chain: ChainInfo }) => {
   const readOnlySafeContract = await getReadOnlyGnosisSafeContract(chain, LATEST_SAFE_VERSION)
   const readOnlyProxyContract = await getReadOnlyProxyFactoryContract(chain.chainId, LATEST_SAFE_VERSION)
-  const readOnlyFallbackHandlerContract = getReadOnlyFallbackHandlerContract(chain.chainId, LATEST_SAFE_VERSION)
+  const readOnlyFallbackHandlerContract = await getReadOnlyFallbackHandlerContract(chain.chainId, LATEST_SAFE_VERSION)
 
   const setupData = readOnlySafeContract.encode('setup', [
     owners,

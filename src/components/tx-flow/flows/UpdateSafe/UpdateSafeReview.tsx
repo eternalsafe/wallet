@@ -20,8 +20,10 @@ export const UpdateSafeReview = () => {
       return
     }
 
-    const txs = createUpdateSafeTxs(safe, chain)
-    createMultiSendCallOnlyTx(txs).then(setSafeTx).catch(setSafeTxError)
+    ;(async () => {
+      const txs = await createUpdateSafeTxs(safe, chain)
+      createMultiSendCallOnlyTx(txs).then(setSafeTx).catch(setSafeTxError)
+    })().catch(setSafeTxError)
   }, [chain, safe, safeLoaded, setNonce, setSafeTx, setSafeTxError])
 
   return (

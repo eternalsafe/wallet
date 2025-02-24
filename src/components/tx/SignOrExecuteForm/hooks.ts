@@ -159,7 +159,7 @@ export const useRecommendedNonce = (): number | undefined => {
   return recommendedNonce
 }
 
-export const useSafeTxGas = (safeTx: SafeTransaction | undefined): number | undefined => {
+export const useSafeTxGas = (safeTx: SafeTransaction | undefined): string | undefined => {
   const { safeAddress, safe } = useSafeInfo()
 
   // Memoize only the necessary params so that the useAsync hook is not called every time safeTx changes
