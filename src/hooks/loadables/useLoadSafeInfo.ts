@@ -40,15 +40,11 @@ export const getSafeInfo = async (sdk: Safe, implementation: string): Promise<Sa
     version = version + '+L2'
   }
 
-  console.log({ implementation })
-
   let implementationVersionState = isKnownContract(implementation)
     ? semverSatisfies(version, '<1.4.1')
       ? ImplementationVersionState.OUTDATED
       : ImplementationVersionState.UP_TO_DATE
     : ImplementationVersionState.UNKNOWN
-
-  console.log({ implementationVersionState })
 
   let info: SafeInfo = {
     address: { value: address },
