@@ -91,14 +91,10 @@ yarn cmp MyNewComponent
 
 This app is built using the following frameworks:
 
-- [Safe Core SDK](https://github.com/safe-global/safe-core-sdk)
+- [Safe Core SDK (Protocol Kit)](https://github.com/safe-global/safe-core-sdk)
 - Next.js
 - React
 - Redux
 - MUI
 - ethers.js
 - web3-onboard
-
-### Notes
-
-- Currently need to use the [`legacy-safe-core-sdk`](https://github.com/safe-global/safe-core-sdk/tree/legacy-safe-core-sdk) branch, as that's what Safe{Wallet} depended on at time of fork.

@@ -1,5 +1,5 @@
-import { hasSafeFeature as sdkHasSafeFeature } from '@safe-global/safe-core-sdk-utils'
-import type { SAFE_FEATURES } from '@safe-global/safe-core-sdk-utils'
+import { hasSafeFeature as sdkHasSafeFeature } from '@safe-global/protocol-kit/dist/src/utils'
+import type { SAFE_FEATURES } from '@safe-global/protocol-kit/dist/src/utils'
 import type { SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import type { Provider } from '@ethersproject/providers'
 import { isValidSafeVersion } from '@/hooks/coreSDK/safeCoreSDK'

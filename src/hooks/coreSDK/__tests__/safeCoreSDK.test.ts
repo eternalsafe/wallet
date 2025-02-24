@@ -1,9 +1,6 @@
 import { ethers } from 'ethers'
-import Safe from '@safe-global/safe-core-sdk'
-import {
-  getProxyFactoryContract,
-  getSafeContract,
-} from '@safe-global/safe-core-sdk/dist/src/contracts/safeDeploymentContracts'
+import Safe from '@safe-global/protocol-kit'
+import { getProxyFactoryContract, getSafeContract } from '@safe-global/protocol-kit'
 import { Web3Provider } from '@ethersproject/providers'
 
 import { initSafeSDK, isValidSafeVersion } from '../safeCoreSDK'
@@ -15,7 +12,7 @@ jest.mock('@/services/contracts/safeContracts', () => {
   }
 })
 
-jest.mock('@safe-global/safe-core-sdk/dist/src/contracts/safeDeploymentContracts')
+jest.mock('@safe-global/protocol-kit/dist/src/contracts/safeDeploymentContracts')
 
 jest.mock('@/types/contracts', () => {
   return {

@@ -7,42 +7,51 @@ import useIntervalCounter from '../useIntervalCounter'
 import useSafeInfo from '../useSafeInfo'
 import { Errors, logError } from '@/services/exceptions'
 import { POLLING_INTERVAL } from '@/config/constants'
-import { isLegacyVersion, useSafeImplementation, useSafeSDK } from '@/hooks/coreSDK/safeCoreSDK'
+import { useSafeImplementation, useSafeSDK } from '@/hooks/coreSDK/safeCoreSDK'
 import { addressEx } from '@/utils/addresses'
-import type Safe from '@safe-global/safe-core-sdk'
-import { _safeDeployments, _safeL2Deployments } from '@safe-global/safe-deployments'
+import type Safe from '@safe-global/protocol-kit'
+import { _SAFE_DEPLOYMENTS, _SAFE_L2_DEPLOYMENTS } from '@safe-global/safe-deployments/dist/deployments'
+import semverSatisfies from 'semver/functions/satisfies'
 
 const isKnownContract = (address: string): boolean => {
-  return _safeDeployments
-    .concat(_safeL2Deployments)
-    .some((deployment) => Object.values(deployment.networkAddresses).includes(address))
+  return _SAFE_DEPLOYMENTS
+    .concat(_SAFE_L2_DEPLOYMENTS)
+    .some((safeDeployments) =>
+      (Object.values(safeDeployments.deployments) ?? []).some((deployment) => deployment.address === address),
+    )
 }
 
 export const getSafeInfo = async (sdk: Safe, implementation: string): Promise<SafeInfo> => {
-  const [chainId, nonce, threshold, owners, modules, guard, fallbackHandler, contractVersion] = await Promise.all([
-    sdk.getChainId(),
-    sdk.getNonce(),
-    sdk.getThreshold(),
-    sdk.getOwners(),
-    sdk.getModules(),
-    sdk.getGuard().catch(console.error),
-    sdk.getFallbackHandler(),
-    sdk.getContractVersion(),
-  ])
+  const [address, chainId, nonce, threshold, owners, modules, guard, fallbackHandler, contractVersion] =
+    await Promise.all([
+      sdk.getAddress(),
+      sdk.getChainId(),
+      sdk.getNonce(),
+      sdk.getThreshold(),
+      sdk.getOwners(),
+      sdk.getModules(),
+      sdk.getGuard().catch(console.error),
+      sdk.getFallbackHandler(),
+      sdk.getContractVersion(),
+    ])
 
   let version = contractVersion.toString()
   if (!sdk.getContractManager().isL1SafeMasterCopy) {
     version = version + '+L2'
   }
 
+  console.log({ implementation })
+
   let implementationVersionState = isKnownContract(implementation)
-    ? isLegacyVersion(version)
+    ? semverSatisfies(version, '<1.4.1')
       ? ImplementationVersionState.OUTDATED
       : ImplementationVersionState.UP_TO_DATE
     : ImplementationVersionState.UNKNOWN
 
+  console.log({ implementationVersionState })
+
   let info: SafeInfo = {
-    address: { value: sdk.getAddress() },
+    address: { value: address },
     chainId: chainId.toString(),
     nonce,
     threshold,

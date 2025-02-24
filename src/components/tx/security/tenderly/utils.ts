@@ -1,12 +1,12 @@
-import { generatePreValidatedSignature } from '@safe-global/safe-core-sdk/dist/src/utils/signatures'
-import EthSafeTransaction from '@safe-global/safe-core-sdk/dist/src/utils/transactions/SafeTransaction'
-import { encodeMultiSendData } from '@safe-global/safe-core-sdk/dist/src/utils/transactions/utils'
+import { generatePreValidatedSignature } from '@safe-global/protocol-kit/dist/src/utils'
+import EthSafeTransaction from '@safe-global/protocol-kit/dist/src/utils/transactions/SafeTransaction'
+import { encodeMultiSendData } from '@safe-global/protocol-kit'
 import { type SafeInfo, type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import type { MetaTransactionData, SafeTransaction } from '@safe-global/safe-core-sdk-types'
 
 import {
   getReadOnlyMultiSendCallOnlyContract,
-  getReadOnlyCurrentGnosisSafeContract,
+  getReadOnlyCurrentSafeContract,
 } from '@/services/contracts/safeContracts'
 import { FEATURES, hasFeature } from '@/utils/chains'
 import type { StateObject, TenderlySimulatePayload, TenderlySimulation } from '@/components/tx/security/tenderly/types'
@@ -77,9 +77,9 @@ type MultiSendTransactionSimulationParams = {
 
 export type SimulationTxParams = SingleTransactionSimulationParams | MultiSendTransactionSimulationParams
 
-export const _getSingleTransactionPayload = (
+export const _getSingleTransactionPayload = async (
   params: SingleTransactionSimulationParams,
-): Pick<TenderlySimulatePayload, 'to' | 'input'> => {
+): Promise<Pick<TenderlySimulatePayload, 'to' | 'input'>> => {
   // If a transaction is executable we simulate with the proposed/selected gasLimit and the actual signatures
   let transaction = params.transactions
   const hasOwnerSignature = transaction.signatures.has(params.executionOwner)
@@ -96,9 +96,9 @@ export const _getSingleTransactionPayload = (
     transaction = simulatedTransaction
   }
 
-  const readOnlySafeContract = getReadOnlyCurrentGnosisSafeContract(params.safe)
+  const readOnlySafeContract = await getReadOnlyCurrentSafeContract(params.safe)
 
-  const input = readOnlySafeContract.encode('execTransaction', [
+  const input = await readOnlySafeContract.encode('execTransaction', [
     transaction.data.to,
     transaction.data.value,
     transaction.data.data,
@@ -117,11 +117,11 @@ export const _getSingleTransactionPayload = (
   }
 }
 
-export const _getMultiSendCallOnlyPayload = (
+export const _getMultiSendCallOnlyPayload = async (
   params: MultiSendTransactionSimulationParams,
-): Pick<TenderlySimulatePayload, 'to' | 'input'> => {
+): Promise<Pick<TenderlySimulatePayload, 'to' | 'input'>> => {
   const data = encodeMultiSendData(params.transactions)
-  const readOnlyMultiSendContract = getReadOnlyMultiSendCallOnlyContract(params.safe.chainId, params.safe.version)
+  const readOnlyMultiSendContract = await getReadOnlyMultiSendCallOnlyContract(params.safe.chainId, params.safe.version)
 
   return {
     to: readOnlyMultiSendContract.getAddress(),
@@ -213,8 +213,8 @@ export const getSimulationPayload = async (params: SimulationTxParams): Promise<
   const gasLimit = params.gasLimit || (await getLatestBlockGasLimit())
 
   const payload = isSingleTransactionSimulation(params)
-    ? _getSingleTransactionPayload(params)
-    : _getMultiSendCallOnlyPayload(params)
+    ? await _getSingleTransactionPayload(params)
+    : await _getMultiSendCallOnlyPayload(params)
 
   const stateOverwrites = getStateOverwrites(params)
   const stateOverwritesLength = Object.keys(stateOverwrites).length

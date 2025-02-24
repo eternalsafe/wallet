@@ -1,7 +1,7 @@
 import { Builder, type IBuilder } from '@/tests/Builder'
 import { faker } from '@faker-js/faker'
 import type { SafeSignature, SafeTransaction } from '@safe-global/safe-core-sdk-types'
-import { ZERO_ADDRESS } from '@safe-global/safe-core-sdk/dist/src/utils/constants'
+import { ZERO_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
 
 // TODO: Convert to builder
 export const createSafeTx = (data = '0x'): SafeTransaction => {

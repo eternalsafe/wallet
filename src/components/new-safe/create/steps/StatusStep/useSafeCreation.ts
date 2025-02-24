@@ -21,7 +21,7 @@ import { closeByGroupKey } from '@/store/notificationsSlice'
 import { waitForCreateSafeTx } from '@/services/tx/txMonitor'
 import useGasPrice from '@/hooks/useGasPrice'
 import { FEATURES, hasFeature } from '@/utils/chains'
-import type { DeploySafeProps } from '@safe-global/safe-core-sdk'
+import type { DeploySafeProps } from '@safe-global/protocol-kit'
 import { usePendingSafe } from './usePendingSafe'
 
 export enum SafeCreationStatus {

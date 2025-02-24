@@ -1,11 +1,10 @@
 import { getMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
-import { _safeDeployments, _safeL2Deployments } from '@safe-global/safe-deployments'
+import { _SAFE_DEPLOYMENTS } from '@safe-global/safe-deployments/dist/deployments'
 import ExternalStore from '@/services/ExternalStore'
 import { Gnosis_safe__factory } from '@/types/contracts'
 import { invariant } from '@/utils/helpers'
 import type { Web3Provider } from '@ethersproject/providers'
-import Safe from '@safe-global/safe-core-sdk'
-import EthersAdapter from '@safe-global/safe-ethers-lib'
+import Safe, { EthersAdapter } from '@safe-global/protocol-kit'
 import type { SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import type { Provider } from '@ethersproject/providers'
 import { ethers } from 'ethers'
@@ -58,16 +57,10 @@ type SafeCoreSDKProps = {
 export const initSafeSDK = async ({ provider, address, implementation }: SafeCoreSDKProps): Promise<Safe> => {
   const safeVersion = await Gnosis_safe__factory.connect(address, provider).VERSION()
 
-  const masterCopy = implementation
-
-  let isL1SafeMasterCopy =
-    Object.values(
-      _safeDeployments.find((deployment) => deployment.version === safeVersion)?.networkAddresses ?? {},
-    ).find((networkAddresses) => networkAddresses === masterCopy) !== undefined
-  const isL2SafeMasterCopy =
-    Object.values(
-      _safeL2Deployments.find((deployment) => deployment.version === safeVersion)?.networkAddresses ?? {},
-    ).find((networkAddresses) => networkAddresses === masterCopy) !== undefined
+  // find out if the implementation is any of the possible L1Safe singletons
+  let isL1SafeMasterCopy = _SAFE_DEPLOYMENTS.some((safeDeployments) =>
+    (Object.values(safeDeployments.deployments) ?? []).some((deployment) => deployment.address === implementation),
+  )
 
   // Legacy Safe contracts
   if (isLegacyVersion(safeVersion)) {
