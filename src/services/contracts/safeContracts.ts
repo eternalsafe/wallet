@@ -57,10 +57,10 @@ export const getCurrentGnosisSafeContract = (safe: SafeInfo, provider: Web3Provi
   return getSafeContractEthers(safe, ethAdapter)
 }
 
-export const getReadOnlyGnosisSafeContract = async (chain: ChainInfo, safeVersion: string = LATEST_SAFE_VERSION) => {
+export const getReadOnlyGnosisSafeContract = (chain: ChainInfo, safeVersion: string = LATEST_SAFE_VERSION) => {
   const ethAdapter = createReadOnlyEthersAdapter()
 
-  return await ethAdapter.getSafeContract({
+  return ethAdapter.getSafeContract({
     singletonDeployment: getSafeContractDeployment(chain, safeVersion),
     ..._getValidatedGetContractProps(safeVersion),
   })
