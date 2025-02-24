@@ -8,12 +8,8 @@ import type { ChainInfo, SafeInfo } from '@safe-global/safe-gateway-typescript-s
 import { ethers } from 'ethers'
 import { createUpdateSafeTxs } from '../safeUpdateParams'
 import { LATEST_SAFE_VERSION } from '@/config/constants'
-import { Web3Provider } from '@ethersproject/providers'
 import * as web3 from '@/hooks/wallets/web3'
-import { MulticallProvider, MulticallWrapper } from 'ethers-multicall-provider'
-import * as safeContracts from '@/services/contracts/safeContracts'
-import { ZERO_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
-import { SafeContractEthers } from '@safe-global/protocol-kit'
+import type { MulticallProvider } from 'ethers-multicall-provider'
 
 const MOCK_SAFE_ADDRESS = '0x0000000000000000000000000000000000005AFE'
 
