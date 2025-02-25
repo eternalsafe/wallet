@@ -43,14 +43,7 @@ const SUPPORTED_CHAINS = [
       'SPENDING_LIMIT',
       'TX_SIMULATION',
     ],
-    gasPrice: [
-      {
-        type: 'oracle',
-        uri: 'https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=JNFAU892RF9TJWBU3EV7DJCPIWZY8KEMY1',
-        gasParameter: 'FastGasPrice',
-        gweiFactor: '1000000000.000000000',
-      },
-    ],
+    gasPrice: [],
     publicRpcUri: {
       authentication: 'NO_AUTHENTICATION',
       value: 'https://cloudflare-eth.com',

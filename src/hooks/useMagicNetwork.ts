@@ -3,7 +3,8 @@ import { useSearchParams } from 'next/navigation'
 import { useAppDispatch } from '@/store'
 import { setRpc } from '@/store/settingsSlice'
 import { addChain } from '@/store/chainsSlice'
-import { type ChainInfo, type RPC_AUTHENTICATION } from '@safe-global/safe-gateway-typescript-sdk'
+import type { ChainInfo } from '@/store/chainsSlice'
+import { type RPC_AUTHENTICATION } from '@safe-global/safe-gateway-typescript-sdk'
 import useChainId from '@/hooks/useChainId'
 import useChains from './useChains'
 import { showNotification } from '@/store/notificationsSlice'
@@ -56,7 +57,6 @@ export const useMagicNetwork = (): void => {
       }
 
       // Create a new chain configuration
-      // @ts-ignore - custom is not a valid property in ChainInfo
       const newChain = {
         custom: true,
         chainId: chainIdParam,
@@ -95,6 +95,8 @@ export const useMagicNetwork = (): void => {
           authentication: 'NO_AUTH' as RPC_AUTHENTICATION,
           value: decodeURIComponent(rpcUrl),
         },
+        transactionService: '',
+        gasPrice: [],
       } as ChainInfo
 
       // Add the chain to Redux store
