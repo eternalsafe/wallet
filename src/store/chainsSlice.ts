@@ -1,8 +1,13 @@
-import { type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
+import { type ChainInfo as ChainInfoSDK } from '@safe-global/safe-gateway-typescript-sdk'
 import { createSelector, createSlice } from '@reduxjs/toolkit'
 import { getChainsConfig } from '@/config/supportedChains'
 import type { RootState } from '.'
 import { makeLoadableSlice } from './common'
+
+export type ChainInfo = ChainInfoSDK & {
+  isTestnet?: boolean
+  custom?: boolean
+}
 
 const initialState: ChainInfo[] = []
 
@@ -40,7 +45,6 @@ export const partialPersistChains = {
   toPersist: (state: any) => {
     return {
       ...state,
-      // @ts-expect-error - custom is not a valid property in ChainInfo
       data: state.data.filter((chain: ChainInfo) => Boolean(chain?.custom)),
     }
   },

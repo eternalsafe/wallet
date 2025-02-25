@@ -62,7 +62,7 @@ const ChainIndicator = ({
     >
       {showLogo && (
         <img
-          src={chainConfig?.nativeCurrency?.logoUri || getChainLogo(chainConfig.chainId)}
+          src={getChainLogo(chainConfig.chainId, chainConfig?.nativeCurrency?.logoUri)}
           alt={`${chainConfig.chainName} Logo`}
           width={24}
           height={24}

@@ -23,16 +23,17 @@ Eternal Safe relies completely on the provided RPC URL. It is very important to 
 
 ### Adding Custom Networks
 
-You can add custom networks to Eternal Safe by including network parameters in the URL. Here's an example:
+You can add custom networks to Eternal Safe by including network parameters in the URL. Here's an example for adding Base Sepolia as a testnet:
 
 ```
-https://eternalsafe.eth.limo?chainId=100&rpc=https%3A%2F%2Frpc.gnosis.gateway.fm&currency=xDAI&symbol=xDAI&expAddr=https%3A%2F%2Fgnosisscan.io%2Faddress%2F%7B%7Baddress%7D%7D&expTx=https%3A%2F%2Fgnosisscan.io%2Ftx%2F%7B%7Bhash%7D%7D
+https://eternalsafe.eth.limo?chainId=84532&chain=Base%20Sepolia&shortName=base-sepolia&rpc=https%3A%2F%2Fsepolia.base.org&currency=ETH&symbol=ETH&expAddr=https%3A%2F%2Fsepolia.basescan.org%2Faddress%2F%7B%7Baddress%7D%7D&expTx=https%3A%2F%2Fsepolia.basescan.org%2Ftx%2F%7B%7Bhash%7D%7D&l2=true&testnet=true
 ```
 
 Required URL parameters:
 
 - `chainId`: The chain ID of the network
-- `chain`: The short name of the network (e.g. 'eth')
+- `chain`: The name of the network (e.g. 'Base Sepolia')
+- `shortName`: The short name of the network (e.g. 'base-sepolia')
 - `rpc`: The RPC URL (must be URL-encoded)
 - `currency`: The name of the native currency
 - `symbol`: The symbol of the native currency

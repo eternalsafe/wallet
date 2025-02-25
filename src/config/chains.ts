@@ -32,9 +32,9 @@ const ChainLogos = {
   [chains.sep]: '/images/networks/sep.png',
 }
 
-export const getChainLogo = (chainId: string) => {
+export const getChainLogo = (chainId: string, backup?: string) => {
   if (!ChainLogos[chainId]) {
-    return '/images/networks/unknown.png'
+    return backup || '/images/networks/unknown.png'
   }
   return ChainLogos[chainId]
 }
