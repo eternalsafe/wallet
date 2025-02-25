@@ -5,7 +5,9 @@
 
 Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-global/safe-wallet-monorepo), forked at v1.26.2. Funded by the [Safe Grants Program](https://app.charmverse.io/safe-grants-program/page-005239065690887612).
 
-The latest version is always accessible at [https://eternalsafe.eth.limo](https://eternalsafe.eth.limo). For the IPFS CID or pinned ENS subdomain, please check the [latest release](https://github.com/eternalsafe/wallet/releases/latest).
+- The latest tagged version is always accessible at [https://eternalsafe.eth.limo](https://eternalsafe.eth.limo).
+  - For the IPFS CID or pinned ENS subdomain, please check the [latest release](https://github.com/eternalsafe/wallet/releases/latest).
+- The latest commit on the `eternalsafe` branch is always accessible at [https://eternalsafe.vercel.app](https://eternalsafe.vercel.app).
 
 ## Differences from Safe{Wallet}
 
