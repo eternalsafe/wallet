@@ -8,8 +8,8 @@ import * as safeContracts from '@/services/contracts/safeContracts'
 import * as store from '@/store'
 import { renderHook } from '@/tests/test-utils'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { EMPTY_DATA, ZERO_ADDRESS } from '@safe-global/safe-core-sdk/dist/src/utils/constants'
-import type GnosisSafeProxyFactoryEthersContract from '@safe-global/safe-ethers-lib/dist/src/contracts/GnosisSafeProxyFactory/GnosisSafeProxyFactoryEthersContract'
+import { EMPTY_DATA, ZERO_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
+import type { SafeProxyFactoryEthersContract } from '@safe-global/protocol-kit'
 import { waitFor } from '@testing-library/react'
 import { type EIP1193Provider } from '@web3-onboard/core'
 import { BigNumber } from 'ethers'
@@ -28,8 +28,8 @@ describe('useEstimateSafeCreationGas', () => {
     jest.spyOn(chainIdModule, 'useChainId').mockReturnValue('4')
     jest
       .spyOn(safeContracts, 'getReadOnlyProxyFactoryContract')
-      .mockReturnValue({ getAddress: () => ZERO_ADDRESS } as GnosisSafeProxyFactoryEthersContract)
-    jest.spyOn(sender, 'encodeSafeCreationTx').mockReturnValue(EMPTY_DATA)
+      .mockResolvedValue({ getAddress: () => ZERO_ADDRESS } as SafeProxyFactoryEthersContract)
+    jest.spyOn(sender, 'encodeSafeCreationTx').mockResolvedValue(EMPTY_DATA)
     jest.spyOn(wallet, 'default').mockReturnValue({} as ConnectedWallet)
   })
 

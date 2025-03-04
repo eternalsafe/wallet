@@ -21,7 +21,7 @@ import { closeByGroupKey } from '@/store/notificationsSlice'
 import { waitForCreateSafeTx } from '@/services/tx/txMonitor'
 import useGasPrice from '@/hooks/useGasPrice'
 import { FEATURES, hasFeature } from '@/utils/chains'
-import type { DeploySafeProps } from '@safe-global/safe-core-sdk'
+import type { DeploySafeProps } from '@safe-global/protocol-kit'
 import { usePendingSafe } from './usePendingSafe'
 
 export enum SafeCreationStatus {
@@ -81,7 +81,11 @@ export const useSafeCreation = (
         saltNonce,
       }
 
-      const safeDeployProps = getSafeDeployProps(safeParams, (txHash) => createSafeCallback(txHash, tx), chain.chainId)
+      const safeDeployProps = await getSafeDeployProps(
+        safeParams,
+        (txHash) => createSafeCallback(txHash, tx),
+        chain.chainId,
+      )
 
       const gasLimit = await estimateSafeCreationGas(chain, provider, tx.from, safeParams)
 

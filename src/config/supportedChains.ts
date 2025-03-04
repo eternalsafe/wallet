@@ -14,7 +14,7 @@ const SUPPORTED_CHAINS = [
       name: 'Ether',
       symbol: 'ETH',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/1/currency_logo.png',
+      logoUri: '/images/chains/1.png',
     },
     transactionService: 'https://safe-transaction-mainnet.safe.global',
     blockExplorerUriTemplate: {
@@ -43,14 +43,7 @@ const SUPPORTED_CHAINS = [
       'SPENDING_LIMIT',
       'TX_SIMULATION',
     ],
-    gasPrice: [
-      {
-        type: 'oracle',
-        uri: 'https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=JNFAU892RF9TJWBU3EV7DJCPIWZY8KEMY1',
-        gasParameter: 'FastGasPrice',
-        gweiFactor: '1000000000.000000000',
-      },
-    ],
+    gasPrice: [],
     publicRpcUri: {
       authentication: 'NO_AUTHENTICATION',
       value: 'https://cloudflare-eth.com',
@@ -80,7 +73,7 @@ const SUPPORTED_CHAINS = [
       name: 'xDai',
       symbol: 'XDAI',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/100/currency_logo.png',
+      logoUri: '/images/chains/100.png',
     },
     transactionService: 'https://safe-transaction-gnosis-chain.safe.global',
     blockExplorerUriTemplate: {
@@ -145,7 +138,7 @@ const SUPPORTED_CHAINS = [
       name: 'Matic',
       symbol: 'MATIC',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/137/currency_logo.png',
+      logoUri: '/images/chains/137.png',
     },
     transactionService: 'https://safe-transaction-polygon.safe.global',
     blockExplorerUriTemplate: {
@@ -214,7 +207,7 @@ const SUPPORTED_CHAINS = [
       name: 'Ether',
       symbol: 'ETH',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/1101/currency_logo.png',
+      logoUri: '/images/chains/1101.png',
     },
     transactionService: 'https://safe-transaction-zkevm.safe.global/',
     blockExplorerUriTemplate: {
@@ -275,7 +268,7 @@ const SUPPORTED_CHAINS = [
       name: 'BNB',
       symbol: 'BNB',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/56/currency_logo.png',
+      logoUri: '/images/chains/56.png',
     },
     transactionService: 'https://safe-transaction-bsc.safe.global',
     blockExplorerUriTemplate: {
@@ -341,7 +334,7 @@ const SUPPORTED_CHAINS = [
       name: 'AETH',
       symbol: 'AETH',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/42161/currency_logo.png',
+      logoUri: '/images/chains/42161.png',
     },
     transactionService: 'https://safe-transaction-arbitrum.safe.global',
     blockExplorerUriTemplate: {
@@ -406,7 +399,7 @@ const SUPPORTED_CHAINS = [
       name: 'Ether',
       symbol: 'OETH',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/10/currency_logo.png',
+      logoUri: '/images/chains/10.png',
     },
     transactionService: 'https://safe-transaction-optimism.safe.global',
     blockExplorerUriTemplate: {
@@ -478,7 +471,7 @@ const SUPPORTED_CHAINS = [
       name: 'Ether',
       symbol: 'ETH',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/8453/currency_logo.png',
+      logoUri: '/images/chains/8453.png',
     },
     transactionService: 'https://safe-transaction-base.safe.global',
     blockExplorerUriTemplate: {
@@ -547,7 +540,7 @@ const SUPPORTED_CHAINS = [
       name: 'Ether',
       symbol: 'ETH',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/324/currency_logo.png',
+      logoUri: '/images/chains/324.png',
     },
     transactionService: 'https://safe-transaction-zksync.safe.global/',
     blockExplorerUriTemplate: {
@@ -599,7 +592,7 @@ const SUPPORTED_CHAINS = [
       name: 'CELO',
       symbol: 'CELO',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/42220/currency_logo.png',
+      logoUri: '/images/chains/42220.png',
     },
     transactionService: 'https://safe-transaction-celo.safe.global',
     blockExplorerUriTemplate: {
@@ -661,7 +654,7 @@ const SUPPORTED_CHAINS = [
       name: 'Avalanche',
       symbol: 'AVAX',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/43114/currency_logo.png',
+      logoUri: '/images/chains/43114.png',
     },
     transactionService: 'https://safe-transaction-avalanche.safe.global',
     blockExplorerUriTemplate: {
@@ -727,7 +720,7 @@ const SUPPORTED_CHAINS = [
       name: 'Ether',
       symbol: 'ETH',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/1313161554/currency_logo.png',
+      logoUri: '/images/chains/1313161554.png',
     },
     transactionService: 'https://safe-transaction-aurora.safe.global',
     blockExplorerUriTemplate: {
@@ -791,7 +784,7 @@ const SUPPORTED_CHAINS = [
       name: 'Sepolia Ether',
       symbol: 'ETH',
       decimals: 18,
-      logoUri: 'https://safe-transaction-assets.safe.global/chains/11155111/currency_logo.png',
+      logoUri: '/images/chains/11155111.png',
     },
     transactionService: 'https://safe-transaction-sepolia.safe.global',
     blockExplorerUriTemplate: {

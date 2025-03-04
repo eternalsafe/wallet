@@ -8,23 +8,31 @@ import type { ChainInfo, SafeInfo } from '@safe-global/safe-gateway-typescript-s
 import { ethers } from 'ethers'
 import { createUpdateSafeTxs } from '../safeUpdateParams'
 import { LATEST_SAFE_VERSION } from '@/config/constants'
-import { Web3Provider } from '@ethersproject/providers'
 import * as web3 from '@/hooks/wallets/web3'
-import { MulticallWrapper } from 'ethers-multicall-provider'
+import type { MulticallProvider } from 'ethers-multicall-provider'
 
 const MOCK_SAFE_ADDRESS = '0x0000000000000000000000000000000000005AFE'
 
 describe('safeUpgradeParams', () => {
-  jest.spyOn(web3, 'getMultiWeb3ReadOnly').mockImplementation(() => MulticallWrapper.wrap(new Web3Provider(jest.fn())))
+  it('Should upgrade L1 safe to L1 1.3.0', async () => {
+    jest.spyOn(web3, 'getMultiWeb3ReadOnly').mockImplementation(
+      () =>
+        jest.fn().mockImplementation(() => {
+          return {
+            getNetwork: jest.fn().mockResolvedValue({ chainId: Number(5) }),
+            _isProvider: jest.fn().mockReturnValue(true),
+          }
+        })() as unknown as MulticallProvider,
+    )
 
-  it('Should upgrade L1 safe to L1 1.3.0', () => {
     const mockSafe = {
       address: {
         value: MOCK_SAFE_ADDRESS,
       },
       version: '1.1.1',
     } as SafeInfo
-    const txs = createUpdateSafeTxs(mockSafe, { chainId: '4', l2: false } as ChainInfo)
+
+    const txs = await createUpdateSafeTxs(mockSafe, { chainId: '5', l2: false } as ChainInfo)
     const [masterCopyTx, fallbackHandlerTx] = txs
     // Safe upgrades mastercopy and fallbackhandler
     expect(txs).toHaveLength(2)
@@ -34,7 +42,7 @@ describe('safeUpgradeParams', () => {
     expect(
       sameAddress(
         decodeChangeMasterCopyAddress(masterCopyTx.data),
-        getSafeSingletonDeployment({ version: '1.3.0', network: '4' })?.defaultAddress,
+        getSafeSingletonDeployment({ version: LATEST_SAFE_VERSION, network: '5' })?.defaultAddress,
       ),
     ).toBeTruthy()
 
@@ -44,19 +52,30 @@ describe('safeUpgradeParams', () => {
     expect(
       sameAddress(
         decodeSetFallbackHandlerAddress(fallbackHandlerTx.data),
-        getFallbackHandlerDeployment({ version: LATEST_SAFE_VERSION, network: '4' })?.defaultAddress,
+        getFallbackHandlerDeployment({ version: LATEST_SAFE_VERSION, network: '5' })?.defaultAddress,
       ),
     ).toBeTruthy()
   })
 
-  it('Should upgrade L2 safe to L2 1.3.0', () => {
+  it('Should upgrade L2 safe to L2 1.3.0', async () => {
+    jest.spyOn(web3, 'getMultiWeb3ReadOnly').mockImplementation(
+      () =>
+        jest.fn().mockImplementation(() => {
+          return {
+            getNetwork: jest.fn().mockResolvedValue({ chainId: Number(100) }),
+            _isProvider: jest.fn().mockReturnValue(true),
+          }
+        })() as unknown as MulticallProvider,
+    )
+
     const mockSafe = {
       address: {
         value: MOCK_SAFE_ADDRESS,
       },
       version: '1.1.1',
     } as SafeInfo
-    const txs = createUpdateSafeTxs(mockSafe, { chainId: '100', l2: true } as ChainInfo)
+
+    const txs = await createUpdateSafeTxs(mockSafe, { chainId: '100', l2: true } as ChainInfo)
     const [masterCopyTx, fallbackHandlerTx] = txs
     // Safe upgrades mastercopy and fallbackhandler
     expect(txs).toHaveLength(2)
@@ -66,7 +85,7 @@ describe('safeUpgradeParams', () => {
     expect(
       sameAddress(
         decodeChangeMasterCopyAddress(masterCopyTx.data),
-        getSafeL2SingletonDeployment({ version: '1.3.0', network: '100' })?.defaultAddress,
+        getSafeL2SingletonDeployment({ version: LATEST_SAFE_VERSION, network: '100' })?.defaultAddress,
       ),
     ).toBeTruthy()
 
@@ -76,7 +95,7 @@ describe('safeUpgradeParams', () => {
     expect(
       sameAddress(
         decodeSetFallbackHandlerAddress(fallbackHandlerTx.data),
-        getFallbackHandlerDeployment({ version: '1.3.0', network: '100' })?.defaultAddress,
+        getFallbackHandlerDeployment({ version: LATEST_SAFE_VERSION, network: '100' })?.defaultAddress,
       ),
     ).toBeTruthy()
   })

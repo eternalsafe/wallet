@@ -5,8 +5,7 @@ import { ethers } from 'ethers'
 import { hexZeroPad } from 'ethers/lib/utils'
 import type { JsonRpcProvider } from '@ethersproject/providers'
 import type { SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
-import type Safe from '@safe-global/safe-core-sdk'
-
+import type Safe from '@safe-global/protocol-kit'
 import * as web3 from '@/hooks/wallets/web3'
 import { RecipientAddressModule } from '.'
 import {

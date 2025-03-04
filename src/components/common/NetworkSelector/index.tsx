@@ -15,17 +15,12 @@ import { AppRoutes } from '@/config/routes'
 
 const keepPathRoutes = [AppRoutes.welcome.index, AppRoutes.newSafe.load]
 
-const testNets = ['gor', 'sep']
-const isTestnet = (shortName: string) => {
-  return testNets.includes(shortName)
-}
-
 const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement => {
   const { configs } = useChains()
   const chainId = useChainId()
   const router = useRouter()
 
-  const [testNets, prodNets] = useMemo(() => partition(configs, (config) => isTestnet(config.shortName)), [configs])
+  const [testNets, prodNets] = useMemo(() => partition(configs, (config) => config.isTestnet ?? false), [configs])
 
   const getNetworkLink = useCallback(
     (shortName: string) => {

@@ -1,5 +1,5 @@
 import { setSafeSDK } from '@/hooks/coreSDK/safeCoreSDK'
-import type Safe from '@safe-global/safe-core-sdk'
+import type Safe from '@safe-global/protocol-kit'
 import type { SafeTransactionDataPartial, TransactionResult } from '@safe-global/safe-core-sdk-types'
 import {
   TransactionInfoType,
@@ -183,7 +183,7 @@ describe('txSender', () => {
         to: '0x123',
         value: '1',
         data: '0x0',
-        safeTxGas: 60000,
+        safeTxGas: '60000',
       }
       await createTx(txParams)
 
@@ -191,7 +191,7 @@ describe('txSender', () => {
         to: '0x123',
         value: '1',
         data: '0x0',
-        safeTxGas: 60000,
+        safeTxGas: '60000',
       }
       expect(mockSafeSDK.createTransaction).toHaveBeenCalledWith({ safeTransactionData })
     })

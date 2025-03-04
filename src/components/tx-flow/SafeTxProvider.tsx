@@ -21,8 +21,8 @@ export const SafeTxContext = createContext<{
   nonceNeeded?: boolean
   setNonceNeeded: Dispatch<SetStateAction<boolean>>
 
-  safeTxGas?: number
-  setSafeTxGas: Dispatch<SetStateAction<number | undefined>>
+  safeTxGas?: string
+  setSafeTxGas: Dispatch<SetStateAction<string | undefined>>
 
   recommendedNonce?: number
 }>({
@@ -40,7 +40,7 @@ const SafeTxProvider = ({ children }: { children: ReactNode }): ReactElement => 
   const [safeTxError, setSafeTxError] = useState<Error>()
   const [nonce, setNonce] = useState<number>()
   const [nonceNeeded, setNonceNeeded] = useState<boolean>(true)
-  const [safeTxGas, setSafeTxGas] = useState<number>()
+  const [safeTxGas, setSafeTxGas] = useState<string>()
 
   // Signed txs cannot be updated
   const isSigned = safeTx && safeTx.signatures.size > 0

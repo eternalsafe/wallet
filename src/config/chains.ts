@@ -1,4 +1,4 @@
-import { networks } from '@safe-global/safe-core-sdk-utils/dist/src/eip-3770/config'
+import { networks } from '@safe-global/protocol-kit/dist/src/utils/eip-3770/config'
 /**
  * A static shortName<->chainId dictionary
  * E.g.:
@@ -32,7 +32,10 @@ const ChainLogos = {
   [chains.sep]: '/images/networks/sep.png',
 }
 
-export const getChainLogo = (chainId: string) => {
+export const getChainLogo = (chainId: string, backup?: string) => {
+  if (!ChainLogos[chainId]) {
+    return backup || '/images/networks/unknown.png'
+  }
   return ChainLogos[chainId]
 }
 

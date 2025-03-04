@@ -5,6 +5,9 @@ name: 'Next.js Bundle Analysis'
 
 on:
   pull_request:
+  push:
+    branches:
+      - eternalsafe
 
 permissions:
   contents: read # for checkout repository
@@ -29,7 +32,7 @@ jobs:
         run: npx -p nextjs-bundle-analysis report
 
       - name: Upload bundle
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bundle
           path: .next/analyze/__bundle_analysis.json

@@ -19,7 +19,7 @@ import {
   useTxActions,
   useValidateNonce,
 } from './hooks'
-import type Safe from '@safe-global/safe-core-sdk'
+import type Safe from '@safe-global/protocol-kit'
 import type { SafeTransaction } from '@safe-global/safe-core-sdk-types'
 import * as safeCoreSDK from '@/hooks/coreSDK/safeCoreSDK'
 import { getMockDetailedTx } from '@/tests/mocks/transactions'

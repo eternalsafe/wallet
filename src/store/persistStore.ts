@@ -5,26 +5,46 @@ import type { RootState } from '@/store'
 
 type PreloadedRootState = PreloadedState<RootState>
 
-export const getPreloadedState = <K extends keyof PreloadedRootState>(sliceNames: K[]): PreloadedRootState => {
+interface PartialPersist {
+  [key: string]: {
+    toPersist: (state: any) => any
+    toHydrate: (state: any) => any
+  }
+}
+
+export const getPreloadedState = <K extends keyof PreloadedRootState>(
+  sliceNames: K[],
+  partialPersist?: PartialPersist,
+): PreloadedRootState => {
   return sliceNames.reduce<PreloadedRootState>((preloadedState, sliceName) => {
     const sliceState = local.getItem<PreloadedRootState[K]>(sliceName)
 
     if (sliceState) {
-      preloadedState[sliceName] = sliceState
+      if (partialPersist?.[sliceName]) {
+        preloadedState[sliceName] = partialPersist[sliceName].toHydrate(sliceState)
+      } else {
+        preloadedState[sliceName] = sliceState
+      }
     }
 
     return preloadedState
   }, {})
 }
 
-export const persistState = <K extends keyof PreloadedRootState>(sliceNames: K[]): Middleware<{}, RootState> => {
+export const persistState = <K extends keyof PreloadedRootState>(
+  sliceNames: K[],
+  partialPersist?: PartialPersist,
+): Middleware<{}, RootState> => {
   return (store) => (next) => (action) => {
     const result = next(action)
 
     const state = store.getState()
 
     for (const sliceName of sliceNames) {
-      const sliceState = state[sliceName]
+      let sliceState = state[sliceName]
+      if (partialPersist?.[sliceName]) {
+        sliceState = partialPersist[sliceName].toPersist(sliceState)
+      }
 
       if (sliceState) {
         local.setItem(sliceName, sliceState)

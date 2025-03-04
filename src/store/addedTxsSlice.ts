@@ -1,8 +1,8 @@
 import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '.'
 import type { SafeTransactionData, SafeTransaction } from '@safe-global/safe-core-sdk-types'
-import EthSafeTransaction from '@safe-global/safe-core-sdk/dist/src/utils/transactions/SafeTransaction'
-import EthSignSignature from '@safe-global/safe-core-sdk/dist/src/utils/signatures/SafeSignature'
+import EthSafeTransaction from '@safe-global/protocol-kit/dist/src/utils/transactions/SafeTransaction'
+import { EthSafeSignature } from '@safe-global/protocol-kit'
 
 export class EternalSafeTransaction extends EthSafeTransaction {
   timestamp: number
@@ -11,7 +11,7 @@ export class EternalSafeTransaction extends EthSafeTransaction {
     super(data)
     this.timestamp = timestamp
     for (const [signer, data] of Object.entries(signatures)) {
-      this.addSignature(new EthSignSignature(signer, data))
+      this.addSignature(new EthSafeSignature(signer, data))
     }
   }
 }

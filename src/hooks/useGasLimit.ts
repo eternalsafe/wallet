@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import type { BigNumber } from 'ethers'
-import type Safe from '@safe-global/safe-core-sdk'
+import type Safe from '@safe-global/protocol-kit'
 import { encodeSignatures } from '@/services/tx/encodeSignatures'
 import type { SafeTransaction } from '@safe-global/safe-core-sdk-types'
 import { OperationType } from '@safe-global/safe-core-sdk-types'
@@ -14,12 +14,12 @@ import { useSafeSDK } from './coreSDK/safeCoreSDK'
 import useIsSafeOwner from './useIsSafeOwner'
 import { Errors, logError } from '@/services/exceptions'
 
-const getEncodedSafeTx = (safeSDK: Safe, safeTx: SafeTransaction, from?: string): string => {
+const getEncodedSafeTx = (safeSDK: Safe, safeTx: SafeTransaction, from?: string): string | undefined => {
   const EXEC_TX_METHOD = 'execTransaction'
 
   return safeSDK
     .getContractManager()
-    .safeContract.encode(EXEC_TX_METHOD, [
+    .safeContract?.encode(EXEC_TX_METHOD, [
       safeTx.data.to,
       safeTx.data.value,
       safeTx.data.data,
@@ -53,7 +53,7 @@ const useGasLimit = (
   const currentChainId = useChainId()
   const hasSafeTxGas = !!safeTx?.data?.safeTxGas
 
-  const encodedSafeTx = useMemo<string>(() => {
+  const encodedSafeTx = useMemo<string | undefined>(() => {
     if (!safeTx || !safeSDK || !walletAddress) {
       return ''
     }

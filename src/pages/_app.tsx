@@ -30,6 +30,7 @@ import useChangedValue from '@/hooks/useChangedValue'
 import { TxModalProvider } from '@/components/tx-flow'
 import WalletProvider from '@/components/common/WalletProvider'
 import { useMagicLink } from '@/hooks/useMagicLink'
+import { useMagicNetwork } from '@/hooks/useMagicNetwork'
 
 const InitApp = (): null => {
   useAdjustUrl()
@@ -43,6 +44,7 @@ const InitApp = (): null => {
   useTxPendingStatuses()
   useSafeMessagePendingStatuses()
   useMagicLink()
+  useMagicNetwork()
 
   return null
 }

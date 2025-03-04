@@ -5,7 +5,7 @@ on:
       - 'v\d+'
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,8 +54,10 @@ jobs:
 
           [ipfs://$IPFS_HASH](ipfs://$IPFS_HASH)  
           __(Recommended)__ _requires Brave Browser or IPFS Desktop_  
-          [https://$IPFS_HASH.ipfs.cf-ipfs.com](https://$IPFS_HASH.ipfs.cf-ipfs.com)  
           [https://$IPFS_HASH.ipfs.dweb.link](https://$IPFS_HASH.ipfs.dweb.link)  
+          [https://$IPFS_HASH.ipfs.w3s.link](https://$IPFS_HASH.ipfs.w3s.link)  
+          [https://$IPFS_HASH.ipfs.nftstorage.link](https://$IPFS_HASH.ipfs.nftstorage.link)  
+          [https://$IPFS_HASH.ipfs.zoltu.io](https://$IPFS_HASH.ipfs.zoltu.io)  
           EOF
           )
 

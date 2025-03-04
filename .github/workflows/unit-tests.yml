@@ -2,9 +2,10 @@ name: Unit tests
 on:
   pull_request:
 
-  push:
-    branches:
-      - eternal-safe
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
