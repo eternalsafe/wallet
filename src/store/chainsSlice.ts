@@ -1,60 +1,21 @@
-import { type ChainInfo as ChainInfoSDK } from '@safe-global/safe-gateway-typescript-sdk'
-import { createSelector, createSlice } from '@reduxjs/toolkit'
-import { getChainsConfig } from '@/config/supportedChains'
+import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '.'
 import { makeLoadableSlice } from './common'
+import { ChainInfo, selectCustomChainsAsLoadable } from '@/store/customChainsSlice'
 
-export type ChainInfo = ChainInfoSDK & {
-  isTestnet?: boolean
-  custom?: boolean
-}
+const initialState: ChainInfo[] = []
 
-const initialState: ChainInfo[] = [...getChainsConfig()]
+const { slice, selector } = makeLoadableSlice('chains', initialState)
 
-const { slice: baseSlice, selector } = makeLoadableSlice('chains', initialState)
+export const chainsSlice = slice
 
-const customSlice = createSlice({
-  name: 'chains',
-  initialState: baseSlice.getInitialState(),
-  reducers: {
-    addChain: (state, action: { payload: ChainInfo }) => {
-      const exists = state.data.find((chain) => chain.chainId === action.payload.chainId)
-      if (!exists) {
-        state.data.push(action.payload)
-      }
-    },
-  },
+export const selectChains = createSelector([selector, selectCustomChainsAsLoadable], (chains, customChains) => {
+  return {
+    loading: false,
+    data: [...chains.data, ...customChains.data],
+    error: chains.error || customChains.error,
+  }
 })
-
-export const chainsSlice = {
-  ...baseSlice,
-  reducer: (state: any, action: any) => {
-    state = baseSlice.reducer(state, action)
-    return customSlice.reducer(state, action)
-  },
-  actions: {
-    ...baseSlice.actions,
-    ...customSlice.actions,
-  },
-}
-
-// Export all actions including the base loading actions
-export const { addChain } = chainsSlice.actions
-export const selectChains = selector
-export const partialPersistChains = {
-  toPersist: (state: any) => {
-    return {
-      ...state,
-      data: state.data.filter((chain: ChainInfo) => Boolean(chain?.custom)),
-    }
-  },
-  toHydrate: (state: any) => {
-    return {
-      ...state,
-      data: [...getChainsConfig(), ...state.data],
-    }
-  },
-}
 
 export const selectChainById = createSelector(
   [selectChains, (_: RootState, chainId: string) => chainId],

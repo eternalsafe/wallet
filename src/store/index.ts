@@ -10,7 +10,8 @@ import { useDispatch, useSelector, type TypedUseSelectorHook } from 'react-redux
 import merge from 'lodash/merge'
 import { IS_PRODUCTION } from '@/config/constants'
 import { createStoreHydrator, HYDRATE_ACTION } from './storeHydrator'
-import { chainsSlice, partialPersistChains } from './chainsSlice'
+import { chainsSlice } from './chainsSlice'
+import { customChainsSlice } from './customChainsSlice'
 import { safeInfoSlice } from './safeInfoSlice'
 import { balancesSlice } from './balancesSlice'
 import { sessionSlice } from './sessionSlice'
@@ -34,6 +35,7 @@ import { collectiblesBalanceSlice } from '@/store/collectiblesBalancesSlice'
 
 const rootReducer = combineReducers({
   [chainsSlice.name]: chainsSlice.reducer,
+  [customChainsSlice.name]: customChainsSlice.reducer,
   [safeInfoSlice.name]: safeInfoSlice.reducer,
   [balancesSlice.name]: balancesSlice.reducer,
   [collectiblesBalanceSlice.name]: collectiblesBalanceSlice.reducer,
@@ -64,23 +66,19 @@ const persistedSlices: (keyof PreloadedState<RootState>)[] = [
   safeAppsSlice.name,
   pendingSafeMessagesSlice.name,
   batchSlice.name,
-  chainsSlice.name,
+  customChainsSlice.name,
   customTokensSlice.name,
   customCollectiblesSlice.name,
   addedTxsSlice.name,
 ]
 
-const partialPersist = {
-  [chainsSlice.name]: partialPersistChains,
-}
-
 export const getPersistedState = () => {
-  return getPreloadedState(persistedSlices, partialPersist)
+  return getPreloadedState(persistedSlices)
 }
 
 export const listenerMiddlewareInstance = createListenerMiddleware<RootState>()
 
-const middleware = [persistState(persistedSlices, partialPersist), listenerMiddlewareInstance.middleware]
+const middleware = [persistState(persistedSlices), listenerMiddlewareInstance.middleware]
 const listeners = [addedSafesListener, safeMessagesListener, txHistoryListener]
 
 export const _hydrationReducer: typeof rootReducer = (state, action) => {

@@ -2,14 +2,15 @@ import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAppDispatch } from '@/store'
 import { setRpc } from '@/store/settingsSlice'
-import { addChain } from '@/store/chainsSlice'
-import type { ChainInfo } from '@/store/chainsSlice'
+import { addChain, type ChainInfo } from '@/store/customChainsSlice'
 import { type RPC_AUTHENTICATION } from '@safe-global/safe-gateway-typescript-sdk'
 import useChainId from '@/hooks/useChainId'
 import useChains from './useChains'
 import { showNotification } from '@/store/notificationsSlice'
+import { useRouter } from 'next/router'
 
 export const useMagicNetwork = (): void => {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
   const chainId = useChainId()
@@ -110,6 +111,8 @@ export const useMagicNetwork = (): void => {
         rpc: decodeURIComponent(rpcUrl),
       }),
     )
+
+    router.replace({ query: { chain: shortName } })
   }, [searchParams, dispatch, chainId, supportedChains])
 }
 
