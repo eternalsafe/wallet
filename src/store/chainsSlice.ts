@@ -9,7 +9,7 @@ export type ChainInfo = ChainInfoSDK & {
   custom?: boolean
 }
 
-const initialState: ChainInfo[] = []
+const initialState: ChainInfo[] = [...getChainsConfig()]
 
 const { slice: baseSlice, selector } = makeLoadableSlice('chains', initialState)
 
