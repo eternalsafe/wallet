@@ -66,10 +66,12 @@ const EnvironmentVariables = () => {
   }, [tenderlyOrgName, tenderlyProjectName, tenderlyToken])
 
   const onSubmit = handleSubmit((data) => {
+    const rpcValue = data[EnvVariablesField.rpc].trim() === '' ? undefined : data[EnvVariablesField.rpc]
+
     dispatch(
       setRpc({
         chainId,
-        rpc: data[EnvVariablesField.rpc],
+        rpc: rpcValue,
       }),
     )
 

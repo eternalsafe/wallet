@@ -30,11 +30,20 @@ export const useInitWeb3 = () => {
   const web3 = useWeb3()
 
   useEffect(() => {
-    if (!customRpcUrl || !chainId) {
+    if (!chainId) {
+      setWeb3(undefined)
+      setWeb3ReadOnly(undefined)
+      setMultiWeb3ReadOnly(undefined)
+      return
+    }
+    if (!customRpcUrl) {
       if (!wallet && !web3) {
         setWeb3(undefined)
+        setWeb3ReadOnly(undefined)
+        setMultiWeb3ReadOnly(undefined)
         return
       }
+
       if (wallet && wallet.chainId !== chainId) {
         dispatch(
           showNotification({
@@ -47,6 +56,8 @@ export const useInitWeb3 = () => {
         )
         return
       }
+
+      // If wallet is connected and on the correct network, use its provider
       if (wallet && wallet.chainId === chainId) {
         const internalWeb3 = createWeb3(wallet.provider)
         setWeb3(MulticallWrapper.wrap(internalWeb3, 50))
