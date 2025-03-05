@@ -1,7 +1,7 @@
 import { type ChainInfo as ChainInfoSDK } from '@safe-global/safe-gateway-typescript-sdk'
 import { createSlice } from '@reduxjs/toolkit'
 import type { RootState } from '.'
-import { Loadable } from '@/store/common'
+import type { Loadable } from '@/store/common'
 
 export type ChainInfo = ChainInfoSDK & {
   isTestnet?: boolean

@@ -113,7 +113,7 @@ export const useMagicNetwork = (): void => {
     )
 
     router.replace({ query: { chain: shortName } })
-  }, [searchParams, dispatch, chainId, supportedChains])
+  }, [searchParams, dispatch, chainId, supportedChains, router])
 }
 
 export default useMagicNetwork
