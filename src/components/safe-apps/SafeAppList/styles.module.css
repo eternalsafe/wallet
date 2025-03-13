@@ -1,0 +1,7 @@
+.safeAppsContainer {
+  display: grid;
+  grid-gap: var(--space-3);
+  list-style-type: none;
+  padding: 0 0 var(--space-1);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}

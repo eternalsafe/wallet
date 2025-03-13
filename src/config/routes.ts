@@ -5,6 +5,12 @@ export const AppRoutes = {
   imprint: '/imprint',
   addressBook: '/address-book',
   addOwner: '/addOwner',
+  apps: {
+    open: '/apps/open',
+    index: '/apps',
+    custom: '/apps/custom',
+    bookmarked: '/apps/bookmarked',
+  },
   balances: {
     nfts: '/balances/nfts',
     index: '/balances',

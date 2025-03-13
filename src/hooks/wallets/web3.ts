@@ -16,6 +16,11 @@ export const createWeb3 = (walletProvider: EIP1193Provider): Web3Provider => {
   return new Web3Provider(walletProvider)
 }
 
+export const createSafeAppsWeb3Provider = (safeAppsRpcUri: string): JsonRpcProvider | undefined => {
+  return new JsonRpcProvider({ url: safeAppsRpcUri, timeout: 10_000 })
+}
+
+
 export const { setStore: setWeb3, useStore: useWeb3 } = new ExternalStore<MulticallProvider<Web3Provider>>()
 
 export const {
