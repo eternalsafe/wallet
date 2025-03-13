@@ -14,7 +14,6 @@ type CustomAppProps = {
 }
 
 const CustomApp = ({ safeApp, shareUrl }: CustomAppProps) => {
-
   return (
     <div className={css.customAppContainer}>
       <SafeAppIconCard src={safeApp.iconUrl} alt={safeApp.name} width={48} height={48} />

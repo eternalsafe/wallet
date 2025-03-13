@@ -20,7 +20,6 @@ export const createSafeAppsWeb3Provider = (safeAppsRpcUri: string): JsonRpcProvi
   return new JsonRpcProvider({ url: safeAppsRpcUri, timeout: 10_000 })
 }
 
-
 export const { setStore: setWeb3, useStore: useWeb3 } = new ExternalStore<MulticallProvider<Web3Provider>>()
 
 export const {

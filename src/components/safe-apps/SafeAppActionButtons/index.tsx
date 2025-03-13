@@ -46,10 +46,7 @@ const SafeAppActionButtons = ({
       )}
 
       {/* Copy share Safe App url button */}
-      <CopyButton
-        initialToolTipText={`Copy share URL for ${safeApp.name}`}
-        text={shareSafeAppUrl}
-      >
+      <CopyButton initialToolTipText={`Copy share URL for ${safeApp.name}`} text={shareSafeAppUrl}>
         <IconButton size="small">
           <SvgIcon component={ShareIcon} inheritViewBox color="border" fontSize="small" />
         </IconButton>
