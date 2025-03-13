@@ -11,6 +11,7 @@ import {
   type TransactionSummary,
   TransactionInfoType,
   DetailedExecutionInfoType,
+  getTransactionDetails,
 } from '@safe-global/safe-gateway-typescript-sdk'
 import { ConflictType, TransactionListItemType } from '@safe-global/safe-gateway-typescript-sdk'
 import {
@@ -142,6 +143,14 @@ export const getMultiSendTxs = async (
       }
     })
     .filter(Boolean) as MetaTransactionData[]
+}
+
+export const getTxsWithDetails = (txs: Transaction[], chainId: string) => {
+  return Promise.all(
+    txs.map(async (tx) => {
+      return await getTransactionDetails(chainId, tx.transaction.id)
+    }),
+  )
 }
 
 export const getTxOptions = (params: AdvancedParameters, currentChain: ChainInfo | undefined): TransactionOptions => {
