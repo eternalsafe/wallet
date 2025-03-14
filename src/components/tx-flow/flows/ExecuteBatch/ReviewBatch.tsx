@@ -5,7 +5,7 @@ import type { TransactionDetails } from '@safe-global/safe-gateway-typescript-sd
 import { getReadOnlyMultiSendCallOnlyContract } from '@/services/contracts/safeContracts'
 import { useCurrentChain } from '@/hooks/useChains'
 import useSafeInfo from '@/hooks/useSafeInfo'
-import { MetaTransactionData } from '@safe-global/safe-core-sdk-types'
+import type { MetaTransactionData } from '@safe-global/safe-core-sdk-types'
 import { arrayify } from '@ethersproject/bytes'
 import { pack as solidityPack } from '@ethersproject/solidity'
 import { useState, useMemo, useContext } from 'react'

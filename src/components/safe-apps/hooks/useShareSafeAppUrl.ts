@@ -3,7 +3,7 @@ import { resolveHref } from 'next/dist/client/resolve-href'
 import { useEffect, useState } from 'react'
 import type { UrlObject } from 'url'
 
-import { AppRoutes } from '@/config/routes'
+// import { AppRoutes } from '@/config/routes'
 import { useCurrentChain } from '@/hooks/useChains'
 
 export const useShareSafeAppUrl = (appUrl: string): string => {

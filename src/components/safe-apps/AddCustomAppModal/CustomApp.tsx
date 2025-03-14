@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import type { SafeAppData } from '@safe-global/safe-gateway-typescript-sdk'
 import { Typography, SvgIcon } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
