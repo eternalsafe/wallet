@@ -50,3 +50,5 @@ yalc.lock
 /public/workbox-*.js.map
 /public/fallback*
 /public/*.js.LICENSE.txt
+
+public/tx-decoder-tmp
