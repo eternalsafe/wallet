@@ -12,7 +12,6 @@ import { parsePrefixedAddress } from '@/utils/addresses'
 import SafeIcon from '@/components/common/SafeIcon'
 import EthHashInfo from '@/components/common/EthHashInfo'
 import { AppRoutes } from '@/config/routes'
-import useOwnedSafes from '@/hooks/useOwnedSafes'
 import { CTA_BUTTON_WIDTH, CTA_HEIGHT } from '@/components/safe-apps/SafeAppLandingPage/constants'
 import CreateNewSafeSVG from '@/public/images/open/safe-creation.svg'
 
@@ -28,14 +27,13 @@ type CompatibleSafesType = { address: string; chainId: string; shortName?: strin
 
 const AppActions = ({ wallet, onConnectWallet, chain, appUrl, app }: Props): React.ReactElement => {
   const lastUsedSafe = useLastSafe()
-  const ownedSafes = useOwnedSafes()
   const addressBook = useAppSelector(selectAllAddressBooks)
   const chains = useAppSelector(selectChains)
   const compatibleChains = app.chainIds
 
   const compatibleSafes = useMemo(
-    () => getCompatibleSafes(ownedSafes, compatibleChains, chains.data),
-    [ownedSafes, compatibleChains, chains.data],
+    () => getCompatibleSafes({}, compatibleChains, chains.data),
+    [compatibleChains, chains.data],
   )
 
   const [safeToUse, setSafeToUse] = useState<CompatibleSafesType>()
@@ -71,7 +69,7 @@ const AppActions = ({ wallet, onConnectWallet, chain, appUrl, app }: Props): Rea
     case shouldCreateSafe:
       const redirect = `${AppRoutes.apps.index}?appUrl=${appUrl}`
       const createSafeHrefWithRedirect: UrlObject = {
-        pathname: AppRoutes.newSafe.create,
+        // pathname: AppRoutes.newSafe.create,
         query: { safeViewRedirectURL: redirect, chain: chain.shortName },
       }
       button = (

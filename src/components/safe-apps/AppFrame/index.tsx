@@ -26,10 +26,8 @@ import { useSafePermissions } from '@/hooks/safe-apps/permissions'
 import { useCurrentChain } from '@/hooks/useChains'
 import { isSameUrl } from '@/utils/url'
 import useTransactionQueueBarState from '@/components/safe-apps/AppFrame/useTransactionQueueBarState'
-import useThirdPartyCookies from './useThirdPartyCookies'
 import useAppIsLoading from './useAppIsLoading'
 import useAppCommunicator, { CommunicatorMessages } from './useAppCommunicator'
-import { ThirdPartyCookiesWarning } from './ThirdPartyCookiesWarning'
 import TransactionQueueBar, { TRANSACTION_BAR_HEIGHT } from './TransactionQueueBar'
 import { safeMsgSubscribe, SafeMsgEvent } from '@/services/safe-messages/safeMsgEvents'
 import { useAppSelector } from '@/store'
@@ -79,7 +77,6 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
   } = useTransactionQueueBarState()
   const queueBarVisible = transactions.results.length > 0 && !queueBarDismissed
   const [remoteApp, , isBackendAppsLoading] = useSafeAppFromBackend(appUrl, safe.chainId)
-  const { thirdPartyCookiesDisabled, setThirdPartyCookiesDisabled } = useThirdPartyCookies()
   const { iframeRef, appIsLoading, isLoadingSlow, setAppIsLoading } = useAppIsLoading()
   const { getPermissions, hasPermission, permissionsRequest, setPermissionsRequest, confirmPermissionRequest } =
     useSafePermissions()
@@ -265,8 +262,6 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
       </Head>
 
       <div className={css.wrapper}>
-        {thirdPartyCookiesDisabled && <ThirdPartyCookiesWarning onClose={() => setThirdPartyCookiesDisabled(false)} />}
-
         {appIsLoading && (
           <div className={css.loadingContainer}>
             {isLoadingSlow && (

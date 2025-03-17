@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { useContext, useEffect, useMemo } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { hashMessage, _TypedDataEncoder } from 'ethers/lib/utils'
 import { Box } from '@mui/system'
 import { Typography, SvgIcon } from '@mui/material'
@@ -25,6 +25,7 @@ import { type SafeAppData } from '@safe-global/safe-gateway-typescript-sdk'
 import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import { asError } from '@/services/exceptions/utils'
 import { isEIP712TypedData } from '@/utils/safe-messages'
+import useAsync from '@/hooks/useAsync'
 
 export type SignMessageOnChainProps = {
   app?: SafeAppData
@@ -44,11 +45,17 @@ const ReviewSignMessageOnChain = ({ message, method, requestId }: SignMessageOnC
   const isTextMessage = method === Methods.signMessage && typeof message === 'string'
   const isTypedMessage = method === Methods.signTypedMessage && isEIP712TypedData(message)
 
-  const readOnlySignMessageLibContract = useMemo(
+  const [readOnlySignMessageLibContract] = useAsync(
     () => getReadOnlySignMessageLibContract(chainId, safe.version),
     [chainId, safe.version],
   )
-  const signMessageAddress = readOnlySignMessageLibContract.getAddress()
+
+  const [signMessageAddress, setSignMessageAddress] = useState<string>('')
+
+  useEffect(() => {
+    if (!readOnlySignMessageLibContract) return
+    setSignMessageAddress(readOnlySignMessageLibContract.getAddress())
+  }, [readOnlySignMessageLibContract])
 
   const [decodedMessage, readableMessage] = useMemo(() => {
     if (isTextMessage) {
@@ -62,6 +69,10 @@ const ReviewSignMessageOnChain = ({ message, method, requestId }: SignMessageOnC
 
   useEffect(() => {
     let txData
+    if (!readOnlySignMessageLibContract) return
+    if (!signMessageAddress) {
+      setSignMessageAddress(readOnlySignMessageLibContract.getAddress())
+    }
 
     if (isTextMessage) {
       txData = readOnlySignMessageLibContract.encode('signMessage', [hashMessage(getDecodedMessage(message))])
@@ -94,6 +105,7 @@ const ReviewSignMessageOnChain = ({ message, method, requestId }: SignMessageOnC
     setSafeTx,
     setSafeTxError,
     signMessageAddress,
+    readOnlySignMessageLibContract,
   ])
 
   const handleSubmit = async () => {

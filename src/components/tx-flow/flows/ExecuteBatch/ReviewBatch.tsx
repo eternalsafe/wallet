@@ -1,7 +1,7 @@
 import { CircularProgress, Typography, Button, CardActions, Divider, Alert } from '@mui/material'
 import useAsync from '@/hooks/useAsync'
 import { FEATURES } from '@safe-global/safe-gateway-typescript-sdk'
-import type { TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
+import type { TransactionDetails, MultisigExecutionDetails } from '@safe-global/safe-gateway-typescript-sdk'
 import { getReadOnlyMultiSendCallOnlyContract } from '@/services/contracts/safeContracts'
 import { useCurrentChain } from '@/hooks/useChains'
 import useSafeInfo from '@/hooks/useSafeInfo'
@@ -67,25 +67,32 @@ export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
   // const willRelay = canRelay && executionMethod === ExecutionMethod.RELAY
   const onboard = useOnboard()
 
+  // First useAsync for txsWithDetails
   const [txsWithDetails, error, loading] = useAsync<TransactionDetails[]>(() => {
     if (!chain?.chainId) return
     return getTxsWithDetails(params.txs, chain.chainId)
   }, [params.txs, chain?.chainId])
 
-  const multiSendContract = useMemo(() => {
+  // Add new useAsync for multiSendTxs
+  const [multiSendTxs, multiSendError, multiSendLoading] = useAsync(async () => {
+    if (!txsWithDetails || !chain || !safe.version) return
+    const validTxs = txsWithDetails.filter(
+      (tx): tx is TransactionDetails & { detailedExecutionInfo: MultisigExecutionDetails } =>
+        tx.detailedExecutionInfo !== undefined && 'nonce' in tx.detailedExecutionInfo,
+    )
+    return getMultiSendTxs(validTxs, chain, safe.address.value, safe.version)
+  }, [txsWithDetails, chain, safe.address.value, safe.version])
+
+  const multiSendTxData = useMemo(() => {
+    if (!multiSendTxs) return
+    return encodeMultiSendData(multiSendTxs)
+  }, [multiSendTxs])
+
+  // Replace the useMemo with useAsync for multiSendContract
+  const [multiSendContract, contractError, contractLoading] = useAsync(async () => {
     if (!chain?.chainId || !safe.version) return
     return getReadOnlyMultiSendCallOnlyContract(chain.chainId, safe.version)
   }, [chain?.chainId, safe.version])
-
-  const multiSendTxs = useMemo(() => {
-    if (!txsWithDetails || !chain || !safe.version) return
-    return getMultiSendTxs(txsWithDetails, chain, safe.address.value, safe.version)
-  }, [chain, safe.address.value, safe.version, txsWithDetails])
-
-  const multiSendTxData = useMemo(() => {
-    if (!txsWithDetails || !multiSendTxs) return
-    return encodeMultiSendData(multiSendTxs)
-  }, [txsWithDetails, multiSendTxs])
 
   const onExecute = async () => {
     if (!onboard || !multiSendTxData || !multiSendContract || !txsWithDetails || !gasPrice) return
@@ -135,7 +142,8 @@ export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
     }
   }
 
-  const submitDisabled = loading || !isSubmittable || !gasPrice
+  // Update submitDisabled to include multiSendLoading and contractLoading
+  const submitDisabled = loading || multiSendLoading || contractLoading || !isSubmittable || !gasPrice
 
   return (
     <>

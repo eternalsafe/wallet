@@ -1,4 +1,8 @@
-import type { DataDecoded, TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
+import type {
+  DataDecoded,
+  TransactionDetails,
+  MultisigExecutionDetails,
+} from '@safe-global/safe-gateway-typescript-sdk'
 import { Box } from '@mui/material'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import extractTxInfo from '@/services/tx/extractTxInfo'
@@ -30,7 +34,12 @@ const DecodedTxs = ({ txs }: { txs: TransactionDetails[] | undefined }) => {
             }))
           }
 
-          const { txParams } = extractTxInfo(transaction, safeAddress)
+          const { txParams } = extractTxInfo(
+            transaction as TransactionDetails & {
+              detailedExecutionInfo: MultisigExecutionDetails
+            },
+            safeAddress,
+          )
 
           let decodedDataParams: DataDecoded = {
             method: '',

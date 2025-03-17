@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo } from 'react'
+import { useContext, useEffect } from 'react'
 import type { ReactElement } from 'react'
 import type { SafeTransaction } from '@safe-global/safe-core-sdk-types'
 import SendToBlock from '@/components/tx/SendToBlock'
@@ -6,7 +6,6 @@ import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
 import { useCurrentChain } from '@/hooks/useChains'
 import type { SafeAppsTxParams } from '.'
 import { trackSafeAppTxCount } from '@/services/safe-apps/track-app-usage-count'
-import { getTxOrigin } from '@/utils/transactions'
 import { createMultiSendCallOnlyTx, createTx, dispatchSafeAppsTx } from '@/services/tx/tx-sender'
 import useOnboard from '@/hooks/wallets/useOnboard'
 import useSafeInfo from '@/hooks/useSafeInfo'
@@ -50,6 +49,7 @@ const ReviewSafeAppsTx = ({
   }, [txs, setSafeTx, setSafeTxError, params])
 
   const handleSubmit = async (txId: string) => {
+    console.log('handleSubmit', safeTx)
     if (!safeTx || !onboard) return
     trackSafeAppTxCount(Number(appId))
 
@@ -63,11 +63,10 @@ const ReviewSafeAppsTx = ({
     onSubmit?.(txId, safeTxHash)
   }
 
-  const origin = useMemo(() => getTxOrigin(app), [app])
   const error = !isTxValid(txs)
 
   return (
-    <SignOrExecuteForm onSubmit={handleSubmit} origin={origin}>
+    <SignOrExecuteForm onSubmit={handleSubmit}>
       {safeTx ? (
         <SendToBlock address={safeTx.data.to} title={getInteractionTitle(safeTx.data.value || '', chain)} />
       ) : error ? (

@@ -6,15 +6,13 @@ import { selectPendingTxs } from '@/store/pendingTxsSlice'
 import useBatchedTxs from '@/hooks/useBatchedTxs'
 import { ExecuteBatchFlow } from '@/components/tx-flow/flows'
 import useWallet from '@/hooks/wallets/useWallet'
-import useTxQueue from '@/hooks/useTxQueue'
 import { TxModalContext } from '@/components/tx-flow'
 
 const BatchExecuteButton = () => {
   const { setTxFlow } = useContext(TxModalContext)
   const pendingTxs = useAppSelector(selectPendingTxs)
   const hoverContext = useContext(BatchExecuteHoverContext)
-  const { page } = useTxQueue()
-  const batchableTransactions = useBatchedTxs(page?.results || [])
+  const batchableTransactions = useBatchedTxs([])
   const wallet = useWallet()
 
   const isBatchable = batchableTransactions.length > 1
