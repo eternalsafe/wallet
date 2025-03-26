@@ -75,14 +75,14 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
   const totalFee =
     gasLimit && maxFeePerGas
       ? formatVisualAmount(
-          maxFeePerGas
-            .add(
-              // maxPriorityFeePerGas is undefined if EIP-1559 disabled
-              maxPriorityFeePerGas || BigNumber.from(0),
-            )
-            .mul(gasLimit),
-          chain?.nativeCurrency.decimals,
-        )
+        maxFeePerGas
+          .add(
+            // maxPriorityFeePerGas is undefined if EIP-1559 disabled
+            maxPriorityFeePerGas || BigNumber.from(0),
+          )
+          .mul(gasLimit),
+        chain?.nativeCurrency.decimals,
+      )
       : '> 0.001'
 
   const handleBack = () => {
@@ -90,6 +90,7 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
   }
 
   const createSafe = async () => {
+    console.log('ReviewStep: Creating safe with data:', data)
     if (!wallet || !provider || !chain) return
 
     const readOnlyFallbackHandlerContract = await getReadOnlyFallbackHandlerContract(chain.chainId, LATEST_SAFE_VERSION)
