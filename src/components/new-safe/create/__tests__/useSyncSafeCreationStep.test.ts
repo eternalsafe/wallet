@@ -7,7 +7,6 @@ import * as usePendingSafe from '../steps/StatusStep/usePendingSafe'
 import * as useIsWrongChain from '@/hooks/useIsWrongChain'
 import * as useRouter from 'next/router'
 import { type NextRouter } from 'next/router'
-import { AppRoutes } from '@/config/routes'
 
 describe('useSyncSafeCreationStep', () => {
   const mockPendingSafe = {

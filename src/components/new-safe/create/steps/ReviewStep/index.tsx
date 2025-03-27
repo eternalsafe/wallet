@@ -14,7 +14,6 @@ import type { NewSafeFormData } from '@/components/new-safe/create'
 import css from '@/components/new-safe/create/steps/ReviewStep/styles.module.css'
 import layoutCss from '@/components/new-safe/create/styles.module.css'
 import { getReadOnlyFallbackHandlerContract } from '@/services/contracts/safeContracts'
-import { computeNewSafeAddress } from '@/components/new-safe/create/logic'
 import useWallet from '@/hooks/wallets/useWallet'
 import { useWeb3 } from '@/hooks/wallets/web3'
 import useSyncSafeCreationStep from '@/components/new-safe/create/useSyncSafeCreationStep'
@@ -75,14 +74,14 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
   const totalFee =
     gasLimit && maxFeePerGas
       ? formatVisualAmount(
-        maxFeePerGas
-          .add(
-            // maxPriorityFeePerGas is undefined if EIP-1559 disabled
-            maxPriorityFeePerGas || BigNumber.from(0),
-          )
-          .mul(gasLimit),
-        chain?.nativeCurrency.decimals,
-      )
+          maxFeePerGas
+            .add(
+              // maxPriorityFeePerGas is undefined if EIP-1559 disabled
+              maxPriorityFeePerGas || BigNumber.from(0),
+            )
+            .mul(gasLimit),
+          chain?.nativeCurrency.decimals,
+        )
       : '> 0.001'
 
   const handleBack = () => {
@@ -90,7 +89,6 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
   }
 
   const createSafe = async () => {
-    console.log('ReviewStep: Creating safe with data:', data)
     if (!wallet || !provider || !chain) return
 
     const readOnlyFallbackHandlerContract = await getReadOnlyFallbackHandlerContract(chain.chainId, LATEST_SAFE_VERSION)
@@ -106,12 +104,9 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
       },
     }
 
-    const safeAddress = await computeNewSafeAddress(provider, props)
-
     const pendingSafe = {
       ...data,
       saltNonce,
-      safeAddress,
     }
 
     setPendingSafe(pendingSafe)
