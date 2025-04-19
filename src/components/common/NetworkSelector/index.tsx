@@ -17,7 +17,7 @@ import { AppRoutes } from '@/config/routes'
 const keepPathRoutes = [AppRoutes.welcome.index, AppRoutes.newSafe.load, AppRoutes.newSafe.create]
 
 // Define a custom route for creating a new chain
-const CUSTOM_CHAIN_ROUTE = '/chains/custom'
+const CUSTOM_CHAIN_ROUTE = '/customChain'
 // Special value to identify the "Create Custom Chain" option
 const CUSTOM_CHAIN_VALUE = 'custom-chain'
 
