@@ -2,9 +2,10 @@ import ChainIndicator from '@/components/common/ChainIndicator'
 import { type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import Link from 'next/link'
 import type { SelectChangeEvent } from '@mui/material'
-import { ListSubheader, MenuItem, Select, Skeleton } from '@mui/material'
+import { Divider, ListSubheader, MenuItem, Select, Skeleton } from '@mui/material'
 import partition from 'lodash/partition'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import useChains from '@/hooks/useChains'
 import { useRouter } from 'next/router'
 import css from './styles.module.css'
@@ -14,6 +15,11 @@ import { useCallback } from 'react'
 import { AppRoutes } from '@/config/routes'
 
 const keepPathRoutes = [AppRoutes.welcome.index, AppRoutes.newSafe.load, AppRoutes.newSafe.create]
+
+// Define a custom route for creating a new chain
+const CUSTOM_CHAIN_ROUTE = '/chains/custom'
+// Special value to identify the "Create Custom Chain" option
+const CUSTOM_CHAIN_VALUE = 'custom-chain'
 
 const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement => {
   const { configs } = useChains()
@@ -45,10 +51,31 @@ const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement =>
     [router],
   )
 
+  const handleCustomChainClick = (event: React.MouseEvent) => {
+    // Prevent the default Select behavior
+    event.preventDefault()
+    event.stopPropagation()
+
+    // Navigate to the custom chain page
+    router.push(CUSTOM_CHAIN_ROUTE)
+
+    // Call the onChainSelect callback if provided
+    if (props.onChainSelect) {
+      props.onChainSelect()
+    }
+  }
+
   const onChange = (event: SelectChangeEvent) => {
     event.preventDefault() // Prevent the link click
 
     const newChainId = event.target.value
+
+    // Handle the custom chain option
+    if (newChainId === CUSTOM_CHAIN_VALUE) {
+      router.push(CUSTOM_CHAIN_ROUTE)
+      return
+    }
+
     const shortName = configs.find((item) => item.chainId === newChainId)?.shortName
 
     if (shortName) {
@@ -97,6 +124,15 @@ const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement =>
       <ListSubheader className={css.listSubHeader}>Testnets</ListSubheader>
 
       {testNets.map((chain) => renderMenuItem(chain.chainId, chain))}
+
+      {/* Divider and Custom Chain Option */}
+      <Divider sx={{ my: 1 }} />
+      <MenuItem value={CUSTOM_CHAIN_VALUE} onClick={handleCustomChainClick} className={css.menuItem}>
+        <div className={css.item} style={{ display: 'flex', alignItems: 'center' }}>
+          <AddCircleOutlineIcon sx={{ mr: 1, fontSize: '1rem' }} />
+          <span>Create Custom Chain</span>
+        </div>
+      </MenuItem>
     </Select>
   ) : (
     <Skeleton width={94} height={31} sx={{ mx: 2 }} />
