@@ -9,12 +9,15 @@ import type { CustomTokensState } from '@/store/customTokensSlice'
 import type { AddedTxsState } from '@/store/addedTxsSlice'
 import type { SafeAppsState } from '@/store/safeAppsSlice'
 import type { SettingsState } from '@/store/settingsSlice'
+import type { ChainInfo } from '@/store/customChainsSlice'
 
 import { useMemo } from 'react'
 
 export const enum SAFE_EXPORT_VERSION {
   V1 = '1.0',
   V2 = '2.0',
+  V2_5 = '2.5', // Note: 2.5 is chosen specifically to be different from versions from the safe team
+  // https://github.com/safe-global/safe-wallet-monorepo/blob/85aaeafca7a646fcc658a12d67c2e57808f226b7/apps/web/src/components/settings/DataManagement/useGlobalImportFileParser.ts#L52
 }
 
 export enum ImportErrors {
@@ -59,6 +62,17 @@ export const _filterValidAbEntries = (ab?: AddressBookState): AddressBookState |
  *  - added Safes
  *  - safeApps
  *  - settings
+ *  - added txs
+ *  - customTokens
+ *
+ * 2.5: eternalsafe exclusive!
+ *  - address book
+ *  - added Safes
+ *  - safeApps
+ *  - settings
+ *  - added txs
+ *  - customTokens
+ *  - customChains
  *
  * @param jsonData
  * @returns data to import and some insights about it
@@ -68,6 +82,7 @@ type Data = {
   addedSafes?: AddedSafesState
   addressBook?: AddressBookState
   customTokens?: CustomTokensState
+  customChains?: ChainInfo[]
   addedTxs?: AddedTxsState
   settings?: SettingsState
   safeApps?: SafeAppsState
@@ -84,6 +99,7 @@ export const useGlobalImportJsonParser = (jsonData: string | undefined): Data =>
       addressBook: undefined,
       addedSafes: undefined,
       customTokens: undefined,
+      customChains: undefined,
       addedTxs: undefined,
       settings: undefined,
       safeApps: undefined,
@@ -124,6 +140,18 @@ export const useGlobalImportJsonParser = (jsonData: string | undefined): Data =>
         data.addedTxs = parsedFile.data.addedTxs
         data.settings = parsedFile.data.settings
         data.safeApps = parsedFile.data.safeApps
+
+        break
+      }
+
+      case SAFE_EXPORT_VERSION.V2_5: {
+        data.addressBook = _filterValidAbEntries(parsedFile.data.addressBook)
+        data.addedSafes = parsedFile.data.addedSafes
+        data.customTokens = parsedFile.data.customTokens
+        data.addedTxs = parsedFile.data.addedTxs
+        data.settings = parsedFile.data.settings
+        data.safeApps = parsedFile.data.safeApps
+        data.customChains = parsedFile.data.customChains
 
         break
       }

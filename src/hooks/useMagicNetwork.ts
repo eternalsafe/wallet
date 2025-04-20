@@ -24,7 +24,8 @@ export const useMagicNetwork = (): void => {
     const shortName = searchParams.get('shortName')
     const currencyName = searchParams.get('currency')
     const currencySymbol = searchParams.get('symbol')
-    const currencyLogo = searchParams.get('logo')
+    const logoParam = searchParams.get('logo')
+    const currencyLogo = logoParam ? decodeURIComponent(logoParam) : null
     const explorerAddr = searchParams.get('expAddr')
     const explorerTx = searchParams.get('expTx')
     const l2 = searchParams.get('l2')

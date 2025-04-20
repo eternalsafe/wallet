@@ -10,6 +10,7 @@ import { safeAppsSlice, selectSafeApps } from '@/store/safeAppsSlice'
 import { selectSettings, settingsSlice } from '@/store/settingsSlice'
 import { addedTxsSlice, selectAllAddedTxs } from '@/store/addedTxsSlice'
 import { customTokensSlice, selectCustomTokens } from '@/store/customTokensSlice'
+import { customChainsSlice } from '@/store/customChainsSlice'
 import InfoIcon from '@/public/images/notifications/info.svg'
 import { ImportFileUpload } from '@/components/settings/DataManagement/ImportFileUpload'
 import { ImportDialog } from '@/components/settings/DataManagement/ImportDialog'
@@ -32,6 +33,7 @@ export const exportAppData = () => {
     [safeAppsSlice.name]: safeApps,
     [addedTxsSlice.name]: addedTxs,
     [customTokensSlice.name]: customTokens,
+    [customChainsSlice.name]: customChains,
   } = getPersistedState()
 
   // Ensure they are under the same name as the slice
@@ -42,9 +44,10 @@ export const exportAppData = () => {
     [safeAppsSlice.name]: safeApps,
     [addedTxsSlice.name]: addedTxs,
     [customTokensSlice.name]: customTokens,
+    [customChainsSlice.name]: customChains,
   }
 
-  const data = JSON.stringify({ version: SAFE_EXPORT_VERSION.V2, data: exportData })
+  const data = JSON.stringify({ version: SAFE_EXPORT_VERSION.V2_5, data: exportData })
 
   const blob = new Blob([data], { type: 'text/json' })
   const link = document.createElement('a')

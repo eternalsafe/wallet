@@ -52,6 +52,7 @@ type Data = {
   addedSafes?: AddedSafesState
   addressBook?: AddressBookState
   customTokens?: CustomTokensState
+  customChains?: ChainInfo[]
   addedTxs?: AddedTxsState
   settings?: SettingsState
   safeApps?: SafeAppsState
@@ -177,6 +178,7 @@ export const FileListCard = ({
   addedSafes,
   addressBook,
   customTokens,
+  customChains,
   addedTxs,
   settings,
   safeApps,

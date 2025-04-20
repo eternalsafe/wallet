@@ -15,6 +15,7 @@ import { showNotification } from '@/store/notificationsSlice'
 
 import css from './styles.module.css'
 import { customTokensSlice } from '@/store/customTokensSlice'
+import { customChainsSlice } from '@/store/customChainsSlice'
 import { addedTxsSlice } from '@/store/addedTxsSlice'
 
 export const ImportDialog = ({
@@ -40,6 +41,7 @@ export const ImportDialog = ({
     addedTxs,
     settings,
     safeApps,
+    customChains,
     error,
   } = useGlobalImportJsonParser(jsonData)
 
@@ -74,6 +76,10 @@ export const ImportDialog = ({
 
     if (safeApps) {
       dispatch(safeAppsSlice.actions.setSafeApps(safeApps))
+    }
+
+    if (customChains) {
+      dispatch(customChainsSlice.actions.setCustomChains(customChains))
     }
 
     dispatch(
@@ -114,6 +120,7 @@ export const ImportDialog = ({
               customTokens={customTokens}
               addedTxs={addedTxs}
               settings={settings}
+              customChains={customChains}
               safeApps={safeApps}
               error={error}
               showPreview
