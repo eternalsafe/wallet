@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Config
-EXPORT_URL="http://api.openchain.xyz/signature-database/v1/export"
+EXPORT_URL="https://api.openchain.xyz/signature-database/v1/export"
 TEMP_EXPORT_FILE="/tmp/db_export_downloaded"
 OUTPUT_DIR="public/tx-decoder-tmp"
 LINES_PER_CHUNK=65000  # Adjust as needed to get desired file sizes
