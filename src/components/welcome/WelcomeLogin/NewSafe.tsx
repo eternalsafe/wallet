@@ -1,7 +1,7 @@
 import { Button } from '@mui/material'
 import { AppRoutes } from '@/config/routes'
 
-const LoadSafe = () => {
+const NewSafe = () => {
   return (
     <Button
       href={AppRoutes.newSafe.create}
@@ -11,9 +11,9 @@ const LoadSafe = () => {
       disableElevation
       fullWidth
     >
-      Create new Safe
+      Create Safe
     </Button>
   )
 }
 
-export default LoadSafe
+export default NewSafe

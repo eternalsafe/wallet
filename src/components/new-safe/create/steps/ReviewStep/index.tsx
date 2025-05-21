@@ -23,7 +23,6 @@ import useIsWrongChain from '@/hooks/useIsWrongChain'
 import ReviewRow from '@/components/new-safe/ReviewRow'
 import { BigNumber } from 'ethers'
 import { usePendingSafe } from '../StatusStep/usePendingSafe'
-import { LATEST_SAFE_VERSION } from '@/config/constants'
 import { type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 
 export const NetworkFee = ({ totalFee, chain }: { totalFee: string; chain: ChainInfo | undefined }) => {
@@ -90,19 +89,6 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
 
   const createSafe = async () => {
     if (!wallet || !provider || !chain) return
-
-    const readOnlyFallbackHandlerContract = await getReadOnlyFallbackHandlerContract(chain.chainId, LATEST_SAFE_VERSION)
-
-    const props = {
-      safeAccountConfig: {
-        threshold: data.threshold,
-        owners: data.owners.map((owner) => owner.address),
-        fallbackHandler: readOnlyFallbackHandlerContract.getAddress(),
-      },
-      safeDeploymentConfig: {
-        saltNonce: saltNonce.toString(),
-      },
-    }
 
     const pendingSafe = {
       ...data,

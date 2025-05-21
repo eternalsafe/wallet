@@ -35,11 +35,23 @@ const walletConnectV2 = (chain: ChainInfo): WalletInit => {
   })
 }
 
+const ledger = (): WalletInit => {
+  // Ledger requires a WC project ID
+  if (!WC_PROJECT_ID) {
+    return () => null
+  }
+
+  return ledgerModule({
+    walletConnectVersion: 2,
+    projectId: WC_PROJECT_ID,
+  })
+}
+
 const WALLET_MODULES: { [key in WALLET_KEYS]: (chain: ChainInfo) => WalletInit } = {
   [WALLET_KEYS.INJECTED]: () => injectedWalletModule(),
   [WALLET_KEYS.WALLETCONNECT_V2]: (chain) => walletConnectV2(chain),
   [WALLET_KEYS.COINBASE]: () => coinbaseModule({ darkMode: prefersDarkMode() }),
-  [WALLET_KEYS.LEDGER]: () => ledgerModule(),
+  [WALLET_KEYS.LEDGER]: () => ledger(),
   [WALLET_KEYS.TREZOR]: () => trezorModule({ appUrl: TREZOR_APP_URL, email: TREZOR_EMAIL }),
   [WALLET_KEYS.KEYSTONE]: () => keystoneModule(),
 }

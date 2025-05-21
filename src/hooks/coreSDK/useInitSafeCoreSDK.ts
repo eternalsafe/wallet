@@ -42,9 +42,21 @@ export const getSafeAddressFromTxReceipt = async (txHash: string, web3: Provider
   })
 
   if (proxyCreationEvents.length > 0) {
-    const proxyAddressData = proxyCreationEvents[0].data
-    const proxyAddress = ethers.utils.getAddress(ethers.utils.defaultAbiCoder.decode(['address'], proxyAddressData)[0])
-    return proxyAddress
+    if (proxyCreationEvents[0].topics.length == 1) {
+      // pre 1.4.1
+      const proxyAddressData = proxyCreationEvents[0].data
+      const proxyAddress = ethers.utils.getAddress(
+        ethers.utils.defaultAbiCoder.decode(['address'], proxyAddressData)[0],
+      )
+      return proxyAddress
+    } else {
+      // 1.4.1 and later
+      const proxyAddressTopic = proxyCreationEvents[0].topics[1]
+      const proxyAddress = ethers.utils.getAddress(
+        ethers.utils.defaultAbiCoder.decode(['address'], proxyAddressTopic)[0],
+      )
+      return proxyAddress
+    }
   }
 
   throw new Error('Safe address not found in transaction receipt')
