@@ -13,7 +13,6 @@ import type { StepRenderProps } from '@/components/new-safe/CardStepper/useCardS
 import type { NewSafeFormData } from '@/components/new-safe/create'
 import css from '@/components/new-safe/create/steps/ReviewStep/styles.module.css'
 import layoutCss from '@/components/new-safe/create/styles.module.css'
-import { getReadOnlyFallbackHandlerContract } from '@/services/contracts/safeContracts'
 import useWallet from '@/hooks/wallets/useWallet'
 import { useWeb3 } from '@/hooks/wallets/web3'
 import useSyncSafeCreationStep from '@/components/new-safe/create/useSyncSafeCreationStep'

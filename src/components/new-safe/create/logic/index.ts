@@ -29,7 +29,7 @@ import { formatError } from '@/utils/formatters'
 import { getSafeSDKAndImplementation, getSafeAddressFromTxReceipt } from '@/hooks/coreSDK/useInitSafeCoreSDK'
 import type { Provider } from '@ethersproject/providers'
 import { getSafeInfo } from '@/hooks/loadables/useLoadSafeInfo'
-import { SafeVersion } from '@safe-global/safe-core-sdk-types'
+import type { SafeVersion } from '@safe-global/safe-core-sdk-types'
 
 export type SafeCreationProps = {
   owners: string[]
