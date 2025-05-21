@@ -59,7 +59,10 @@ describe('useSafeCreationEffects', () => {
     const setPendingSafeSpy = jest.fn()
     jest
       .spyOn(usePendingSafe, 'usePendingSafe')
-      .mockReturnValue([{ safeAddress: hexZeroPad('0x123', 20) } as PendingSafeData, setPendingSafeSpy])
+      .mockReturnValue([
+        { safeAddress: hexZeroPad('0x123', 20), txHash: '0x123' } as PendingSafeData,
+        setPendingSafeSpy,
+      ])
     renderHook(() =>
       useSafeCreationEffects({
         status: SafeCreationStatus.SUCCESS,

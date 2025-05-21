@@ -26,9 +26,10 @@ import { backOff } from 'exponential-backoff'
 import { LATEST_SAFE_VERSION } from '@/config/constants'
 import { EMPTY_DATA, ZERO_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
 import { formatError } from '@/utils/formatters'
-import { getSafeSDKAndImplementation } from '@/hooks/coreSDK/useInitSafeCoreSDK'
+import { getSafeSDKAndImplementation, getSafeAddressFromTxReceipt } from '@/hooks/coreSDK/useInitSafeCoreSDK'
 import type { Provider } from '@ethersproject/providers'
 import { getSafeInfo } from '@/hooks/loadables/useLoadSafeInfo'
+import type { SafeVersion } from '@safe-global/safe-core-sdk-types'
 
 export type SafeCreationProps = {
   owners: string[]
@@ -63,18 +64,8 @@ export const getSafeDeployProps = async (
 export const createNewSafe = async (ethersProvider: Web3Provider, props: DeploySafeProps): Promise<Safe> => {
   const ethAdapter = createEthersAdapter(ethersProvider)
 
-  const safeFactory = await SafeFactory.create({ ethAdapter })
+  const safeFactory = await SafeFactory.create({ ethAdapter, safeVersion: LATEST_SAFE_VERSION as SafeVersion })
   return safeFactory.deploySafe(props)
-}
-
-/**
- * Compute the new counterfactual Safe address before it is actually created
- */
-export const computeNewSafeAddress = async (ethersProvider: Web3Provider, props: DeploySafeProps): Promise<string> => {
-  const ethAdapter = createEthersAdapter(ethersProvider)
-
-  const safeFactory = await SafeFactory.create({ ethAdapter })
-  return safeFactory.predictSafeAddress(props.safeAccountConfig, props.saltNonce)
 }
 
 /**
@@ -151,10 +142,14 @@ export const estimateSafeCreationGas = async (
   })
 }
 
-export const pollSafeInfo = async (web3: Provider, chainId: string, safeAddress: string): Promise<SafeInfo> => {
+export const pollSafeInfo = async (web3: Provider, chainId: string, txHash: string): Promise<SafeInfo> => {
   // exponential delay between attempts for around 4 min
   return backOff(
     async () => {
+      const safeAddress = await getSafeAddressFromTxReceipt(txHash, web3)
+      if (!safeAddress) {
+        throw new Error('Safe address not found in transaction receipt')
+      }
       let [sdk, implementation] = await getSafeSDKAndImplementation(web3, safeAddress, chainId)
       if (!sdk) {
         throw new Error('Safe SDK not available')

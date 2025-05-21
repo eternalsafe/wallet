@@ -30,74 +30,66 @@ export const useInitWeb3 = () => {
   const web3 = useWeb3()
 
   useEffect(() => {
-    if (!chainId) {
+    if (!chainId || (!customRpcUrl && !wallet && !web3)) {
       setWeb3(undefined)
       setWeb3ReadOnly(undefined)
       setMultiWeb3ReadOnly(undefined)
       return
     }
-    if (!customRpcUrl) {
-      if (!wallet && !web3) {
-        setWeb3(undefined)
-        setWeb3ReadOnly(undefined)
-        setMultiWeb3ReadOnly(undefined)
-        return
-      }
 
-      if (wallet && wallet.chainId !== chainId) {
-        dispatch(
-          showNotification({
-            message: `Your wallet seems to be connected to the wrong network. You must change your wallet network to ${
-              chain?.chainName ?? 'the same network'
-            }.`,
-            groupKey: RPC_URL_ERROR_KEY,
-            variant: 'error',
-          }),
-        )
-        return
-      }
-
+    if (wallet && wallet.chainId !== chainId) {
+      dispatch(
+        showNotification({
+          message: `Your wallet seems to be connected to the wrong network. You must change your wallet network to ${
+            chain?.chainName ?? 'the same network'
+          }.`,
+          groupKey: RPC_URL_ERROR_KEY,
+          variant: 'error',
+        }),
+      )
+    } else if (wallet && wallet.chainId === chainId) {
       // If wallet is connected and on the correct network, use its provider
-      if (wallet && wallet.chainId === chainId) {
-        const internalWeb3 = createWeb3(wallet.provider)
-        setWeb3(MulticallWrapper.wrap(internalWeb3, 50))
-        dispatch(closeByGroupKey({ groupKey: RPC_URL_ERROR_KEY }))
-        if (internalWeb3) {
-          setWeb3ReadOnly(internalWeb3)
-          setMultiWeb3ReadOnly(MulticallWrapper.wrap(internalWeb3, 50))
-        }
+      const internalWeb3 = createWeb3(wallet.provider)
+      setWeb3(internalWeb3)
+      dispatch(closeByGroupKey({ groupKey: RPC_URL_ERROR_KEY }))
+      if (internalWeb3 && !customRpcUrl) {
+        setWeb3ReadOnly(internalWeb3)
+        setMultiWeb3ReadOnly(MulticallWrapper.wrap(internalWeb3, 50))
+        return
       }
-      return
     }
 
-    const web3ReadOnly = createWeb3ReadOnly(customRpcUrl)
+    if (customRpcUrl) {
+      const web3ReadOnly = createWeb3ReadOnly(customRpcUrl)
 
-    web3ReadOnly._networkPromise
-      .then((network) => {
-        setWeb3ReadOnly(web3ReadOnly)
-        dispatch(closeByGroupKey({ groupKey: RPC_URL_ERROR_KEY }))
+      web3ReadOnly._networkPromise
+        .then((network) => {
+          setWeb3ReadOnly(web3ReadOnly)
+          dispatch(closeByGroupKey({ groupKey: RPC_URL_ERROR_KEY }))
 
-        const multiWeb3ReadOnly = createMultiWeb3ReadOnly(customRpcUrl, network)
-        setMultiWeb3ReadOnly(multiWeb3ReadOnly)
-      })
-      .catch((error) => {
-        dispatch(
-          setRpc({
-            chainId,
-          }),
-        )
-        dispatch(
-          showNotification({
-            message: `Cannot connect to the provided RPC URL for  ${
-              chain?.chainName ?? 'this'
-            } network, please provide a new one.`,
-            groupKey: RPC_URL_ERROR_KEY,
-            variant: 'error',
-            detailedMessage: error.message,
-          }),
-        )
-        router.push({ pathname: AppRoutes.welcome.index, query: { chain: chain.shortName } })
-      })
+          const multiWeb3ReadOnly = createMultiWeb3ReadOnly(customRpcUrl, network)
+          setMultiWeb3ReadOnly(multiWeb3ReadOnly)
+        })
+        .catch((error) => {
+          dispatch(
+            setRpc({
+              chainId,
+            }),
+          )
+          dispatch(
+            showNotification({
+              message: `Cannot connect to the provided RPC URL for  ${
+                chain?.chainName ?? 'this'
+              } network, please provide a new one.`,
+              groupKey: RPC_URL_ERROR_KEY,
+              variant: 'error',
+              detailedMessage: error.message,
+            }),
+          )
+          router.push({ pathname: AppRoutes.welcome.index, query: { chain: chain.shortName } })
+        })
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customRpcUrl, chain, wallet, chainId, router, dispatch])
 }

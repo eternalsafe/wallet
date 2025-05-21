@@ -34,6 +34,34 @@ export const getSafeImplementation = async (web3: Provider, safeAddress: string,
     })
 }
 
+// Helper function to extract Safe address from transaction receipt
+export const getSafeAddressFromTxReceipt = async (txHash: string, web3: Provider): Promise<string> => {
+  const receipt = await web3.getTransactionReceipt(txHash)
+  const proxyCreationEvents = receipt.logs.filter((log) => {
+    return log.topics.includes(ethers.utils.id('ProxyCreation(address,address)'))
+  })
+
+  if (proxyCreationEvents.length > 0) {
+    if (proxyCreationEvents[0].topics.length == 1) {
+      // pre 1.4.1
+      const proxyAddressData = proxyCreationEvents[0].data
+      const proxyAddress = ethers.utils.getAddress(
+        ethers.utils.defaultAbiCoder.decode(['address'], proxyAddressData)[0],
+      )
+      return proxyAddress
+    } else {
+      // 1.4.1 and later
+      const proxyAddressTopic = proxyCreationEvents[0].topics[1]
+      const proxyAddress = ethers.utils.getAddress(
+        ethers.utils.defaultAbiCoder.decode(['address'], proxyAddressTopic)[0],
+      )
+      return proxyAddress
+    }
+  }
+
+  throw new Error('Safe address not found in transaction receipt')
+}
+
 export const getSafeSDKAndImplementation = async (
   web3: Provider,
   safeAddress: string,

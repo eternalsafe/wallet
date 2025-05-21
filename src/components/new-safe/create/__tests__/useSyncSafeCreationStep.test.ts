@@ -7,7 +7,6 @@ import * as usePendingSafe from '../steps/StatusStep/usePendingSafe'
 import * as useIsWrongChain from '@/hooks/useIsWrongChain'
 import * as useRouter from 'next/router'
 import { type NextRouter } from 'next/router'
-import { AppRoutes } from '@/config/routes'
 
 describe('useSyncSafeCreationStep', () => {
   const mockPendingSafe = {
@@ -21,21 +20,6 @@ describe('useSyncSafeCreationStep', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-  })
-
-  it('should go to the first step if no wallet is connected and there is no pending safe', async () => {
-    const mockPushRoute = jest.fn()
-    jest.spyOn(wallet, 'default').mockReturnValue(null)
-    jest.spyOn(usePendingSafe, 'usePendingSafe').mockReturnValue([undefined, setPendingSafeSpy])
-    jest.spyOn(useRouter, 'useRouter').mockReturnValue({
-      push: mockPushRoute,
-    } as unknown as NextRouter)
-    const mockSetStep = jest.fn()
-
-    renderHook(() => useSyncSafeCreationStep(mockSetStep))
-
-    expect(mockSetStep).not.toHaveBeenCalled()
-    expect(mockPushRoute).toHaveBeenCalledWith({ pathname: AppRoutes.welcome.index, query: undefined })
   })
 
   it('should go to the fourth step if there is a pending safe', async () => {

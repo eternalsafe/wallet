@@ -8,6 +8,7 @@ import LoadRPCUrl from '@/components/welcome/WelcomeLogin/LoadRPCUrl'
 import { CHAINLIST_URL } from '@/config/constants'
 import { useEffect, useState } from 'react'
 import { useWeb3 } from '@/hooks/wallets/web3'
+import NewSafe from './NewSafe'
 
 const WelcomeLogin = () => {
   const web3 = useWeb3()
@@ -35,9 +36,12 @@ const WelcomeLogin = () => {
         {(web3 || customRpcUrl) && !forceShowRpcInput ? (
           <>
             <Typography mb={2} textAlign="center">
-              Eternal Safe does not yet support creating a Safe, you must have one already created.
+              Create a new Safe or load an existing one.
             </Typography>
-            <LoadSafe />
+            <Box display="flex" flexDirection="column" gap={2}>
+              <LoadSafe />
+              <NewSafe />
+            </Box>
             {/* TODO(eternalsafe): Allow import of data here */}
           </>
         ) : chain ? (

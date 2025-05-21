@@ -13,8 +13,6 @@ import type { StepRenderProps } from '@/components/new-safe/CardStepper/useCardS
 import type { NewSafeFormData } from '@/components/new-safe/create'
 import css from '@/components/new-safe/create/steps/ReviewStep/styles.module.css'
 import layoutCss from '@/components/new-safe/create/styles.module.css'
-import { getReadOnlyFallbackHandlerContract } from '@/services/contracts/safeContracts'
-import { computeNewSafeAddress } from '@/components/new-safe/create/logic'
 import useWallet from '@/hooks/wallets/useWallet'
 import { useWeb3 } from '@/hooks/wallets/web3'
 import useSyncSafeCreationStep from '@/components/new-safe/create/useSyncSafeCreationStep'
@@ -24,7 +22,6 @@ import useIsWrongChain from '@/hooks/useIsWrongChain'
 import ReviewRow from '@/components/new-safe/ReviewRow'
 import { BigNumber } from 'ethers'
 import { usePendingSafe } from '../StatusStep/usePendingSafe'
-import { LATEST_SAFE_VERSION } from '@/config/constants'
 import { type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 
 export const NetworkFee = ({ totalFee, chain }: { totalFee: string; chain: ChainInfo | undefined }) => {
@@ -92,25 +89,9 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
   const createSafe = async () => {
     if (!wallet || !provider || !chain) return
 
-    const readOnlyFallbackHandlerContract = await getReadOnlyFallbackHandlerContract(chain.chainId, LATEST_SAFE_VERSION)
-
-    const props = {
-      safeAccountConfig: {
-        threshold: data.threshold,
-        owners: data.owners.map((owner) => owner.address),
-        fallbackHandler: readOnlyFallbackHandlerContract.getAddress(),
-      },
-      safeDeploymentConfig: {
-        saltNonce: saltNonce.toString(),
-      },
-    }
-
-    const safeAddress = await computeNewSafeAddress(provider, props)
-
     const pendingSafe = {
       ...data,
       saltNonce,
-      safeAddress,
     }
 
     setPendingSafe(pendingSafe)
