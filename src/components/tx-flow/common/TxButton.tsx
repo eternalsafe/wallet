@@ -34,3 +34,11 @@ export const SendNFTsButton = () => {
     </Link>
   )
 }
+
+export const CustomTransactionButton = ({ onClick, sx }: { onClick: () => void; sx?: ButtonProps['sx'] }) => {
+  return (
+    <Button onClick={onClick} variant="outlined" sx={sx ?? buttonSx} fullWidth>
+      Custom transaction
+    </Button>
+  )
+}
