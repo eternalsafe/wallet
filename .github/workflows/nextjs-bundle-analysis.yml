@@ -58,11 +58,14 @@ jobs:
         if: success() && github.event.number
         # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-strings
         run: |
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "$(cat .next/analyze/__bundle_analysis_comment.txt)" >> $GITHUB_OUTPUT
-          echo EOF >> $GITHUB_OUTPUT
+          if [ -s .next/analyze/__bundle_analysis_comment.txt ]; then
+            echo "body<<EOF" >> $GITHUB_OUTPUT
+            cat .next/analyze/__bundle_analysis_comment.txt >> $GITHUB_OUTPUT
+            echo EOF >> $GITHUB_OUTPUT
+          fi
 
       - name: Comment
+        if: success() && github.event.number && steps.get-comment-body.outputs.body != ''
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: next-bundle-analysis
