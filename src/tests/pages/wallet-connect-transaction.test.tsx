@@ -33,6 +33,23 @@ jest.mock('@/components/tx/SignOrExecuteForm', () => ({
   default: () => <div data-testid="sign-or-execute-form" />,
 }))
 
+jest.mock('@/components/tx-flow/common/TxLayout', () => ({
+  __esModule: true,
+  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}))
+
+jest.mock('@/components/common/TxModalDialog', () => ({
+  __esModule: true,
+  default: ({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) => (
+    <div>
+      <button aria-label="close" onClick={() => onClose?.()}>
+        close
+      </button>
+      {children}
+    </div>
+  ),
+}))
+
 jest.mock('@/components/tx-flow/SafeTxProvider', () => {
   const React = require('react')
   const setSafeTx = jest.fn()
@@ -98,7 +115,7 @@ describe('WalletConnect transaction page', () => {
       expect(document.title).toBe('Eternal Safe - WalletConnect Transaction')
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reject transaction request' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'close' })[0])
 
     await waitFor(() => {
       expect(rejectRequest).toHaveBeenCalledWith('User rejected the transaction')
@@ -137,7 +154,7 @@ describe('WalletConnect transaction page', () => {
 
     render(<WalletConnectTransactionPage />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reject transaction request' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'close' })[0])
 
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith({

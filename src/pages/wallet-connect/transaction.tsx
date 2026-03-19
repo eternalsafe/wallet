@@ -1,13 +1,12 @@
 import React, { useCallback, useContext, useEffect, useRef } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { Box, Container, Grid, IconButton, Paper, Typography } from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
 import { useWalletConnectContext } from '@/components/common/WalletConnectProvider'
 import { createTx } from '@/services/tx/tx-sender'
-import SafeTxProvider, { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
+import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
-import ChainIndicator from '@/components/common/ChainIndicator'
+import TxLayout from '@/components/tx-flow/common/TxLayout'
+import TxModalDialog from '@/components/common/TxModalDialog'
 import { AppRoutes } from '@/config/routes'
 import useChainId from '@/hooks/useChainId'
 import useSafeInfo from '@/hooks/useSafeInfo'
@@ -17,10 +16,45 @@ import {
   WALLET_CONNECT_RETURN_TO_QUERY_PARAM,
 } from '@/utils/wallet-connect'
 
-const WalletConnectTxContent = () => {
+type WalletConnectTxParams = NonNullable<ReturnType<typeof extractWalletConnectTxParams>>
+
+const WalletConnectTxReview = ({
+  txParams,
+  onSubmit,
+}: {
+  txParams: WalletConnectTxParams
+  onSubmit: (txId: string, isExecuted?: boolean) => Promise<void>
+}) => {
+  const { setSafeTx, setSafeTxError } = useContext(SafeTxContext)
+
+  useEffect(() => {
+    createTx({
+      to: txParams.to,
+      value: txParams.value,
+      data: txParams.data,
+      operation: 0, // Call
+    })
+      .then(setSafeTx)
+      .catch((err) => {
+        setSafeTxError(err instanceof Error ? err : new Error('Failed to create transaction'))
+      })
+  }, [txParams, setSafeTx, setSafeTxError])
+
+  const handleSubmit = async (txId: string, isExecuted?: boolean) => {
+    try {
+      await onSubmit(txId, isExecuted)
+    } catch (err) {
+      setSafeTxError(err instanceof Error ? err : new Error('Failed to approve WalletConnect request'))
+      throw err
+    }
+  }
+
+  return <SignOrExecuteForm onSubmit={handleSubmit} isCreation />
+}
+
+const WalletConnectTransactionPage = () => {
   const router = useRouter()
   const { pendingRequest, approveRequest, rejectRequest } = useWalletConnectContext()
-  const { setSafeTx, setSafeTxError } = useContext(SafeTxContext)
   const isRequestHandledRef = useRef(false)
   const chainId = useChainId()
   const { safeAddress } = useSafeInfo()
@@ -64,39 +98,10 @@ const WalletConnectTxContent = () => {
     }
   }, [txParams, redirectToOriginPage])
 
-  useEffect(() => {
-    const createSafeTx = async () => {
-      if (!txParams) {
-        return
-      }
-
-      try {
-        const tx = await createTx({
-          to: txParams.to,
-          value: txParams.value,
-          data: txParams.data,
-          operation: 0, // Call
-        })
-
-        setSafeTx(tx)
-      } catch (err) {
-        console.error('Failed to create SafeTransaction:', err)
-        setSafeTxError(err instanceof Error ? err : new Error('Failed to create transaction'))
-      }
-    }
-
-    createSafeTx()
-  }, [txParams, setSafeTx, setSafeTxError])
-
   const handleSubmit = async (txId: string, _isExecuted?: boolean) => {
-    try {
-      await approveRequest(txId)
-      isRequestHandledRef.current = true
-      redirectToOriginPage()
-    } catch (err) {
-      console.error('Failed to approve WalletConnect request:', err)
-      setSafeTxError(err instanceof Error ? err : new Error('Failed to approve WalletConnect request'))
-    }
+    await approveRequest(txId)
+    isRequestHandledRef.current = true
+    redirectToOriginPage()
   }
 
   const rejectCurrentRequest = useCallback(async () => {
@@ -132,51 +137,12 @@ const WalletConnectTxContent = () => {
       <Head>
         <title>Eternal Safe - WalletConnect Transaction</title>
       </Head>
-
-      <Container sx={{ mt: 2 }}>
-        <Grid container justifyContent="center">
-          <Grid item xs={12} md={11} display="flex" flexDirection="column">
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="h3">WalletConnect Transaction Request</Typography>
-              <ChainIndicator inline />
-            </Box>
-
-            <Paper sx={{ position: 'relative' }}>
-              <IconButton
-                aria-label="Reject transaction request"
-                onClick={handleReject}
-                size="small"
-                sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  color: 'border.main',
-                  p: 1,
-                  backgroundColor: 'border.light',
-                  '&:hover': {
-                    backgroundColor: 'border.light',
-                  },
-                }}
-              >
-                <CloseIcon fontSize="large" />
-              </IconButton>
-
-              <Box sx={{ px: 4, py: 4 }}>
-                <SignOrExecuteForm onSubmit={handleSubmit} isCreation />
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Container>
+      <TxModalDialog open onClose={() => void handleReject()} fullWidth>
+        <TxLayout title="Confirm transaction" subtitle="WalletConnect transaction request" step={0}>
+          <WalletConnectTxReview txParams={txParams} onSubmit={handleSubmit} />
+        </TxLayout>
+      </TxModalDialog>
     </>
-  )
-}
-
-const WalletConnectTransactionPage = () => {
-  return (
-    <SafeTxProvider>
-      <WalletConnectTxContent />
-    </SafeTxProvider>
   )
 }
 
