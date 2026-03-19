@@ -22,6 +22,7 @@ import { useAppDispatch, useAppSelector } from '@/store'
 import { selectWalletConnectApiKey, setWalletConnectPairingCode, setWalletConnectApiKey } from '@/store/settingsSlice'
 import { useWalletConnectContext } from '@/components/common/WalletConnectProvider'
 import useSafeInfo from '@/hooks/useSafeInfo'
+import useChainId from '@/hooks/useChainId'
 import { buildApprovedNamespaces } from './utils'
 
 type WalletConnectPairingModalProps = {
@@ -35,12 +36,13 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [activeTab, setActiveTab] = useState(0)
   const dispatch = useAppDispatch()
+  const chainId = useChainId()
   const { safeAddress } = useSafeInfo()
   const walletConnectApiKey = useAppSelector(selectWalletConnectApiKey)
   const envApiKey = (typeof process !== 'undefined' && process.env.WC_PROJECT_ID) || ''
   const isApiKeySet = !!walletConnectApiKey
 
-  const { sessions, pendingProposal, pair, approveSession, rejectSession, disconnectSession, error } =
+  const { isInitialized, sessions, pendingProposal, pair, approveSession, rejectSession, disconnectSession, error } =
     useWalletConnectContext()
 
   useEffect(() => {
@@ -76,7 +78,7 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
   const handleApproveSession = async () => {
     if (!pendingProposal) return
     try {
-      const namespaces = buildApprovedNamespaces(pendingProposal.params.requiredNamespaces, safeAddress)
+      const namespaces = buildApprovedNamespaces(pendingProposal.params.requiredNamespaces, safeAddress, chainId)
       await approveSession(namespaces)
     } catch (e) {
       console.error('Failed to approve session:', e)
@@ -330,7 +332,12 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
 
               {/* Connect Tab */}
               {activeTab === 0 && (
-                <Button onClick={handleSubmit} variant="contained" color="primary" disabled={!pairingCode.trim()}>
+                <Button
+                  onClick={handleSubmit}
+                  variant="contained"
+                  color="primary"
+                  disabled={!pairingCode.trim() || !isInitialized}
+                >
                   Connect
                 </Button>
               )}

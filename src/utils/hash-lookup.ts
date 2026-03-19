@@ -397,7 +397,7 @@ export async function getFunctionSignature(hash: string): Promise<string | null>
 
     if (!fileContent) {
       // Fetch the file at runtime as an ArrayBuffer
-      const response = await fetch(`/tx-decoder-tmp/${fileName}`)
+      const response = await fetch(`/signatures/${fileName}`)
       if (!response.ok) {
         return null
       }

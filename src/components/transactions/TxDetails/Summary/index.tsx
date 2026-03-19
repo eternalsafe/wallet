@@ -5,7 +5,7 @@ import { generateDataRowValue, TxDataRow } from '@/components/transactions/TxDet
 import { isMultisigDetailedExecutionInfo } from '@/utils/transaction-guards'
 import type { TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
 import { Operation } from '@safe-global/safe-gateway-typescript-sdk'
-import { dateString } from '@/utils/formatters'
+import { dateString, safeFormatUnits } from '@/utils/formatters'
 import css from './styles.module.css'
 import type { SafeTransaction } from '@safe-global/safe-core-sdk-types'
 import SafeTxGasForm from '../SafeTxGasForm'
@@ -68,6 +68,9 @@ const Summary = ({ txDetails, defaultExpanded = false }: Props): ReactElement =>
             <div>
               <TxDataRow datatestid="tx-operation" title="Operation:">
                 {`${txData.operation} (${Operation[txData.operation].toLowerCase()})`}
+              </TxDataRow>
+              <TxDataRow datatestid="tx-value" title="Value:">
+                {txData?.value ? `${safeFormatUnits(txData.value, 18)} ETH` : '0 ETH'}
               </TxDataRow>
               <TxDataRow datatestid="tx-safe-gas" title="safeTxGas:">
                 {safeTxGas}

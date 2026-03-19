@@ -16,13 +16,14 @@ export type ApprovedNamespaces = Record<
 export const buildApprovedNamespaces = (
   requiredNamespaces: Record<string, NamespaceRequirement>,
   safeAddress: string,
+  chainId: string,
 ): ApprovedNamespaces => {
   if (!safeAddress) {
     throw new Error('No Safe address available for WalletConnect session approval')
   }
 
   return Object.entries(requiredNamespaces).reduce<ApprovedNamespaces>((acc, [key, value]) => {
-    const chains = value.chains || []
+    const chains = value.chains && value.chains.length > 0 ? value.chains : [`eip155:${chainId}`]
     acc[key] = {
       accounts: chains.map((chain) => `${chain}:${safeAddress}`),
       methods: value.methods,

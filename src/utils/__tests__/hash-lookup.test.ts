@@ -48,7 +48,7 @@ describe('hash-lookup', () => {
       const signature = await getFunctionSignature('06256bdd')
 
       expect(signature).toBe('getMaxStakeLeadPercent(uint256)')
-      expect(fetchMock).toHaveBeenCalledWith('/tx-decoder-tmp/export_chunk_372')
+      expect(fetchMock).toHaveBeenCalledWith('/signatures/export_chunk_372')
       expect(init).toHaveBeenCalledTimes(1)
       expect(decompress).toHaveBeenCalledTimes(1)
     })

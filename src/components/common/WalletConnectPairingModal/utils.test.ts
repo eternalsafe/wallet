@@ -11,6 +11,7 @@ describe('buildApprovedNamespaces', () => {
         },
       },
       '0x1234567890123456789012345678901234567890',
+      '1',
     )
 
     expect(namespaces).toEqual({
@@ -25,6 +26,21 @@ describe('buildApprovedNamespaces', () => {
     })
   })
 
+  it('falls back to the active chain when proposal chains are omitted', () => {
+    const namespaces = buildApprovedNamespaces(
+      {
+        eip155: {
+          methods: ['eth_sendTransaction'],
+          events: ['accountsChanged'],
+        },
+      },
+      '0x1234567890123456789012345678901234567890',
+      '11155111',
+    )
+
+    expect(namespaces.eip155.accounts).toEqual(['eip155:11155111:0x1234567890123456789012345678901234567890'])
+  })
+
   it('throws when no Safe address is available', () => {
     expect(() =>
       buildApprovedNamespaces(
@@ -36,6 +52,7 @@ describe('buildApprovedNamespaces', () => {
           },
         },
         '',
+        '1',
       ),
     ).toThrow('No Safe address available for WalletConnect session approval')
   })
