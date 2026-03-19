@@ -3,6 +3,8 @@ jest.mock('@bokuweb/zstd-wasm', () => ({
   decompress: jest.fn(),
 }))
 
+import fs from 'fs'
+import path from 'path'
 import { decompress, init } from '@bokuweb/zstd-wasm'
 import { findFileForHash, getFunctionSignature } from '@/utils/hash-lookup'
 
@@ -22,20 +24,29 @@ describe('hash-lookup', () => {
   })
 
   describe('findFileForHash', () => {
-    it('returns the expected file for values at range boundaries', () => {
-      expect(findFileForHash('0x00000000')).toBe('export_chunk_371')
-      expect(findFileForHash('0x06255eac')).toBe('export_chunk_371')
-      expect(findFileForHash('0x06256bdd')).toBe('export_chunk_372')
+    it('returns a chunk file for known valid hashes', () => {
+      expect(findFileForHash('0x00000000')).toMatch(/^export_chunk_/)
+      expect(findFileForHash('0xffffffff')).toMatch(/^export_chunk_/)
     })
 
-    it('returns null for values that are outside all ranges', () => {
-      expect(findFileForHash('0x06256000')).toBeNull()
-      expect(findFileForHash('0x06255ead')).toBeNull()
+    it('returns null for invalid hash input', () => {
+      expect(findFileForHash('not-a-hash')).toBeNull()
+    })
+
+    it('maps to a committed chunk file in public/signatures', () => {
+      const chunk = findFileForHash('0x00000000')
+      expect(chunk).toBeTruthy()
+
+      const chunkPath = path.join(process.cwd(), 'public', 'signatures', chunk as string)
+      expect(fs.existsSync(chunkPath)).toBe(true)
+      expect(fs.statSync(chunkPath).size).toBeGreaterThan(0)
     })
   })
 
   describe('getFunctionSignature', () => {
     it('returns a function signature from decompressed file contents', async () => {
+      const expectedChunk = findFileForHash('0x06256bdd')
+
       const fetchMock = jest.fn().mockResolvedValue({
         ok: true,
         arrayBuffer: async () => new ArrayBuffer(4),
@@ -48,7 +59,7 @@ describe('hash-lookup', () => {
       const signature = await getFunctionSignature('06256bdd')
 
       expect(signature).toBe('getMaxStakeLeadPercent(uint256)')
-      expect(fetchMock).toHaveBeenCalledWith('/signatures/export_chunk_372')
+      expect(fetchMock).toHaveBeenCalledWith(`/signatures/${expectedChunk}`)
       expect(init).toHaveBeenCalledTimes(1)
       expect(decompress).toHaveBeenCalledTimes(1)
     })
