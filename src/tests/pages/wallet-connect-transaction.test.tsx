@@ -33,16 +33,6 @@ jest.mock('@/components/tx/SignOrExecuteForm', () => ({
   default: () => <div data-testid="sign-or-execute-form" />,
 }))
 
-jest.mock('@/components/common/PageHeader', () => ({
-  __esModule: true,
-  default: ({ title, action }: { title: string; action?: React.ReactNode }) => (
-    <div>
-      <div>{title}</div>
-      <div>{action}</div>
-    </div>
-  ),
-}))
-
 jest.mock('@/components/tx-flow/SafeTxProvider', () => {
   const React = require('react')
   const setSafeTx = jest.fn()
@@ -103,6 +93,10 @@ describe('WalletConnect transaction page', () => {
     mockCreateTx.mockResolvedValue({})
 
     render(<WalletConnectTransactionPage />)
+
+    await waitFor(() => {
+      expect(document.title).toBe('Eternal Safe - WalletConnect Transaction')
+    })
 
     fireEvent.click(screen.getByRole('button', { name: 'Reject transaction request' }))
 

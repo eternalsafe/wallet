@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect } from 'react'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { Box, Container, Grid, IconButton, Paper, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
@@ -23,6 +24,10 @@ const WalletConnectTxContent = () => {
   const chainId = useChainId()
   const { safeAddress } = useSafeInfo()
   const txParams = extractWalletConnectTxParams(pendingRequest, chainId, safeAddress)
+
+  useEffect(() => {
+    document.title = 'Eternal Safe - WalletConnect Transaction'
+  }, [])
 
   const redirectToOriginPage = useCallback(() => {
     const returnTo = extractWalletConnectReturnTo(router.query[WALLET_CONNECT_RETURN_TO_QUERY_PARAM])
@@ -93,20 +98,28 @@ const WalletConnectTxContent = () => {
   }
 
   return (
-    <Container sx={{ mt: 2 }}>
-      <Grid container justifyContent="center">
-        <Grid item xs={12} md={11} display="flex" flexDirection="column">
-          <Box sx={{ alignSelf: 'flex-end', mb: 1 }}>
-            <ChainIndicator inline />
-          </Box>
+    <>
+      <Head>
+        <title>Eternal Safe - WalletConnect Transaction</title>
+      </Head>
 
-          <Paper>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
+      <Container sx={{ mt: 2 }}>
+        <Grid container justifyContent="center">
+          <Grid item xs={12} md={11} display="flex" flexDirection="column">
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="h3">WalletConnect Transaction Request</Typography>
+              <ChainIndicator inline />
+            </Box>
+
+            <Paper sx={{ position: 'relative' }}>
               <IconButton
                 aria-label="Reject transaction request"
                 onClick={handleReject}
                 size="small"
                 sx={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
                   color: 'border.main',
                   p: 1,
                   backgroundColor: 'border.light',
@@ -117,21 +130,15 @@ const WalletConnectTxContent = () => {
               >
                 <CloseIcon fontSize="large" />
               </IconButton>
-            </Box>
 
-            <Box sx={{ px: 4, pb: 4 }}>
-              <Typography variant="h3" sx={{ mb: 1 }}>
-                WalletConnect Transaction Request
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                A dApp is requesting to submit a transaction through WalletConnect
-              </Typography>
-              <SignOrExecuteForm onSubmit={handleSubmit} isCreation />
-            </Box>
-          </Paper>
+              <Box sx={{ px: 4, py: 4 }}>
+                <SignOrExecuteForm onSubmit={handleSubmit} isCreation />
+              </Box>
+            </Paper>
+          </Grid>
         </Grid>
-      </Grid>
-    </Container>
+      </Container>
+    </>
   )
 }
 
