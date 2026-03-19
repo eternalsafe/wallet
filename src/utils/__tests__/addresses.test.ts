@@ -1,4 +1,4 @@
-import { checksumAddress, isChecksummedAddress, parsePrefixedAddress, sameAddress } from '../addresses'
+import { checksumAddress, cleanInputValue, isChecksummedAddress, parsePrefixedAddress, sameAddress } from '../addresses'
 
 describe('Addresses', () => {
   describe('checksumAddress', () => {
@@ -97,6 +97,18 @@ describe('Addresses', () => {
       const { prefix, address } = parsePrefixedAddress('sdfgsdfg')
       expect(prefix).toBeUndefined()
       expect(address).toBe('sdfgsdfg')
+    })
+  })
+
+  describe('cleanInputValue', () => {
+    it('should keep a hyphenated chain prefix', () => {
+      const value = cleanInputValue('self-assured:0x62Da87FF2E2216F1858603A3Db9313E178da3112')
+      expect(value).toBe('self-assured:0x62Da87FF2E2216F1858603A3Db9313E178da3112')
+    })
+
+    it('should still clean surrounding text around prefixed addresses', () => {
+      const value = cleanInputValue("Here's my address: self-assured:0x62Da87FF2E2216F1858603A3Db9313E178da3112")
+      expect(value).toBe('self-assured:0x62Da87FF2E2216F1858603A3Db9313E178da3112')
     })
   })
 })
