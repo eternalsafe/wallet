@@ -7,37 +7,38 @@ import SafeTxProvider, { SafeTxContext } from '@/components/tx-flow/SafeTxProvid
 import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
 import PageHeader from '@/components/common/PageHeader'
 import { AppRoutes } from '@/config/routes'
+import useChainId from '@/hooks/useChainId'
+import useSafeInfo from '@/hooks/useSafeInfo'
+import { extractWalletConnectTxParams } from '@/utils/wallet-connect'
 
 const WalletConnectTxContent = () => {
   const router = useRouter()
   const { pendingRequest, approveRequest, rejectRequest } = useWalletConnectContext()
-  const { setSafeTx, setSafeTxError, safeTx, safeTxError } = useContext(SafeTxContext)
+  const { setSafeTx, setSafeTxError } = useContext(SafeTxContext)
+  const chainId = useChainId()
+  const { safeAddress } = useSafeInfo()
+  const txParams = extractWalletConnectTxParams(pendingRequest, chainId, safeAddress)
 
   useEffect(() => {
-    if (!pendingRequest || pendingRequest.params.request.method !== 'eth_sendTransaction') {
+    if (!txParams) {
       router.push({
         pathname: AppRoutes.index,
         query: router.query,
       })
     }
-  }, [pendingRequest, router])
+  }, [txParams, router])
 
   useEffect(() => {
     const createSafeTx = async () => {
-      if (!pendingRequest || pendingRequest.params.request.method !== 'eth_sendTransaction') {
+      if (!txParams) {
         return
       }
 
       try {
-        const txParams = pendingRequest.params.request.params[0]
-        if (!txParams) {
-          throw new Error('No transaction parameters provided')
-        }
-
         const tx = await createTx({
           to: txParams.to,
-          value: txParams.value || '0',
-          data: txParams.data || '0x',
+          value: txParams.value,
+          data: txParams.data,
           operation: 0, // Call
         })
 
@@ -49,7 +50,7 @@ const WalletConnectTxContent = () => {
     }
 
     createSafeTx()
-  }, [pendingRequest, setSafeTx, setSafeTxError])
+  }, [txParams, setSafeTx, setSafeTxError])
 
   const redirectToOriginalPage = () => {
     router.push({
@@ -58,7 +59,7 @@ const WalletConnectTxContent = () => {
     })
   }
 
-  const handleSubmit = async (txId: string, isExecuted?: boolean) => {
+  const handleSubmit = async (txId: string, _isExecuted?: boolean) => {
     try {
       await approveRequest(txId)
       redirectToOriginalPage()
@@ -77,7 +78,7 @@ const WalletConnectTxContent = () => {
     }
   }
 
-  if (!pendingRequest || pendingRequest.params.request.method !== 'eth_sendTransaction') {
+  if (!txParams) {
     return null
   }
 
@@ -124,8 +125,6 @@ const WalletConnectTxContent = () => {
 }
 
 const WalletConnectTransactionPage = () => {
-  const router = useRouter()
-
   return (
     <SafeTxProvider>
       <WalletConnectTxContent />

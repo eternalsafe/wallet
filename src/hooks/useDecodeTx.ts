@@ -5,7 +5,6 @@ import { isEmptyHexData } from '@/utils/hex'
 import type { AsyncResult } from './useAsync'
 import useAsync from './useAsync'
 import useChainId from './useChainId'
-import { guessAbiEncodedData, guessFragment } from '@openchainxyz/abi-guesser'
 import { getFunctionSignature } from '@/utils/hash-lookup'
 import { ethers } from 'ethers'
 import { useEffect, useState } from 'react'
@@ -85,41 +84,39 @@ const useDecodeTx = (tx?: SafeTransaction, useRemoteApi: boolean = false): Async
     encodedData,
     isEmptyData,
     tx?.data.to,
-    asyncCallback,
   ])
 
   // Local decoding using hash-lookup and ethers
   useEffect(() => {
+    let cancelled = false
+
     if (!useRemoteApi && encodedData && !isEmptyData) {
       const decodeLocally = async () => {
         setLocalLoading(true)
+        setLocalError(undefined)
         try {
           // Extract the function selector (first 4 bytes)
           const functionSelector = encodedData.slice(0, 10) // 0x + 8 chars (4 bytes)
-          console.log('functionSelector', functionSelector)
+
           // Use hash-lookup to get the function signature
           const functionSignature = await getFunctionSignature(functionSelector)
-          console.log('functionSignature', functionSignature)
+
+          if (cancelled) return
+
           if (functionSignature) {
             // Decode with ethers
             const [signature, decoded, paramTypes] = await decodeWithEthers(encodedData, functionSignature)
             const methodName = signature.split('(')[0]
             setLocalDecodedData(formatDecodedParams(methodName, decoded, paramTypes))
           } else {
-            // Fallback to abi-guesser if hash-lookup fails
-            const paramTypes = guessAbiEncodedData(encodedData)
-            const fragment = guessFragment(encodedData)
-
-            if (fragment) {
-              const methodName = fragment.name
-              setLocalDecodedData({
-                method: methodName,
-                parameters: [], // We don't have decoded parameters in this case
-              })
-            }
+            // No local signature match: leave decoded data undefined so raw calldata is displayed
+            setLocalDecodedData(undefined)
           }
+
+          if (cancelled) return
           setLocalLoading(false)
         } catch (error) {
+          if (cancelled) return
           console.error('Error in transaction decoding:', error)
           setLocalError(error instanceof Error ? error : new Error(String(error)))
           setLocalLoading(false)
@@ -127,15 +124,20 @@ const useDecodeTx = (tx?: SafeTransaction, useRemoteApi: boolean = false): Async
       }
 
       decodeLocally()
+    } else if (!useRemoteApi) {
+      setLocalDecodedData(nativeTransfer)
+      setLocalLoading(false)
     }
-  }, [useRemoteApi, encodedData, isEmptyData])
+
+    return () => {
+      cancelled = true
+    }
+  }, [useRemoteApi, encodedData, isEmptyData, nativeTransfer])
 
   // Return appropriate data based on useRemoteApi flag
   if (useRemoteApi) {
     return [remoteData || nativeTransfer, remoteError, remoteLoading]
   } else {
-    console.log('localDecodedData', localDecodedData)
-
     return [localDecodedData || nativeTransfer, localError, localLoading]
   }
 }

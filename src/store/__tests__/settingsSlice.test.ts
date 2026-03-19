@@ -1,4 +1,9 @@
-import { settingsSlice, initialState } from '../settingsSlice'
+import {
+  settingsSlice,
+  initialState,
+  selectWalletConnectApiKey,
+  selectWalletConnectPairingCode,
+} from '../settingsSlice'
 import type { SettingsState } from '../settingsSlice'
 
 describe('settingsSlice', () => {
@@ -67,6 +72,34 @@ describe('settingsSlice', () => {
         projectName: '',
         accessToken: '',
       })
+    })
+  })
+
+  describe('wallet connect settings', () => {
+    it('should set wallet connect API key', () => {
+      const state = settingsSlice.reducer(initialState, settingsSlice.actions.setWalletConnectApiKey('project-id'))
+      expect(state.env.walletConnectApiKey).toBe('project-id')
+    })
+
+    it('should set wallet connect pairing code', () => {
+      const state = settingsSlice.reducer(initialState, settingsSlice.actions.setWalletConnectPairingCode('wc:abc'))
+      expect(state.env.walletConnectPairingCode).toBe('wc:abc')
+    })
+
+    it('should select wallet connect API key and pairing code', () => {
+      const state = {
+        [settingsSlice.name]: {
+          ...initialState,
+          env: {
+            ...initialState.env,
+            walletConnectApiKey: 'my-key',
+            walletConnectPairingCode: 'wc:pairing',
+          },
+        },
+      } as any
+
+      expect(selectWalletConnectApiKey(state)).toBe('my-key')
+      expect(selectWalletConnectPairingCode(state)).toBe('wc:pairing')
     })
   })
 })

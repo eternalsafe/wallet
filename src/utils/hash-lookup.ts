@@ -342,6 +342,7 @@ export function findFileForHash(hash: string): string | null {
 // Track initialization state
 let isInitialized = false
 let initPromise: Promise<void> | null = null
+const fileContentCache = new Map<string, string>()
 
 /**
  * Initializes the zstd library if it hasn't been initialized yet
@@ -383,7 +384,7 @@ async function decompressZstd(compressedData: ArrayBuffer): Promise<string> {
  */
 export async function getFunctionSignature(hash: string): Promise<string | null> {
   // Normalize the hash format (remove 0x prefix if present)
-  const normalizedHash = hash.startsWith('0x') ? hash : `0x${hash}`
+  const normalizedHash = (hash.startsWith('0x') ? hash : `0x${hash}`).toLowerCase()
 
   // Find the file that contains this hash
   const fileName = findFileForHash(normalizedHash)
@@ -392,18 +393,22 @@ export async function getFunctionSignature(hash: string): Promise<string | null>
   }
 
   try {
-    // Fetch the file at runtime as an ArrayBuffer
-    const response = await fetch(`/tx-decoder-tmp/${fileName}`)
-    if (!response.ok) {
-      console.error(`Failed to fetch ${fileName}: ${response.statusText}`)
-      return null
+    let fileContent = fileContentCache.get(fileName)
+
+    if (!fileContent) {
+      // Fetch the file at runtime as an ArrayBuffer
+      const response = await fetch(`/tx-decoder-tmp/${fileName}`)
+      if (!response.ok) {
+        return null
+      }
+
+      // Get the compressed data as an ArrayBuffer
+      const compressedData = await response.arrayBuffer()
+
+      // Decompress the file content
+      fileContent = await decompressZstd(compressedData)
+      fileContentCache.set(fileName, fileContent)
     }
-
-    // Get the compressed data as an ArrayBuffer
-    const compressedData = await response.arrayBuffer()
-
-    // Decompress the file content
-    const fileContent = await decompressZstd(compressedData)
 
     // Search for the hash in the file
     // Format in file is: 0xHASH,functionSignature(param1,param2)
@@ -416,8 +421,7 @@ export async function getFunctionSignature(hash: string): Promise<string | null>
     }
 
     return null
-  } catch (error) {
-    console.error(`Error fetching function signature for hash ${normalizedHash}:`, error)
+  } catch (_error) {
     return null
   }
 }

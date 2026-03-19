@@ -18,11 +18,11 @@ import {
   Paper,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
-import { useRouter } from 'next/router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { selectWalletConnectApiKey, setWalletConnectPairingCode, setWalletConnectApiKey } from '@/store/settingsSlice'
 import { useWalletConnectContext } from '@/components/common/WalletConnectProvider'
-import useWallet from '@/hooks/wallets/useWallet'
+import useSafeInfo from '@/hooks/useSafeInfo'
+import { buildApprovedNamespaces } from './utils'
 
 type WalletConnectPairingModalProps = {
   open: boolean
@@ -34,9 +34,8 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
   const [pairingCode, setPairingCode] = useState('')
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [activeTab, setActiveTab] = useState(0)
-  const router = useRouter()
   const dispatch = useAppDispatch()
-  const wallet = useWallet()
+  const { safeAddress } = useSafeInfo()
   const walletConnectApiKey = useAppSelector(selectWalletConnectApiKey)
   const envApiKey = (typeof process !== 'undefined' && process.env.WC_PROJECT_ID) || ''
   const isApiKeySet = !!walletConnectApiKey
@@ -77,18 +76,7 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
   const handleApproveSession = async () => {
     if (!pendingProposal) return
     try {
-      const { requiredNamespaces } = pendingProposal.params
-      const namespaces: Record<string, any> = {}
-      Object.entries(requiredNamespaces).forEach(([key, value]) => {
-        const chains = value.chains || []
-        const walletAddress = wallet?.address || ''
-        const accounts = chains.map((chain) => `${chain}:${walletAddress}`)
-        namespaces[key] = {
-          accounts,
-          methods: value.methods,
-          events: value.events,
-        }
-      })
+      const namespaces = buildApprovedNamespaces(pendingProposal.params.requiredNamespaces, safeAddress)
       await approveSession(namespaces)
     } catch (e) {
       console.error('Failed to approve session:', e)

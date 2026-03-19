@@ -65,5 +65,22 @@ describe('hash-lookup', () => {
 
       expect(signature).toBeNull()
     })
+
+    it('reuses cached file contents for hashes from the same chunk', async () => {
+      const fetchMock = jest.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => new ArrayBuffer(4),
+      })
+      global.fetch = fetchMock as unknown as typeof fetch
+      ;(decompress as jest.Mock).mockReturnValue(new TextEncoder().encode('0x81244e3e,foo()\n0x81244e3f,bar(uint256)'))
+
+      const first = await getFunctionSignature('0x81244e3e')
+      const second = await getFunctionSignature('0x81244e3f')
+
+      expect(first).toBe('foo()')
+      expect(second).toBe('bar(uint256)')
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(decompress).toHaveBeenCalledTimes(1)
+    })
   })
 })

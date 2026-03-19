@@ -42,13 +42,22 @@ export type SessionProposal = {
   }
 }
 
+export type WalletConnectNamespace = {
+  methods: string[]
+  events: string[]
+  accounts: string[]
+}
+
+export type WalletConnectNamespaces = Record<string, WalletConnectNamespace>
+type WalletKitInstance = Awaited<ReturnType<typeof WalletKit.init>>
+
 export type SessionRequest = {
   id: number
   topic: string
   params: {
     request: {
       method: string
-      params: any
+      params: unknown[]
     }
     chainId: string
   }
@@ -57,7 +66,7 @@ export type SessionEvent = {
   topic: string
   event: {
     name: string
-    data: any
+    data: unknown
   }
   chainId: string
 }
@@ -70,16 +79,13 @@ export type WalletConnectHook = {
   pendingRequest: SessionRequest | null
   error: Error | null
   pair: (uri: string) => Promise<void>
-  approveSession: (namespaces: Record<string, any>) => Promise<void>
+  approveSession: (namespaces: WalletConnectNamespaces) => Promise<SessionTypes.Struct>
   rejectSession: () => Promise<void>
-  approveRequest: (result: any) => Promise<void>
+  approveRequest: (result: unknown) => Promise<void>
   rejectRequest: (reason?: string) => Promise<void>
   disconnectSession: (topic: string) => Promise<void>
-  updateSession: (topic: string, namespaces: Record<string, any>) => Promise<void>
+  updateSession: (topic: string, namespaces: WalletConnectNamespaces) => Promise<void>
 }
-
-// Singleton instance of WalletKit
-let walletKitInstance: any = null
 
 const useWalletConnect = (): WalletConnectHook => {
   const wallet = useWallet()
@@ -97,6 +103,7 @@ const useWalletConnect = (): WalletConnectHook => {
 
   const pendingProposalRef = useRef<SessionProposal | null>(null)
   const pendingRequestRef = useRef<SessionRequest | null>(null)
+  const walletKitRef = useRef<WalletKitInstance | null>(null)
 
   useEffect(() => {
     pendingProposalRef.current = pendingProposal
@@ -104,48 +111,43 @@ const useWalletConnect = (): WalletConnectHook => {
   }, [pendingProposal, pendingRequest])
 
   // Set up event listeners for WalletKit
-  const setupEventListeners = useCallback((walletKit: any) => {
+  const setupEventListeners = useCallback((walletKit: WalletKitInstance) => {
+    const on = walletKit.on as (event: string, listener: (...args: any[]) => void) => void
+
     // Session proposal event
-    walletKit.on('session_proposal', (proposal: SessionProposal) => {
-      console.log('Received session proposal:', proposal)
-      setPendingProposal(proposal)
+    on('session_proposal', (proposal: unknown) => {
+      if (!proposal) return
+      setPendingProposal(proposal as SessionProposal)
     })
 
     // Session request event
-    walletKit.on('session_request', (request: SessionRequest) => {
-      console.log('Received session request:', request)
-      setPendingRequest(request)
+    on('session_request', (request: unknown) => {
+      if (!request) return
+      setPendingRequest(request as SessionRequest)
     })
 
     // Session delete event
-    walletKit.on('session_delete', ({ topic }: { topic: string }) => {
-      console.log('Session deleted:', topic)
+    on('session_delete', ({ topic }: { topic: string }) => {
       setSessions((prev) => prev.filter((session) => session.topic !== topic))
     })
 
     // Session update event
-    walletKit.on(
-      'session_update',
-      ({ topic, params }: { topic: string; params: { namespaces: Record<string, any> } }) => {
-        console.log('Session updated:', topic, params)
-        setSessions((prev) => {
-          const updatedSessions = [...prev]
-          const sessionIndex = updatedSessions.findIndex((session) => session.topic === topic)
-          if (sessionIndex !== -1) {
-            updatedSessions[sessionIndex] = {
-              ...updatedSessions[sessionIndex],
-              namespaces: params.namespaces,
-            }
+    on('session_update', ({ topic, params }: { topic: string; params: { namespaces: WalletConnectNamespaces } }) => {
+      setSessions((prev) => {
+        const updatedSessions = [...prev]
+        const sessionIndex = updatedSessions.findIndex((session) => session.topic === topic)
+        if (sessionIndex !== -1) {
+          updatedSessions[sessionIndex] = {
+            ...updatedSessions[sessionIndex],
+            namespaces: params.namespaces,
           }
-          return updatedSessions
-        })
-      },
-    )
+        }
+        return updatedSessions
+      })
+    })
 
     // Session event
-    walletKit.on('session_event', ({ topic, params }: { topic: string; params: any }) => {
-      console.log('Session event:', topic, params)
-    })
+    on('session_event', () => undefined)
   }, [])
 
   useEffect(() => {
@@ -153,9 +155,12 @@ const useWalletConnect = (): WalletConnectHook => {
       if (!projectId || isInitialized || isInitializing || !wallet) {
         return
       }
+      if (walletKitRef.current) {
+        setIsInitialized(true)
+        return
+      }
 
       try {
-        console.log('Initializing WalletKit with project ID:', projectId)
         setIsInitializing(true)
         setError(null)
 
@@ -164,9 +169,7 @@ const useWalletConnect = (): WalletConnectHook => {
         })
 
         try {
-          console.log('Creating WalletKit instance...')
-
-          walletKitInstance = await WalletKit.init({
+          walletKitRef.current = await WalletKit.init({
             core,
             metadata: {
               name: 'Eternal Safe Wallet',
@@ -175,8 +178,6 @@ const useWalletConnect = (): WalletConnectHook => {
               icons: [`${window.location.origin}/favicon.ico`],
             },
           })
-
-          console.log('WalletKit instance created successfully')
         } catch (initError) {
           console.error('Error creating WalletKit instance:', initError)
           throw initError
@@ -184,9 +185,7 @@ const useWalletConnect = (): WalletConnectHook => {
 
         // Set up event listeners
         try {
-          console.log('Setting up event listeners...')
-          setupEventListeners(walletKitInstance)
-          console.log('Event listeners set up successfully')
+          setupEventListeners(walletKitRef.current)
         } catch (listenerError) {
           console.error('Error setting up event listeners:', listenerError)
           // Continue even if event listeners fail
@@ -194,10 +193,8 @@ const useWalletConnect = (): WalletConnectHook => {
 
         // Get active sessions
         try {
-          console.log('Getting active sessions...')
-          const activeSessions = walletKitInstance.getActiveSessions()
+          const activeSessions = walletKitRef.current.getActiveSessions()
           setSessions(Object.values(activeSessions))
-          console.log('Active sessions retrieved successfully')
         } catch (sessionsError) {
           console.error('Error getting active sessions:', sessionsError)
           // Continue even if getting sessions fails
@@ -206,9 +203,7 @@ const useWalletConnect = (): WalletConnectHook => {
         // Try to pair with existing code if available
         if (pairingCode) {
           try {
-            console.log('Pairing with existing code...')
-            await walletKitInstance.pair({ uri: pairingCode })
-            console.log('Paired successfully with existing code')
+            await walletKitRef.current.pair({ uri: pairingCode })
           } catch (pairError) {
             console.warn('Failed to pair with saved code:', pairError)
             // Continue even if pairing fails
@@ -216,7 +211,6 @@ const useWalletConnect = (): WalletConnectHook => {
         }
 
         setIsInitialized(true)
-        console.log('WalletKit initialized successfully')
       } catch (e) {
         console.error('Failed to initialize WalletKit:', e)
         setError(e instanceof Error ? e : new Error('Failed to initialize WalletKit'))
@@ -231,12 +225,13 @@ const useWalletConnect = (): WalletConnectHook => {
   // Pair with a dApp
   const pair = useCallback(
     async (uri: string) => {
-      if (!walletKitInstance || !isInitialized) {
+      const walletKit = walletKitRef.current
+      if (!walletKit || !isInitialized) {
         throw new Error('WalletKit not initialized')
       }
 
       try {
-        await walletKitInstance.pair({ uri })
+        await walletKit.pair({ uri })
       } catch (e) {
         console.error('Failed to pair:', e)
         setError(e instanceof Error ? e : new Error('Failed to pair'))
@@ -248,9 +243,9 @@ const useWalletConnect = (): WalletConnectHook => {
 
   // Approve a session proposal
   const approveSession = useCallback(
-    async (namespaces: Record<string, any>) => {
-      console.log({ namespaces })
-      if (!walletKitInstance || !isInitialized) {
+    async (namespaces: WalletConnectNamespaces) => {
+      const walletKit = walletKitRef.current
+      if (!walletKit || !isInitialized) {
         throw new Error('WalletKit not initialized')
       }
 
@@ -266,7 +261,6 @@ const useWalletConnect = (): WalletConnectHook => {
           // Create a custom namespaces object directly
           approvedNamespaces = {
             eip155: {
-              chains: ['eip155:1', 'eip155:137'],
               methods: ['eth_sendTransaction', 'personal_sign'],
               events: ['accountsChanged', 'chainChanged'],
               accounts: [`eip155:${chainId}:${safeAddress}`],
@@ -275,7 +269,7 @@ const useWalletConnect = (): WalletConnectHook => {
         }
 
         // Approve the session with the built namespaces
-        const session = await walletKitInstance.approveSession({
+        const session = await walletKit.approveSession({
           id: pendingProposalRef.current.id,
           namespaces: approvedNamespaces,
         })
@@ -289,7 +283,7 @@ const useWalletConnect = (): WalletConnectHook => {
         setError(error instanceof Error ? error : new Error('Failed to approve session'))
 
         // Reject the session on error
-        await walletKitInstance.rejectSession({
+        await walletKit.rejectSession({
           id: pendingProposalRef.current.id,
           reason: getSdkError('USER_REJECTED'),
         })
@@ -302,7 +296,8 @@ const useWalletConnect = (): WalletConnectHook => {
 
   // Reject a session proposal
   const rejectSession = useCallback(async () => {
-    if (!walletKitInstance || !isInitialized) {
+    const walletKit = walletKitRef.current
+    if (!walletKit || !isInitialized) {
       throw new Error('WalletKit not initialized')
     }
 
@@ -311,7 +306,7 @@ const useWalletConnect = (): WalletConnectHook => {
     }
 
     try {
-      await walletKitInstance.rejectSession({
+      await walletKit.rejectSession({
         id: pendingProposalRef.current.id,
         reason: getSdkError('USER_REJECTED'),
       })
@@ -326,8 +321,9 @@ const useWalletConnect = (): WalletConnectHook => {
 
   // Approve a session request
   const approveRequest = useCallback(
-    async (result: any) => {
-      if (!walletKitInstance || !isInitialized) {
+    async (result: unknown) => {
+      const walletKit = walletKitRef.current
+      if (!walletKit || !isInitialized) {
         throw new Error('WalletKit not initialized')
       }
 
@@ -338,7 +334,7 @@ const useWalletConnect = (): WalletConnectHook => {
       try {
         const { topic, id } = pendingRequestRef.current
 
-        await walletKitInstance.respondSessionRequest({
+        await walletKit.respondSessionRequest({
           topic,
           response: {
             id,
@@ -360,7 +356,8 @@ const useWalletConnect = (): WalletConnectHook => {
   // Reject a session request
   const rejectRequest = useCallback(
     async (reason = 'User rejected request') => {
-      if (!walletKitInstance || !isInitialized) {
+      const walletKit = walletKitRef.current
+      if (!walletKit || !isInitialized) {
         throw new Error('WalletKit not initialized')
       }
 
@@ -371,7 +368,7 @@ const useWalletConnect = (): WalletConnectHook => {
       try {
         const { topic, id } = pendingRequestRef.current
 
-        await walletKitInstance.respondSessionRequest({
+        await walletKit.respondSessionRequest({
           topic,
           response: {
             id,
@@ -396,12 +393,13 @@ const useWalletConnect = (): WalletConnectHook => {
   // Disconnect a session
   const disconnectSession = useCallback(
     async (topic: string) => {
-      if (!walletKitInstance || !isInitialized) {
+      const walletKit = walletKitRef.current
+      if (!walletKit || !isInitialized) {
         throw new Error('WalletKit not initialized')
       }
 
       try {
-        await walletKitInstance.disconnectSession({
+        await walletKit.disconnectSession({
           topic,
           reason: getSdkError('USER_DISCONNECTED'),
         })
@@ -418,13 +416,14 @@ const useWalletConnect = (): WalletConnectHook => {
 
   // Update a session
   const updateSession = useCallback(
-    async (topic: string, namespaces: Record<string, any>) => {
-      if (!walletKitInstance || !isInitialized) {
+    async (topic: string, namespaces: WalletConnectNamespaces) => {
+      const walletKit = walletKitRef.current
+      if (!walletKit || !isInitialized) {
         throw new Error('WalletKit not initialized')
       }
 
       try {
-        await walletKitInstance.updateSession({
+        await walletKit.updateSession({
           topic,
           namespaces,
         })
