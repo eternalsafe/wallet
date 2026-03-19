@@ -148,4 +148,36 @@ describe('WalletConnect transaction page', () => {
       })
     })
   })
+
+  it('rejects pending request when leaving the WalletConnect transaction page', async () => {
+    const rejectRequest = jest.fn().mockResolvedValue(undefined)
+
+    mockUseRouter.mockReturnValue({
+      push: jest.fn(),
+      query: {
+        safe: 'eth:0x1234567890123456789012345678901234567890',
+      },
+    })
+
+    mockUseWalletConnectContext.mockReturnValue({
+      pendingRequest: { id: 1 },
+      approveRequest: jest.fn(),
+      rejectRequest,
+    })
+
+    mockExtractWalletConnectTxParams.mockReturnValue({
+      to: '0x3430d04E42a722c5Ae52C5Bffbf1F230C2677600',
+      value: '0',
+      data: '0x',
+    })
+
+    mockCreateTx.mockResolvedValue({})
+
+    const { unmount } = render(<WalletConnectTransactionPage />)
+    unmount()
+
+    await waitFor(() => {
+      expect(rejectRequest).toHaveBeenCalledWith('User rejected the transaction')
+    })
+  })
 })

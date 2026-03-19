@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect } from 'react'
+import React, { useCallback, useContext, useEffect, useRef } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { Box, Container, Grid, IconButton, Paper, Typography } from '@mui/material'
@@ -21,6 +21,7 @@ const WalletConnectTxContent = () => {
   const router = useRouter()
   const { pendingRequest, approveRequest, rejectRequest } = useWalletConnectContext()
   const { setSafeTx, setSafeTxError } = useContext(SafeTxContext)
+  const isRequestHandledRef = useRef(false)
   const chainId = useChainId()
   const { safeAddress } = useSafeInfo()
   const txParams = extractWalletConnectTxParams(pendingRequest, chainId, safeAddress)
@@ -28,6 +29,19 @@ const WalletConnectTxContent = () => {
   useEffect(() => {
     document.title = 'Eternal Safe - WalletConnect Transaction'
   }, [])
+
+  useEffect(() => {
+    return () => {
+      if (isRequestHandledRef.current || !pendingRequest) {
+        return
+      }
+
+      isRequestHandledRef.current = true
+      void rejectRequest('User rejected the transaction').catch((err) => {
+        console.error('Failed to reject WalletConnect request on page leave:', err)
+      })
+    }
+  }, [pendingRequest, rejectRequest])
 
   const redirectToOriginPage = useCallback(() => {
     const returnTo = extractWalletConnectReturnTo(router.query[WALLET_CONNECT_RETURN_TO_QUERY_PARAM])
@@ -77,6 +91,7 @@ const WalletConnectTxContent = () => {
   const handleSubmit = async (txId: string, _isExecuted?: boolean) => {
     try {
       await approveRequest(txId)
+      isRequestHandledRef.current = true
       redirectToOriginPage()
     } catch (err) {
       console.error('Failed to approve WalletConnect request:', err)
@@ -84,9 +99,24 @@ const WalletConnectTxContent = () => {
     }
   }
 
-  const handleReject = async () => {
+  const rejectCurrentRequest = useCallback(async () => {
+    if (isRequestHandledRef.current) {
+      return
+    }
+
+    isRequestHandledRef.current = true
+
     try {
       await rejectRequest('User rejected the transaction')
+    } catch (err) {
+      isRequestHandledRef.current = false
+      throw err
+    }
+  }, [rejectRequest])
+
+  const handleReject = async () => {
+    try {
+      await rejectCurrentRequest()
       redirectToOriginPage()
     } catch (err) {
       console.error('Failed to reject WalletConnect request:', err)

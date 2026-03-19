@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
 import {
   Button,
   TextField,
@@ -22,10 +21,8 @@ import CloseIcon from '@mui/icons-material/Close'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { selectWalletConnectApiKey, setWalletConnectPairingCode, setWalletConnectApiKey } from '@/store/settingsSlice'
 import { useWalletConnectContext } from '@/components/common/WalletConnectProvider'
-import { AppRoutes } from '@/config/routes'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import useChainId from '@/hooks/useChainId'
-import { WALLET_CONNECT_RETURN_TO_QUERY_PARAM } from '@/utils/wallet-connect'
 import { buildApprovedNamespaces } from './utils'
 
 type WalletConnectPairingModalProps = {
@@ -39,25 +36,14 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [activeTab, setActiveTab] = useState(0)
   const dispatch = useAppDispatch()
-  const router = useRouter()
   const chainId = useChainId()
   const { safeAddress } = useSafeInfo()
   const walletConnectApiKey = useAppSelector(selectWalletConnectApiKey)
   const envApiKey = (typeof process !== 'undefined' && process.env.WC_PROJECT_ID) || ''
   const isApiKeySet = !!walletConnectApiKey
 
-  const {
-    isInitialized,
-    sessions,
-    pendingProposal,
-    pendingRequest,
-    pair,
-    approveSession,
-    rejectSession,
-    rejectRequest,
-    disconnectSession,
-    error,
-  } = useWalletConnectContext()
+  const { isInitialized, sessions, pendingProposal, pair, approveSession, rejectSession, disconnectSession, error } =
+    useWalletConnectContext()
 
   useEffect(() => {
     if (open) {
@@ -70,12 +56,6 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
       setActiveTab(1)
     }
   }, [pendingProposal, activeTab])
-
-  useEffect(() => {
-    if (pendingRequest && activeTab !== 2) {
-      setActiveTab(2)
-    }
-  }, [pendingRequest, activeTab])
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
@@ -118,32 +98,6 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
       await disconnectSession(topic)
     } catch (e) {
       console.error('Failed to disconnect session:', e)
-    }
-  }
-
-  const handleOpenPendingTransaction = () => {
-    if (!pendingRequest || pendingRequest.params.request.method !== 'eth_sendTransaction') {
-      return
-    }
-
-    const { [WALLET_CONNECT_RETURN_TO_QUERY_PARAM]: _ignoredReturnTo, ...queryWithoutReturnTo } = router.query
-
-    router.push({
-      pathname: AppRoutes.walletConnect.transaction,
-      query: {
-        ...queryWithoutReturnTo,
-        [WALLET_CONNECT_RETURN_TO_QUERY_PARAM]: router.asPath,
-      },
-    })
-    onClose()
-  }
-
-  const handleRejectPendingTransaction = async () => {
-    try {
-      await rejectRequest('User rejected the transaction')
-      onClose()
-    } catch (e) {
-      console.error('Failed to reject transaction request:', e)
     }
   }
 
@@ -243,16 +197,6 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
                 <Tab
                   label={
                     <>
-                      Transactions
-                      {pendingRequest && (
-                        <Chip size="small" color="error" label="1" sx={{ ml: 1, height: 16, fontSize: '0.75rem' }} />
-                      )}
-                    </>
-                  }
-                />
-                <Tab
-                  label={
-                    <>
                       Sessions
                       {sessions.length > 0 && (
                         <Chip
@@ -340,36 +284,6 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
               {/* Sessions Tab */}
               {activeTab === 2 && (
                 <>
-                  {pendingRequest ? (
-                    <Box>
-                      <Typography variant="h6" gutterBottom>
-                        Pending Transaction Request
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Method: {pendingRequest.params.request.method}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Chain: {pendingRequest.params.chainId}
-                      </Typography>
-                      {pendingRequest.params.request.method === 'eth_sendTransaction' ? (
-                        <Typography variant="body2" color="text.secondary">
-                          Review and approve or reject this request in the transaction page.
-                        </Typography>
-                      ) : (
-                        <Alert severity="info" sx={{ mt: 2 }}>
-                          This request type is not supported in the transaction flow yet.
-                        </Alert>
-                      )}
-                    </Box>
-                  ) : (
-                    <Typography variant="body1">No pending transaction requests.</Typography>
-                  )}
-                </>
-              )}
-
-              {/* Sessions Tab */}
-              {activeTab === 3 && (
-                <>
                   {sessions.length > 0 ? (
                     <List>
                       {sessions.map((session, index) => (
@@ -412,15 +326,9 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-              {activeTab === 2 && pendingRequest ? (
-                <Button onClick={handleRejectPendingTransaction} variant="outlined" color="error" sx={{ mr: 1 }}>
-                  Reject
-                </Button>
-              ) : (
-                <Button onClick={onClose} sx={{ mr: 1 }}>
-                  Cancel
-                </Button>
-              )}
+              <Button onClick={onClose} sx={{ mr: 1 }}>
+                Cancel
+              </Button>
 
               {/* Connect Tab */}
               {activeTab === 0 && (
@@ -444,18 +352,6 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
                     Approve
                   </Button>
                 </>
-              )}
-
-              {/* Transactions Tab */}
-              {activeTab === 2 && pendingRequest && (
-                <Button
-                  onClick={handleOpenPendingTransaction}
-                  variant="contained"
-                  color="primary"
-                  disabled={pendingRequest.params.request.method !== 'eth_sendTransaction'}
-                >
-                  Review transaction
-                </Button>
               )}
             </Box>
           </>

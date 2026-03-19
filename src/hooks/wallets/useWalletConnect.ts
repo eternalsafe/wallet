@@ -71,15 +71,6 @@ export type SessionEvent = {
   chainId: string
 }
 
-export const enqueuePendingRequest = (queue: SessionRequest[], nextRequest: SessionRequest): SessionRequest[] => {
-  const isDuplicate = queue.some((item) => item.id === nextRequest.id && item.topic === nextRequest.topic)
-  return isDuplicate ? queue : [...queue, nextRequest]
-}
-
-export const removePendingRequest = (queue: SessionRequest[], handledRequest: SessionRequest): SessionRequest[] => {
-  return queue.filter((request) => !(request.topic === handledRequest.topic && request.id === handledRequest.id))
-}
-
 export type WalletConnectHook = {
   isInitialized: boolean
   isInitializing: boolean
@@ -107,9 +98,8 @@ const useWalletConnect = (): WalletConnectHook => {
   const [isInitializing, setIsInitializing] = useState(false)
   const [sessions, setSessions] = useState<SessionTypes.Struct[]>([])
   const [pendingProposal, setPendingProposal] = useState<SessionProposal | null>(null)
-  const [pendingRequests, setPendingRequests] = useState<SessionRequest[]>([])
+  const [pendingRequest, setPendingRequest] = useState<SessionRequest | null>(null)
   const [error, setError] = useState<Error | null>(null)
-  const pendingRequest = pendingRequests[0] ?? null
 
   const pendingProposalRef = useRef<SessionProposal | null>(null)
   const pendingRequestRef = useRef<SessionRequest | null>(null)
@@ -133,14 +123,12 @@ const useWalletConnect = (): WalletConnectHook => {
     // Session request event
     on('session_request', (request: unknown) => {
       if (!request) return
-      const nextRequest = request as SessionRequest
-      setPendingRequests((prev) => enqueuePendingRequest(prev, nextRequest))
+      setPendingRequest(request as SessionRequest)
     })
 
     // Session delete event
     on('session_delete', ({ topic }: { topic: string }) => {
       setSessions((prev) => prev.filter((session) => session.topic !== topic))
-      setPendingRequests((prev) => prev.filter((request) => request.topic !== topic))
     })
 
     // Session update event
@@ -344,8 +332,7 @@ const useWalletConnect = (): WalletConnectHook => {
       }
 
       try {
-        const currentRequest = pendingRequestRef.current
-        const { topic, id } = currentRequest
+        const { topic, id } = pendingRequestRef.current
 
         await walletKit.respondSessionRequest({
           topic,
@@ -356,7 +343,7 @@ const useWalletConnect = (): WalletConnectHook => {
           },
         })
 
-        setPendingRequests((prev) => removePendingRequest(prev, currentRequest))
+        setPendingRequest(null)
       } catch (e) {
         console.error('Failed to approve request:', e)
         setError(e instanceof Error ? e : new Error('Failed to approve request'))
@@ -379,8 +366,7 @@ const useWalletConnect = (): WalletConnectHook => {
       }
 
       try {
-        const currentRequest = pendingRequestRef.current
-        const { topic, id } = currentRequest
+        const { topic, id } = pendingRequestRef.current
 
         await walletKit.respondSessionRequest({
           topic,
@@ -394,7 +380,7 @@ const useWalletConnect = (): WalletConnectHook => {
           },
         })
 
-        setPendingRequests((prev) => removePendingRequest(prev, currentRequest))
+        setPendingRequest(null)
       } catch (e) {
         console.error('Failed to reject request:', e)
         setError(e instanceof Error ? e : new Error('Failed to reject request'))
