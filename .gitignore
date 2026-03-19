@@ -51,5 +51,4 @@ yalc.lock
 /public/fallback*
 /public/*.js.LICENSE.txt
 
-public/tx-decoder-tmp
 public/signatures/fourbyte-signatures.csv

@@ -19,15 +19,11 @@ require_command() {
   fi
 }
 
-for cmd in curl sort split awk sed zstd node; do
+for cmd in curl sort split awk zstd node; do
   require_command "$cmd"
 done
 
 mkdir -p "$OUTPUT_DIR"
-
-escape_ts_string() {
-  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
-}
 
 suffix_to_decimal() {
   local suffix="$1"
@@ -159,9 +155,7 @@ import { init, decompress } from '@bokuweb/zstd-wasm'
 interface HashRange {
   file: string
   firstHash: string
-  firstSig: string
   lastHash: string
-  lastSig: string
 }
 
 const FILE_RANGES: HashRange[] = [
@@ -181,9 +175,7 @@ for chunk in "$OUTPUT_DIR"/chunk_*.raw; do
   last_line="$(tail -n 1 "$chunk")"
 
   first_hash="${first_line%%,*}"
-  first_sig="${first_line#*,}"
   last_hash="${last_line%%,*}"
-  last_sig="${last_line#*,}"
 
   if [[ ! "$first_hash" =~ ^0x[0-9a-fA-F]{8}$ ]]; then
     echo "Skipping chunk with invalid first hash: $chunk_basename"
@@ -195,9 +187,6 @@ for chunk in "$OUTPUT_DIR"/chunk_*.raw; do
     continue
   fi
 
-  first_sig_escaped="$(escape_ts_string "$first_sig")"
-  last_sig_escaped="$(escape_ts_string "$last_sig")"
-
   if [[ $count -gt 0 ]]; then
     echo "," >>"$TYPESCRIPT_FILE"
   fi
@@ -206,9 +195,7 @@ for chunk in "$OUTPUT_DIR"/chunk_*.raw; do
   {
     file: "$export_chunk_filename",
     firstHash: "$first_hash",
-    firstSig: "$first_sig_escaped",
-    lastHash: "$last_hash",
-    lastSig: "$last_sig_escaped"
+    lastHash: "$last_hash"
   }
 EOF
 

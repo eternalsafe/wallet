@@ -10,139 +10,99 @@ import { init, decompress } from '@bokuweb/zstd-wasm'
 interface HashRange {
   file: string
   firstHash: string
-  firstSig: string
   lastHash: string
-  lastSig: string
 }
 
 const FILE_RANGES: HashRange[] = [
   {
     file: 'export_chunk_371',
     firstHash: '0x00000000',
-    firstSig:
-      'AaANwg8((address,address,address,uint136,uint40,uint40,uint24,uint8,uint256,bytes32,bytes32,uint256));BlazingIt4490597615();MonkahmmXXXXXXXXXXXXACSKFIOY();QKJ0gRzrmgZzBLWm(address,uint256,uint256,bytes);ROOT4146650865();abcei51243fdgjkh(bytes);arb_ybtltp(uint256[]);bdspwouamqsxyabc(uint256,bytes);blockHashAddendsInexpansible(uint256);blockHashAmarilloNonspontaneously(uint256);blockHashAmphithyronVersify(uint256);blockHashAskewLimitary(uint256);buyAndFree22457070633(uint256);buy_bca86a0f(address,uint256,int256);call_g0oyU7o(address,uint256,bytes32,bytes);cehbdjakgfi(address,address,uint256,uint8);contrivedNameThatisVeryUnlikelyToBeFoundInTheWild_visd4o(address,uint256);createCollectionN2M_000oEFvt(bytes,bytes32,bytes32);dgen1fxrdyw();execute_44g58pv();f00000000_bvvvdlt();f09140466846285922(address,bytes);f7836435186477227(address);fillOrderWithEth_5cbdfc3((address,uint256,uint256),bytes32,bytes32);fulfillBasicOrder_efficient_6GL6yc((address,uint256,uint256,address,address,address,uint256,uint256,uint8,uint256,uint256,bytes32,uint256,bytes32,bytes32,uint256,(uint256,address)[],bytes));fulfillBasicOrder_efficient_fGEoT((((uint8,address,uint256,uint256,uint256)[],(uint8,address,uint256,uint256,uint256,address)[],uint256,uint256,uint256,address,uint8),(bytes32,bytes32,uint8)));get_block_hash_257335279069929(uint256);jIUTh(bytes);left_branch_block(uint32);locked_6416899205(uint256);marku1XcC();mev_abcd1g3ekj2f4ih5(bytes);mintEfficientN2M_001Z5BWH();mint_d22vi9okr4w(address);mint_efficient_1268F998();mint_efficient_7e80c46e(address,address,address,uint256);overdiffusingness(bytes,uint256,uint256,uint256,uint256);randallAteMySandwich(uint256[],address[],uint8,uint256[],bool,bytes32,address,address[]);randallAteMySandwich_atrxxnf(bytes);randallAteMySandwich_bixiwot(uint256,uint256);randallAteMySandwich_dbohban(uint256,address);randall_was_here_eionbta(uint256);randallsRevenge_ilxaotc();swap_6269342730();test2001551086();trigger2618242932(address[],uint256[],bytes,uint256);wycpnbqcyf()',
     lastHash: '0x0e316ab7',
-    lastSig: 'removeSigner(address)',
   },
   {
     file: 'export_chunk_372',
     firstHash: '0x0e31b50e',
-    firstSig: 'setDustFloors(address[],uint256[])',
     lastHash: '0x1c70cc49',
-    lastSig: 'subscribersAddr()',
   },
   {
     file: 'export_chunk_373',
     firstHash: '0x1c70ce3f',
-    firstSig: 'getStorageDescriptorsKey(uint256)',
     lastHash: '0x2aac9ee0',
-    lastSig: 'setWhitelistSell(bool)',
   },
   {
     file: 'export_chunk_374',
     firstHash: '0x2aaca0fa',
-    firstSig: 'deleteMarketOrders(bytes32,uint256)',
     lastHash: '0x38f77d69',
-    lastSig: 'getDistributeProfitsInfo()',
   },
   {
     file: 'export_chunk_375',
     firstHash: '0x38f7a867',
-    firstSig: 'sniperOwner()',
     lastHash: '0x4723affc',
-    lastSig: 'CONTRACT_OPERATOR_ROLE()',
   },
   {
     file: 'export_chunk_376',
     firstHash: '0x4723bf7a',
-    firstSig: 'BOBOTestToken(uint256,string,uint8,string)',
     lastHash: '0x55614cfa',
-    lastSig: 'setInflationBuffer(uint256)',
   },
   {
     file: 'export_chunk_377',
     firstHash: '0x55614fcc',
-    firstSig: 'isCurrentValidator(address)',
     lastHash: '0x63b2c2a9',
-    lastSig: 'unlockTeamBBT(uint256,string)',
   },
   {
     file: 'export_chunk_378',
     firstHash: '0x63b2d0f6',
-    firstSig: 'FiveMinSubsPriceals()',
     lastHash: '0x71ea7b7b',
-    lastSig: 'LISTING_STATE_CLOSED()',
   },
   {
     file: 'export_chunk_379',
     firstHash: '0x71ea87ee',
-    firstSig: 'getPeriodRange(uint256)',
     lastHash: '0x80361c73',
-    lastSig: 'getNumDepositRequestsProcessed()',
   },
   {
     file: 'export_chunk_380',
     firstHash: '0x8036268e',
-    firstSig: 'qv(uint256)',
     lastHash: '0x8e7fd292',
-    lastSig: 'trySetSubnodeOwner(bytes32,address)',
   },
   {
     file: 'export_chunk_381',
     firstHash: '0x8e7fdc6c',
-    firstSig: 'LogBetProperties(uint256)',
     lastHash: '0x9cae6f49',
-    lastSig: 'mintBattleBurger(uint256)',
   },
   {
     file: 'export_chunk_382',
     firstHash: '0x9cae7da5',
-    firstSig:
-      'createSwapOrder((address,bytes,(uint256,address)[],(uint256,address)[],(uint256,uint256,address)[]),bytes32,uint256)',
     lastHash: '0xaaf97b68',
-    lastSig: '_imageData(uint256)',
   },
   {
     file: 'export_chunk_383',
     firstHash: '0xaaf9ac80',
-    firstSig: 'setupGutterCollections(address,address,address,address,address,address)',
     lastHash: '0xb918866b',
-    lastSig: 'setmaximumRoyality(uint256)',
   },
   {
     file: 'export_chunk_384',
     firstHash: '0xb918a18a',
-    firstSig: 'flipActiveSwitch()',
     lastHash: '0xc74c6540',
-    lastSig: 'withdrawReflection(address)',
   },
   {
     file: 'export_chunk_385',
     firstHash: '0xc74c6bfa',
-    firstSig: 'setMarketFeeGang(uint256)',
     lastHash: '0xd5897182',
-    lastSig: 'handle_cancel_bid(address,uint256,uint256,uint256)',
   },
   {
     file: 'export_chunk_386',
     firstHash: '0xd5897504',
-    firstSig: 'harness__sendValue(address,uint256)',
     lastHash: '0xe3c0ff12',
-    lastSig: 'getStakedList(address)',
   },
   {
     file: 'export_chunk_387',
     firstHash: '0xe3c10714',
-    firstSig: 'setMinContrib(uint256)',
     lastHash: '0xf1f169e7',
-    lastSig: 'file(address,bytes32,address)',
   },
   {
     file: 'export_chunk_388',
     firstHash: '0xf1f1d481',
-    firstSig: '_getRandomBaseValue()',
     lastHash: '0xffffffff',
-    lastSig: 'LOCK8605463013();test266151307();uWjK9(uint256)',
   },
 ]
 
