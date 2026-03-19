@@ -1,6 +1,8 @@
 import type { SessionRequest } from '@/hooks/wallets/useWalletConnect'
 import { sameAddress } from '@/utils/addresses'
 
+export const WALLET_CONNECT_RETURN_TO_QUERY_PARAM = 'returnTo'
+
 type WalletConnectTxParams = {
   to: string
   value: string
@@ -15,6 +17,15 @@ type RawWalletConnectTxParams = {
 }
 
 const buildEip155ChainRef = (chainId: string): string => `eip155:${chainId}`
+
+export const extractWalletConnectReturnTo = (returnTo: string | string[] | undefined): string | null => {
+  const route = Array.isArray(returnTo) ? returnTo[0] : returnTo
+  if (typeof route !== 'string') return null
+
+  if (!route.startsWith('/')) return null
+
+  return route
+}
 
 export const extractWalletConnectTxParams = (
   pendingRequest: SessionRequest | null,

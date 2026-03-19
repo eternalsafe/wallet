@@ -1,5 +1,5 @@
 import type { SessionRequest } from '@/hooks/wallets/useWalletConnect'
-import { extractWalletConnectTxParams } from '@/utils/wallet-connect'
+import { extractWalletConnectReturnTo, extractWalletConnectTxParams } from '@/utils/wallet-connect'
 
 const buildRequest = (paramsOverrides: Partial<SessionRequest['params']> = {}): SessionRequest => ({
   id: 1,
@@ -81,5 +81,19 @@ describe('extractWalletConnectTxParams', () => {
       value: '0',
       data: '0x',
     })
+  })
+})
+
+describe('extractWalletConnectReturnTo', () => {
+  it('returns route when it is a valid internal path', () => {
+    expect(extractWalletConnectReturnTo('/balances?safe=eth:0x123')).toBe('/balances?safe=eth:0x123')
+  })
+
+  it('returns null for external URLs', () => {
+    expect(extractWalletConnectReturnTo('https://example.com')).toBeNull()
+  })
+
+  it('returns null when query value is missing', () => {
+    expect(extractWalletConnectReturnTo(undefined)).toBeNull()
   })
 })

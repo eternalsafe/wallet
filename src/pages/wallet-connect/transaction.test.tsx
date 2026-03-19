@@ -20,6 +20,7 @@ jest.mock('@/hooks/useChainId', () => jest.fn(() => '1'))
 jest.mock('@/hooks/useSafeInfo', () => jest.fn(() => ({ safeAddress: '0x1234567890123456789012345678901234567890' })))
 
 jest.mock('@/utils/wallet-connect', () => ({
+  ...jest.requireActual('@/utils/wallet-connect'),
   extractWalletConnectTxParams: jest.fn(),
 }))
 
@@ -70,7 +71,7 @@ const mockExtractWalletConnectTxParams = extractWalletConnectTxParams as jest.Mo
 const mockCreateTx = createTx as jest.Mock
 
 describe('WalletConnect transaction page', () => {
-  it('redirects to balances after rejecting a WalletConnect transaction', async () => {
+  it('redirects to the origin page after rejecting a WalletConnect transaction', async () => {
     const push = jest.fn()
     const rejectRequest = jest.fn().mockResolvedValue(undefined)
 
@@ -78,6 +79,7 @@ describe('WalletConnect transaction page', () => {
       push,
       query: {
         safe: 'eth:0x1234567890123456789012345678901234567890',
+        returnTo: '/transactions/history?safe=eth:0x1234567890123456789012345678901234567890',
       },
     })
 
@@ -102,6 +104,41 @@ describe('WalletConnect transaction page', () => {
     await waitFor(() => {
       expect(rejectRequest).toHaveBeenCalledWith('User rejected the transaction')
     })
+
+    await waitFor(() => {
+      expect(push).toHaveBeenCalledWith('/transactions/history?safe=eth:0x1234567890123456789012345678901234567890')
+    })
+  })
+
+  it('falls back to balances when returnTo is invalid', async () => {
+    const push = jest.fn()
+    const rejectRequest = jest.fn().mockResolvedValue(undefined)
+
+    mockUseRouter.mockReturnValue({
+      push,
+      query: {
+        safe: 'eth:0x1234567890123456789012345678901234567890',
+        returnTo: 'https://example.com',
+      },
+    })
+
+    mockUseWalletConnectContext.mockReturnValue({
+      pendingRequest: { id: 1 },
+      approveRequest: jest.fn(),
+      rejectRequest,
+    })
+
+    mockExtractWalletConnectTxParams.mockReturnValue({
+      to: '0x3430d04E42a722c5Ae52C5Bffbf1F230C2677600',
+      value: '0',
+      data: '0x',
+    })
+
+    mockCreateTx.mockResolvedValue({})
+
+    render(<WalletConnectTransactionPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reject Transaction' }))
 
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith({

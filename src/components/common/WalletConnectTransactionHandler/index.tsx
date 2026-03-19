@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { useWalletConnectContext } from '@/components/common/WalletConnectProvider'
 import { AppRoutes } from '@/config/routes'
 import useSafeInfo from '@/hooks/useSafeInfo'
+import { WALLET_CONNECT_RETURN_TO_QUERY_PARAM } from '@/utils/wallet-connect'
 
 const WalletConnectTransactionHandler = () => {
   const { pendingRequest } = useWalletConnectContext()
@@ -23,10 +24,14 @@ const WalletConnectTransactionHandler = () => {
       safeAddress != ''
     ) {
       redirectedRequestIds.current.add(pendingRequest.id)
-      const query = router.query
+      const { [WALLET_CONNECT_RETURN_TO_QUERY_PARAM]: _ignoredReturnTo, ...queryWithoutReturnTo } = router.query
+
       router.push({
         pathname: AppRoutes.walletConnect.transaction,
-        query,
+        query: {
+          ...queryWithoutReturnTo,
+          [WALLET_CONNECT_RETURN_TO_QUERY_PARAM]: router.asPath,
+        },
       })
     }
   }, [pendingRequest, router, router.pathname, safeAddress])

@@ -9,7 +9,11 @@ import PageHeader from '@/components/common/PageHeader'
 import { AppRoutes } from '@/config/routes'
 import useChainId from '@/hooks/useChainId'
 import useSafeInfo from '@/hooks/useSafeInfo'
-import { extractWalletConnectTxParams } from '@/utils/wallet-connect'
+import {
+  extractWalletConnectReturnTo,
+  extractWalletConnectTxParams,
+  WALLET_CONNECT_RETURN_TO_QUERY_PARAM,
+} from '@/utils/wallet-connect'
 
 const WalletConnectTxContent = () => {
   const router = useRouter()
@@ -19,18 +23,26 @@ const WalletConnectTxContent = () => {
   const { safeAddress } = useSafeInfo()
   const txParams = extractWalletConnectTxParams(pendingRequest, chainId, safeAddress)
 
-  const redirectToBalancesPage = useCallback(() => {
+  const redirectToOriginPage = useCallback(() => {
+    const returnTo = extractWalletConnectReturnTo(router.query[WALLET_CONNECT_RETURN_TO_QUERY_PARAM])
+    if (returnTo != null && !returnTo.startsWith(AppRoutes.walletConnect.transaction)) {
+      router.push(returnTo)
+      return
+    }
+
+    const { [WALLET_CONNECT_RETURN_TO_QUERY_PARAM]: _ignoredReturnTo, ...queryWithoutReturnTo } = router.query
+
     router.push({
       pathname: AppRoutes.balances.index,
-      query: router.query,
+      query: queryWithoutReturnTo,
     })
   }, [router])
 
   useEffect(() => {
     if (!txParams) {
-      redirectToBalancesPage()
+      redirectToOriginPage()
     }
-  }, [txParams, redirectToBalancesPage])
+  }, [txParams, redirectToOriginPage])
 
   useEffect(() => {
     const createSafeTx = async () => {
@@ -59,7 +71,7 @@ const WalletConnectTxContent = () => {
   const handleSubmit = async (txId: string, _isExecuted?: boolean) => {
     try {
       await approveRequest(txId)
-      redirectToBalancesPage()
+      redirectToOriginPage()
     } catch (err) {
       console.error('Failed to approve WalletConnect request:', err)
       setSafeTxError(err instanceof Error ? err : new Error('Failed to approve WalletConnect request'))
@@ -69,7 +81,7 @@ const WalletConnectTxContent = () => {
   const handleReject = async () => {
     try {
       await rejectRequest('User rejected the transaction')
-      redirectToBalancesPage()
+      redirectToOriginPage()
     } catch (err) {
       console.error('Failed to reject WalletConnect request:', err)
     }
