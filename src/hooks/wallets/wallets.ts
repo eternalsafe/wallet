@@ -36,15 +36,7 @@ const walletConnectV2 = (chain: ChainInfo): WalletInit => {
 }
 
 const ledger = (): WalletInit => {
-  // Ledger requires a WC project ID
-  if (!WC_PROJECT_ID) {
-    return () => null
-  }
-
-  return ledgerModule({
-    walletConnectVersion: 2,
-    projectId: WC_PROJECT_ID,
-  })
+  return ledgerModule()
 }
 
 const WALLET_MODULES: { [key in WALLET_KEYS]: (chain: ChainInfo) => WalletInit } = {
