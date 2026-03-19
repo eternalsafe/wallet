@@ -54,6 +54,7 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
     pair,
     approveSession,
     rejectSession,
+    rejectRequest,
     disconnectSession,
     error,
   } = useWalletConnectContext()
@@ -135,6 +136,15 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
       },
     })
     onClose()
+  }
+
+  const handleRejectPendingTransaction = async () => {
+    try {
+      await rejectRequest('User rejected the transaction')
+      onClose()
+    } catch (e) {
+      console.error('Failed to reject transaction request:', e)
+    }
   }
 
   const handleSaveApiKey = (e: React.FormEvent) => {
@@ -402,9 +412,15 @@ const WalletConnectPairingModal = ({ open, onClose, anchorEl }: WalletConnectPai
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-              <Button onClick={onClose} sx={{ mr: 1 }}>
-                Cancel
-              </Button>
+              {activeTab === 2 && pendingRequest ? (
+                <Button onClick={handleRejectPendingTransaction} variant="outlined" color="error" sx={{ mr: 1 }}>
+                  Reject
+                </Button>
+              ) : (
+                <Button onClick={onClose} sx={{ mr: 1 }}>
+                  Cancel
+                </Button>
+              )}
 
               {/* Connect Tab */}
               {activeTab === 0 && (

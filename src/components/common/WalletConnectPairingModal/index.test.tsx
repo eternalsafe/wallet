@@ -112,4 +112,41 @@ describe('WalletConnectPairingModal', () => {
     })
     expect(onClose).toHaveBeenCalled()
   })
+
+  it('shows Reject in the Transactions tab and rejects the pending request', async () => {
+    const rejectRequest = jest.fn().mockResolvedValue(undefined)
+    const onClose = jest.fn()
+
+    mockUseWalletConnectContext.mockReturnValue({
+      ...baseWalletConnectContext,
+      rejectRequest,
+      pendingRequest: {
+        id: 7,
+        topic: 'topic',
+        params: {
+          request: {
+            method: 'eth_sendTransaction',
+            params: [],
+          },
+          chainId: 'eip155:1',
+        },
+      },
+    })
+
+    const anchorEl = document.createElement('button')
+    document.body.appendChild(anchorEl)
+
+    render(<WalletConnectPairingModal open onClose={onClose} anchorEl={anchorEl} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Pending Transaction Request')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reject' }))
+
+    await waitFor(() => {
+      expect(rejectRequest).toHaveBeenCalledWith('User rejected the transaction')
+      expect(onClose).toHaveBeenCalled()
+    })
+  })
 })

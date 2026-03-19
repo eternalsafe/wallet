@@ -94,6 +94,24 @@ const WalletConnectTxContent = () => {
 
   return (
     <>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, pt: 1 }}>
+        <IconButton
+          aria-label="Reject transaction request"
+          onClick={handleReject}
+          size="small"
+          sx={{
+            color: 'border.main',
+            p: 1,
+            backgroundColor: 'border.light',
+            '&:hover': {
+              backgroundColor: 'border.light',
+            },
+          }}
+        >
+          <CloseIcon fontSize="large" />
+        </IconButton>
+      </Box>
+
       <PageHeader
         title="WalletConnect Transaction Request"
         action={
@@ -103,7 +121,6 @@ const WalletConnectTxContent = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
-              gap: 2,
             }}
           >
             <Box
@@ -117,21 +134,6 @@ const WalletConnectTxContent = () => {
             >
               A dApp is requesting to submit a transaction through WalletConnect
             </Box>
-            <IconButton
-              aria-label="Reject transaction request"
-              onClick={handleReject}
-              size="small"
-              sx={{
-                color: 'border.main',
-                p: 1,
-                backgroundColor: 'border.light',
-                '&:hover': {
-                  backgroundColor: 'border.light',
-                },
-              }}
-            >
-              <CloseIcon fontSize="large" />
-            </IconButton>
           </Box>
         }
       />
