@@ -363,13 +363,13 @@ async function initZstd(): Promise<void> {
  */
 async function decompressZstd(compressedData: ArrayBuffer): Promise<string> {
   await initZstd()
-  
+
   // Create a Uint8Array from the ArrayBuffer
   const compressedArray = new Uint8Array(compressedData)
-  
+
   // Decompress the data
   const decompressedArray = decompress(compressedArray)
-  
+
   // Convert the decompressed data to a string
   const decoder = new TextDecoder('utf-8')
   return decoder.decode(decompressedArray)
@@ -420,5 +420,4 @@ export async function getFunctionSignature(hash: string): Promise<string | null>
     console.error(`Error fetching function signature for hash ${normalizedHash}:`, error)
     return null
   }
-}
 }
