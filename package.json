@@ -2,7 +2,7 @@
   "name": "eternalsafe-wallet",
   "homepage": "https://github.com/eternalsafe/wallet",
   "license": "GPL-3.0",
-  "version": "1",
+  "version": "2",
   "type": "module",
   "scripts": {
     "dev": "next dev",
