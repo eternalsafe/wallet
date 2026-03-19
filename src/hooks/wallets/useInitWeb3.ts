@@ -36,26 +36,12 @@ export const useInitWeb3 = () => {
       setMultiWeb3ReadOnly(undefined)
       return
     }
-    if (!customRpcUrl) {
-      if (!wallet) {
-        setWeb3(undefined)
-        setWeb3ReadOnly(undefined)
-        setMultiWeb3ReadOnly(undefined)
-        return
-      }
-
-      if (wallet && wallet.chainId !== chainId) {
-        dispatch(
-          showNotification({
-            message: `Your wallet seems to be connected to the wrong network. You must change your wallet network to ${
-              chain?.chainName ?? 'the same network'
-            }.`,
-            groupKey: RPC_URL_ERROR_KEY,
-            variant: 'error',
-          }),
-        )
-        return
-      }
+    if (!customRpcUrl && !wallet) {
+      setWeb3(undefined)
+      setWeb3ReadOnly(undefined)
+      setMultiWeb3ReadOnly(undefined)
+      return
+    }
 
     if (wallet && wallet.chainId !== chainId) {
       dispatch(
