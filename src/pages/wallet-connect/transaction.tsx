@@ -1,12 +1,12 @@
 import React, { useCallback, useContext, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import { Box, IconButton } from '@mui/material'
+import { Box, Container, Grid, IconButton, Paper, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import { useWalletConnectContext } from '@/components/common/WalletConnectProvider'
 import { createTx } from '@/services/tx/tx-sender'
 import SafeTxProvider, { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
-import PageHeader from '@/components/common/PageHeader'
+import ChainIndicator from '@/components/common/ChainIndicator'
 import { AppRoutes } from '@/config/routes'
 import useChainId from '@/hooks/useChainId'
 import useSafeInfo from '@/hooks/useSafeInfo'
@@ -93,57 +93,45 @@ const WalletConnectTxContent = () => {
   }
 
   return (
-    <>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, pt: 1 }}>
-        <IconButton
-          aria-label="Reject transaction request"
-          onClick={handleReject}
-          size="small"
-          sx={{
-            color: 'border.main',
-            p: 1,
-            backgroundColor: 'border.light',
-            '&:hover': {
-              backgroundColor: 'border.light',
-            },
-          }}
-        >
-          <CloseIcon fontSize="large" />
-        </IconButton>
-      </Box>
-
-      <PageHeader
-        title="WalletConnect Transaction Request"
-        action={
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                color: 'text.secondary',
-                fontSize: '14px',
-              }}
-            >
-              A dApp is requesting to submit a transaction through WalletConnect
-            </Box>
+    <Container sx={{ mt: 2 }}>
+      <Grid container justifyContent="center">
+        <Grid item xs={12} md={11} display="flex" flexDirection="column">
+          <Box sx={{ alignSelf: 'flex-end', mb: 1 }}>
+            <ChainIndicator inline />
           </Box>
-        }
-      />
 
-      <main>
-        <Box sx={{ p: 3 }}>
-          <SignOrExecuteForm onSubmit={handleSubmit} isCreation />
-        </Box>
-      </main>
-    </>
+          <Paper>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
+              <IconButton
+                aria-label="Reject transaction request"
+                onClick={handleReject}
+                size="small"
+                sx={{
+                  color: 'border.main',
+                  p: 1,
+                  backgroundColor: 'border.light',
+                  '&:hover': {
+                    backgroundColor: 'border.light',
+                  },
+                }}
+              >
+                <CloseIcon fontSize="large" />
+              </IconButton>
+            </Box>
+
+            <Box sx={{ px: 4, pb: 4 }}>
+              <Typography variant="h3" sx={{ mb: 1 }}>
+                WalletConnect Transaction Request
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                A dApp is requesting to submit a transaction through WalletConnect
+              </Typography>
+              <SignOrExecuteForm onSubmit={handleSubmit} isCreation />
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+    </Container>
   )
 }
 
