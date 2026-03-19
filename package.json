@@ -26,7 +26,7 @@
     "static-serve": "yarn build && yarn serve"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=20.18.0"
   },
   "resolutions": {
     "@solana/web3.js": "^1.87.7",

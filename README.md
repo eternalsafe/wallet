@@ -6,9 +6,9 @@
 Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-global/safe-wallet-monorepo), forked at v1.26.2. Funded by the [Safe Grants Program](https://app.charmverse.io/safe-grants-program/page-005239065690887612).
 
 - The latest released version is always accessible at [https://eternalsafe.eth](https://eternalsafe.eth). If your browser doesn't support ENS, you can use alternatives below with different privacy trade-offs:
-  - [https://eternalsafe.eth.limo](https://eternalsafe.eth.limo) - centralized ENS resolution. 
+  - [https://eternalsafe.eth.limo](https://eternalsafe.eth.limo) - centralized ENS resolution.
   - [https://eternalsafe-eth.ipns.inbrowser.link](https://eternalsafe-eth.ipns.inbrowser.link) - this [fetches and verifies client-side](https://inbrowser.link/) the IPFS content.
-  - [https://eternalsafe.earthfast.app](https://eternalsafe.earthfast.app) - [EarthFast (an IPFS alternative)](https://earthfast.com) hosts a mirror. 
+  - [https://eternalsafe.earthfast.app](https://eternalsafe.earthfast.app) - [EarthFast (an IPFS alternative)](https://earthfast.com) hosts a mirror.
 - For the IPFS CID or pinned ENS subdomain, please check the [latest release](https://github.com/eternalsafe/wallet/releases/latest).
 - The latest commit on the `eternalsafe` branch is always accessible at [https://eternalsafe.vercel.app](https://eternalsafe.vercel.app).
 
@@ -68,7 +68,7 @@ Here's the list of all the environment variables:
 | Env variable                | Description                                                                   |
 | --------------------------- | ----------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_IS_PRODUCTION` | Set to `true` to build a minified production app                              |
-| `NEXT_PUBLIC_SAFE_VERSION`  | The latest version of the Safe contract, defaults to 1.3.0                    |
+| `NEXT_PUBLIC_SAFE_VERSION`  | The latest version of the Safe contract, defaults to 1.4.1                    |
 | `NEXT_PUBLIC_WC_PROJECT_ID` | [WalletConnect v2](https://docs.walletconnect.com/2.0/cloud/relay) project ID |
 
 If you don't provide some of the variables, the corresponding features will be disabled in the UI.

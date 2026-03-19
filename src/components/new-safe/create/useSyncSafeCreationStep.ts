@@ -5,7 +5,6 @@ import useWallet from '@/hooks/wallets/useWallet'
 import { usePendingSafe } from './steps/StatusStep/usePendingSafe'
 import useIsWrongChain from '@/hooks/useIsWrongChain'
 import { useRouter } from 'next/router'
-import { AppRoutes } from '@/config/routes'
 
 const useSyncSafeCreationStep = (setStep: StepRenderProps<NewSafeFormData>['setStep']) => {
   const [pendingSafe] = usePendingSafe()
@@ -18,11 +17,6 @@ const useSyncSafeCreationStep = (setStep: StepRenderProps<NewSafeFormData>['setS
     if (pendingSafe) {
       setStep(3)
       return
-    }
-
-    // Jump to the welcome page if there is no wallet
-    if (!wallet) {
-      router.push({ pathname: AppRoutes.welcome.index, query: router.query })
     }
 
     // Jump to choose name and network step if the wallet is connected to the wrong chain and there is no pending Safe

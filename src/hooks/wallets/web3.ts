@@ -16,7 +16,7 @@ export const createWeb3 = (walletProvider: EIP1193Provider): Web3Provider => {
   return new Web3Provider(walletProvider)
 }
 
-export const { setStore: setWeb3, useStore: useWeb3 } = new ExternalStore<MulticallProvider<Web3Provider>>()
+export const { setStore: setWeb3, useStore: useWeb3 } = new ExternalStore<Web3Provider>()
 
 export const {
   getStore: getWeb3ReadOnly,

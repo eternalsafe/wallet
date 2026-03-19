@@ -11,6 +11,7 @@ export const AppRoutes = {
   },
   newSafe: {
     load: '/new-safe/load',
+    create: '/new-safe/create',
   },
   settings: {
     setup: '/settings/setup',
