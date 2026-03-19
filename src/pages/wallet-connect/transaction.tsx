@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import { Box, Button } from '@mui/material'
+import { Box, IconButton } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
 import { useWalletConnectContext } from '@/components/common/WalletConnectProvider'
 import { createTx } from '@/services/tx/tx-sender'
 import SafeTxProvider, { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
@@ -102,6 +103,7 @@ const WalletConnectTxContent = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
+              gap: 2,
             }}
           >
             <Box
@@ -115,6 +117,21 @@ const WalletConnectTxContent = () => {
             >
               A dApp is requesting to submit a transaction through WalletConnect
             </Box>
+            <IconButton
+              aria-label="Reject transaction request"
+              onClick={handleReject}
+              size="small"
+              sx={{
+                color: 'border.main',
+                p: 1,
+                backgroundColor: 'border.light',
+                '&:hover': {
+                  backgroundColor: 'border.light',
+                },
+              }}
+            >
+              <CloseIcon fontSize="large" />
+            </IconButton>
           </Box>
         }
       />
@@ -122,11 +139,6 @@ const WalletConnectTxContent = () => {
       <main>
         <Box sx={{ p: 3 }}>
           <SignOrExecuteForm onSubmit={handleSubmit} isCreation />
-          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-            <Button variant="contained" color="error" onClick={handleReject} sx={{ minWidth: '200px' }}>
-              Reject Transaction
-            </Button>
-          </Box>
         </Box>
       </main>
     </>

@@ -35,7 +35,12 @@ jest.mock('@/components/tx/SignOrExecuteForm', () => ({
 
 jest.mock('@/components/common/PageHeader', () => ({
   __esModule: true,
-  default: ({ title }: { title: string }) => <div>{title}</div>,
+  default: ({ title, action }: { title: string; action?: React.ReactNode }) => (
+    <div>
+      <div>{title}</div>
+      <div>{action}</div>
+    </div>
+  ),
 }))
 
 jest.mock('@/components/tx-flow/SafeTxProvider', () => {
@@ -99,7 +104,7 @@ describe('WalletConnect transaction page', () => {
 
     render(<WalletConnectTransactionPage />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reject Transaction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reject transaction request' }))
 
     await waitFor(() => {
       expect(rejectRequest).toHaveBeenCalledWith('User rejected the transaction')
@@ -138,7 +143,7 @@ describe('WalletConnect transaction page', () => {
 
     render(<WalletConnectTransactionPage />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reject Transaction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reject transaction request' }))
 
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith({
