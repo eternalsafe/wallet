@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react'
+import React, { useCallback, useContext, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { Box, Button } from '@mui/material'
 import { useWalletConnectContext } from '@/components/common/WalletConnectProvider'
@@ -19,14 +19,18 @@ const WalletConnectTxContent = () => {
   const { safeAddress } = useSafeInfo()
   const txParams = extractWalletConnectTxParams(pendingRequest, chainId, safeAddress)
 
+  const redirectToBalancesPage = useCallback(() => {
+    router.push({
+      pathname: AppRoutes.balances.index,
+      query: router.query,
+    })
+  }, [router])
+
   useEffect(() => {
     if (!txParams) {
-      router.push({
-        pathname: AppRoutes.index,
-        query: router.query,
-      })
+      redirectToBalancesPage()
     }
-  }, [txParams, router])
+  }, [txParams, redirectToBalancesPage])
 
   useEffect(() => {
     const createSafeTx = async () => {
@@ -52,17 +56,10 @@ const WalletConnectTxContent = () => {
     createSafeTx()
   }, [txParams, setSafeTx, setSafeTxError])
 
-  const redirectToOriginalPage = () => {
-    router.push({
-      pathname: AppRoutes.index,
-      query: router.query,
-    })
-  }
-
   const handleSubmit = async (txId: string, _isExecuted?: boolean) => {
     try {
       await approveRequest(txId)
-      redirectToOriginalPage()
+      redirectToBalancesPage()
     } catch (err) {
       console.error('Failed to approve WalletConnect request:', err)
       setSafeTxError(err instanceof Error ? err : new Error('Failed to approve WalletConnect request'))
@@ -72,7 +69,7 @@ const WalletConnectTxContent = () => {
   const handleReject = async () => {
     try {
       await rejectRequest('User rejected the transaction')
-      redirectToOriginalPage()
+      redirectToBalancesPage()
     } catch (err) {
       console.error('Failed to reject WalletConnect request:', err)
     }
