@@ -59,7 +59,6 @@ describe('hash-lookup', () => {
         arrayBuffer: async () => new ArrayBuffer(4),
       })
       global.fetch = fetchMock as unknown as typeof fetch
-
       ;(decompress as jest.Mock).mockReturnValue(new TextEncoder().encode('0x06256bdd,foo()'))
 
       const signature = await getFunctionSignature('0x06256bde')
