@@ -51,7 +51,8 @@
   border-right: none;
 }
 
-.connectWallet {
+.connectWallet,
+.walletConnectButton {
   flex-shrink: 0;
 }
 

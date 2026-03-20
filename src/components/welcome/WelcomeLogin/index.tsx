@@ -24,7 +24,7 @@ const WelcomeLogin = () => {
 
   useEffect(() => {
     setForceShowRpcInput(false)
-  }, [chain])
+  }, [chain, web3])
 
   return (
     <Paper className={css.loginCard} data-testid="welcome-login">
@@ -69,9 +69,11 @@ const WelcomeLogin = () => {
         )}
 
         <Typography variant="subtitle2" textAlign="center" mt="auto" pt={3}>
-          <Link type="button" component="button" onClick={toggleShowRpcInput} color="primary">
-            {forceShowRpcInput ? 'Close' : 'Open'} RPC URL input
-          </Link>
+          {(customRpcUrl || web3) && (
+            <Link type="button" component="button" onClick={toggleShowRpcInput} color="primary">
+              {forceShowRpcInput ? 'Close' : 'Open'} RPC URL input
+            </Link>
+          )}
         </Typography>
       </Box>
     </Paper>

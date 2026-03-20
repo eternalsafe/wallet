@@ -32,4 +32,7 @@ export const AppRoutes = {
   welcome: {
     index: '/welcome',
   },
+  walletConnect: {
+    transaction: '/wallet-connect/transaction',
+  },
 }

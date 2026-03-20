@@ -29,6 +29,8 @@ import useSafeMessagePendingStatuses from '@/hooks/messages/useSafeMessagePendin
 import useChangedValue from '@/hooks/useChangedValue'
 import { TxModalProvider } from '@/components/tx-flow'
 import WalletProvider from '@/components/common/WalletProvider'
+import WalletConnectProvider from '@/components/common/WalletConnectProvider'
+import WalletConnectTransactionHandler from '@/components/common/WalletConnectTransactionHandler'
 import { useMagicLink } from '@/hooks/useMagicLink'
 import { useMagicNetwork } from '@/hooks/useMagicNetwork'
 
@@ -62,7 +64,12 @@ export const AppProviders = ({ children }: { children: ReactNode | ReactNode[] }
         <ThemeProvider theme={safeTheme}>
           <SentryErrorBoundary showDialog fallback={ErrorBoundary}>
             <WalletProvider>
-              <TxModalProvider>{children}</TxModalProvider>
+              <WalletConnectProvider>
+                <TxModalProvider>
+                  {children}
+                  <WalletConnectTransactionHandler />
+                </TxModalProvider>
+              </WalletConnectProvider>
             </WalletProvider>
           </SentryErrorBoundary>
         </ThemeProvider>

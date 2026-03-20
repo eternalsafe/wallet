@@ -73,6 +73,12 @@ Here's the list of all the environment variables:
 
 If you don't provide some of the variables, the corresponding features will be disabled in the UI.
 
+WalletConnect API key resolution order:
+
+1. User-provided key saved in app settings
+2. `NEXT_PUBLIC_WC_PROJECT_ID` from `.env`
+3. Empty (WalletConnect disabled until a key is provided)
+
 ### Running the app locally
 
 Install the dependencies:
@@ -88,6 +94,44 @@ yarn start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
+
+## Local hash lookup for transaction decoding
+
+The transaction decoder uses a local selector database in the browser. It does not depend on a remote decoding API in the normal flow.
+
+### Files involved
+
+- `public/signatures/export_chunk_*`: Pre-generated, compressed selector chunks served as static assets.
+- `src/utils/hash-lookup.ts`: Generated lookup helper that maps a 4-byte selector (`0x12345678`) to the correct chunk file.
+- `grab_split_db.sh`: Maintenance script used to rebuild selector chunks and regenerate `src/utils/hash-lookup.ts`.
+
+### Runtime concept
+
+1. The app extracts the first 4 bytes from calldata.
+2. `src/utils/hash-lookup.ts` chooses the matching chunk by hash range.
+3. The client fetches only that chunk from `/signatures/...`.
+4. The chunk is decompressed client-side and searched for matching function signatures.
+5. If no local match exists, raw calldata is shown.
+
+This keeps decoding local and avoids downloading the full signature dataset up front.
+
+### Rebuilding signature chunks
+
+Use the script when you want to refresh the local selector dataset:
+
+```bash
+./grab_split_db.sh
+```
+
+The script:
+
+1. Downloads signatures from the 4byte API.
+2. Normalizes/sorts/deduplicates entries.
+3. Splits the dataset into chunk files.
+4. Compresses chunks.
+5. Regenerates `src/utils/hash-lookup.ts` with updated hash ranges.
+
+Required CLI tools include: `curl`, `sort`, `split`, `awk`, `zstd`, and `node`.
 
 ## Lint
 

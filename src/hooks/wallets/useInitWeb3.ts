@@ -36,6 +36,12 @@ export const useInitWeb3 = () => {
       setMultiWeb3ReadOnly(undefined)
       return
     }
+    if (!customRpcUrl && !wallet) {
+      setWeb3(undefined)
+      setWeb3ReadOnly(undefined)
+      setMultiWeb3ReadOnly(undefined)
+      return
+    }
 
     if (wallet && wallet.chainId !== chainId) {
       dispatch(

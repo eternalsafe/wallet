@@ -7,6 +7,7 @@ import classnames from 'classnames'
 import css from './styles.module.css'
 import ConnectWallet from '@/components/common/ConnectWallet'
 import NetworkSelector from '@/components/common/NetworkSelector'
+import WalletConnectButton from '@/components/common/WalletConnectButton'
 import { AppRoutes } from '@/config/routes'
 import Link from 'next/link'
 
@@ -44,6 +45,10 @@ const Header = ({ onMenuToggle }: HeaderProps): ReactElement => {
 
       <div className={classnames(css.element, css.connectWallet)}>
         <ConnectWallet />
+      </div>
+
+      <div className={classnames(css.element, css.walletConnectButton)}>
+        <WalletConnectButton />
       </div>
 
       <div className={classnames(css.element, css.networkSelector)}>

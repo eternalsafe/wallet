@@ -2,8 +2,9 @@ import { createSelector } from '@reduxjs/toolkit'
 import type { RootState } from '.'
 import { makeLoadableSlice } from './common'
 import { type ChainInfo, selectCustomChainsAsLoadable } from '@/store/customChainsSlice'
+import getChainsConfig from '@/config/supportedChains'
 
-const initialState: ChainInfo[] = []
+const initialState: ChainInfo[] = [...getChainsConfig()]
 
 const { slice, selector } = makeLoadableSlice('chains', initialState)
 

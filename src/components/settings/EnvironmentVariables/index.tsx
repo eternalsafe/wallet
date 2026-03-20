@@ -3,7 +3,7 @@ import { Paper, Grid, Typography, TextField, Button, Tooltip, IconButton, SvgIco
 import InputAdornment from '@mui/material/InputAdornment'
 import RotateLeftIcon from '@mui/icons-material/RotateLeft'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { selectSettings, setIPFS, setRpc, setTenderly } from '@/store/settingsSlice'
+import { selectSettings, setIPFS, setRpc, setTenderly, setWalletConnectApiKey } from '@/store/settingsSlice'
 import { CHAINLIST_URL } from '@/config/constants'
 import useChainId from '@/hooks/useChainId'
 import { useCurrentChain } from '@/hooks/useChains'
@@ -18,6 +18,7 @@ export enum EnvVariablesField {
   tenderlyOrgName = 'tenderlyOrgName',
   tenderlyProjectName = 'tenderlyProjectName',
   tenderlyToken = 'tenderlyToken',
+  walletConnectApiKey = 'walletConnectApiKey',
 }
 
 export type EnvVariablesFormData = {
@@ -26,6 +27,7 @@ export type EnvVariablesFormData = {
   [EnvVariablesField.tenderlyOrgName]: string
   [EnvVariablesField.tenderlyProjectName]: string
   [EnvVariablesField.tenderlyToken]: string
+  [EnvVariablesField.walletConnectApiKey]: string
 }
 
 const EnvironmentVariables = () => {
@@ -42,6 +44,7 @@ const EnvironmentVariables = () => {
       [EnvVariablesField.tenderlyOrgName]: settings.env?.tenderly.orgName ?? '',
       [EnvVariablesField.tenderlyProjectName]: settings.env?.tenderly.projectName ?? '',
       [EnvVariablesField.tenderlyToken]: settings.env?.tenderly.accessToken ?? '',
+      [EnvVariablesField.walletConnectApiKey]: settings.env?.walletConnectApiKey ?? '',
     },
   })
 
@@ -52,6 +55,7 @@ const EnvironmentVariables = () => {
   const tenderlyOrgName = watch(EnvVariablesField.tenderlyOrgName)
   const tenderlyProjectName = watch(EnvVariablesField.tenderlyProjectName)
   const tenderlyToken = watch(EnvVariablesField.tenderlyToken)
+  const walletConnectApiKey = watch(EnvVariablesField.walletConnectApiKey)
 
   const [tenderlyPartial, setTenderlyPartial] = useState<boolean>(false)
 
@@ -88,6 +92,8 @@ const EnvironmentVariables = () => {
         accessToken: data[EnvVariablesField.tenderlyToken],
       }),
     )
+
+    dispatch(setWalletConnectApiKey(data[EnvVariablesField.walletConnectApiKey]))
 
     location.reload()
   })
@@ -330,6 +336,46 @@ const EnvironmentVariables = () => {
                 </Grid>
               </Grid>
 
+              <Typography fontWeight={700} mb={2} mt={3}>
+                WalletConnect API Key
+                <Tooltip
+                  placement="top"
+                  arrow
+                  title="You can use your own WalletConnect API key to connect to the WalletConnect network."
+                >
+                  <span>
+                    <SvgIcon
+                      component={InfoIcon}
+                      inheritViewBox
+                      fontSize="small"
+                      color="border"
+                      sx={{ verticalAlign: 'middle', ml: 0.5 }}
+                    />
+                  </span>
+                </Tooltip>
+              </Typography>
+
+              <TextField
+                {...register(EnvVariablesField.walletConnectApiKey)}
+                variant="outlined"
+                type="text"
+                InputProps={{
+                  endAdornment: walletConnectApiKey ? (
+                    <InputAdornment position="end">
+                      <Tooltip title="Reset to default value">
+                        <IconButton
+                          onClick={() => onReset(EnvVariablesField.walletConnectApiKey)}
+                          size="small"
+                          color="primary"
+                        >
+                          <RotateLeftIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </InputAdornment>
+                  ) : null,
+                }}
+                fullWidth
+              />
               <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }} disabled={!formState.isValid}>
                 Save
               </Button>
