@@ -3,6 +3,7 @@ import {
   setAddressBook,
   upsertAddressBookEntry,
   removeAddressBookEntry,
+  removeAddressBookByChain,
   selectAddressBookByChain,
 } from '../addressBookSlice'
 
@@ -84,6 +85,14 @@ describe('addressBookSlice', () => {
       }),
     )
     expect(state).toStrictEqual({})
+  })
+
+  it('should remove all entries for a chain', () => {
+    const state = addressBookSlice.reducer(initialState, removeAddressBookByChain('1'))
+
+    expect(state).toEqual({
+      '4': { '0x0': 'Charlie', '0x1': 'Dave' },
+    })
   })
 
   it('should not return entries with invalid address format', () => {

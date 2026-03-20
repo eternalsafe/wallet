@@ -31,7 +31,7 @@ Eternal Safe relies completely on the provided RPC URL. It is very important to 
 You can add custom networks to Eternal Safe by including network parameters in the URL. Here's an example for adding Base Sepolia as a testnet:
 
 ```
-https://eternalsafe.eth.limo?chainId=84532&chain=Base%20Sepolia&shortName=base-sepolia&rpc=https%3A%2F%2Fsepolia.base.org&currency=ETH&symbol=ETH&expAddr=https%3A%2F%2Fsepolia.basescan.org%2Faddress%2F%7B%7Baddress%7D%7D&expTx=https%3A%2F%2Fsepolia.basescan.org%2Ftx%2F%7B%7BtxHash%7D%7D&l2=true&testnet=true&multisendAddress=0x1111111111111111111111111111111111111111&multisendCallOnlyAddress=0x2222222222222222222222222222222222222222
+https://eternalsafe.eth.limo?chainId=84532&chain=Base%20Sepolia&shortName=base-sepolia&rpc=https%3A%2F%2Fsepolia.base.org&currency=ETH&symbol=ETH&expAddr=https%3A%2F%2Fsepolia.basescan.org%2Faddress%2F%7B%7Baddress%7D%7D&expTx=https%3A%2F%2Fsepolia.basescan.org%2Ftx%2F%7B%7BtxHash%7D%7D&l2=true&testnet=true&multisendAddress=0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526&multisendCallOnlyAddress=0x9641d764fc13c8B624c04430C7356C1C7C8102e2
 ```
 
 Required URL parameters:

@@ -5,6 +5,7 @@ import type { AddedSafesState } from '../addedSafesSlice'
 import {
   addOrUpdateSafe,
   removeSafe,
+  removeAddedSafesByChain,
   addedSafesSlice,
   updateAddedSafeBalance,
   addedSafesListener,
@@ -149,6 +150,22 @@ describe('addedSafesSlice', () => {
         removeSafe({ chainId: '1', address: '0x0' }),
       )
       expect(state).toEqual({ '4': { ['0x0']: {} as SafeInfo } })
+    })
+  })
+
+  describe('removeAddedSafesByChain', () => {
+    it('should remove all added safes for the target chain only', () => {
+      const state = addedSafesSlice.reducer(
+        {
+          '1': { ['0x0']: { threshold: 1, owners: [{ value: '0x1' }] } },
+          '4': { ['0x2']: { threshold: 2, owners: [{ value: '0x2' }] } },
+        },
+        removeAddedSafesByChain('1'),
+      )
+
+      expect(state).toEqual({
+        '4': { ['0x2']: { threshold: 2, owners: [{ value: '0x2' }] } },
+      })
     })
   })
 
