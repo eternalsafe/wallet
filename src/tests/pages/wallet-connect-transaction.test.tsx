@@ -30,7 +30,11 @@ jest.mock('@/services/tx/tx-sender', () => ({
 
 jest.mock('@/components/tx/SignOrExecuteForm', () => ({
   __esModule: true,
-  default: () => <div data-testid="sign-or-execute-form" />,
+  default: ({ onSubmit }: { onSubmit?: (txId: string) => Promise<void> }) => (
+    <div data-testid="sign-or-execute-form">
+      <button onClick={() => void onSubmit?.('tx-id')}>confirm-sign</button>
+    </div>
+  ),
 }))
 
 jest.mock('@/components/tx-flow/common/TxLayout', () => ({
@@ -121,6 +125,8 @@ describe('WalletConnect transaction page', () => {
       expect(rejectRequest).toHaveBeenCalledWith('User rejected the transaction')
     })
 
+    expect(rejectRequest).toHaveBeenCalledTimes(1)
+
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith('/transactions/history?safe=eth:0x1234567890123456789012345678901234567890')
     })
@@ -196,5 +202,46 @@ describe('WalletConnect transaction page', () => {
     await waitFor(() => {
       expect(rejectRequest).toHaveBeenCalledWith('User rejected the transaction')
     })
+  })
+
+  it('does not auto-reject after a successful approval', async () => {
+    const push = jest.fn()
+    const approveRequest = jest.fn().mockResolvedValue(undefined)
+    const rejectRequest = jest.fn().mockResolvedValue(undefined)
+
+    mockUseRouter.mockReturnValue({
+      push,
+      query: {
+        safe: 'eth:0x1234567890123456789012345678901234567890',
+        returnTo: '/balances?safe=eth:0x1234567890123456789012345678901234567890',
+      },
+    })
+
+    mockUseWalletConnectContext.mockReturnValue({
+      pendingRequest: { id: 1 },
+      approveRequest,
+      rejectRequest,
+    })
+
+    mockExtractWalletConnectTxParams.mockReturnValue({
+      to: '0x3430d04E42a722c5Ae52C5Bffbf1F230C2677600',
+      value: '0',
+      data: '0x',
+    })
+
+    mockCreateTx.mockResolvedValue({})
+
+    const { unmount } = render(<WalletConnectTransactionPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'confirm-sign' }))
+
+    await waitFor(() => {
+      expect(approveRequest).toHaveBeenCalledWith('tx-id')
+      expect(push).toHaveBeenCalledWith('/balances?safe=eth:0x1234567890123456789012345678901234567890')
+    })
+
+    unmount()
+
+    expect(rejectRequest).not.toHaveBeenCalled()
   })
 })
