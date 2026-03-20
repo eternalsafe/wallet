@@ -6,6 +6,7 @@ import { showNotification } from '@/store/notificationsSlice'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/router'
 import useChains from '@/hooks/useChains'
+import { useConfirmationDialog } from '@/components/common/ConfirmationDialog'
 
 jest.mock('next/navigation', () => ({
   useSearchParams: jest.fn(),
@@ -18,6 +19,10 @@ jest.mock('next/router', () => ({
 jest.mock('@/hooks/useChains', () => ({
   __esModule: true,
   default: jest.fn(),
+}))
+
+jest.mock('@/components/common/ConfirmationDialog', () => ({
+  useConfirmationDialog: jest.fn(),
 }))
 
 jest.mock('@/store/customChainsSlice', () => {
@@ -47,6 +52,7 @@ jest.mock('@/store/notificationsSlice', () => {
 const mockUseSearchParams = useSearchParams as jest.Mock
 const mockUseRouter = useRouter as jest.Mock
 const mockUseChains = useChains as jest.Mock
+const mockUseConfirmationDialog = useConfirmationDialog as jest.Mock
 
 const createSearchParams = (params: Record<string, string | undefined>) => ({
   get: (key: string) => params[key] ?? null,
@@ -115,12 +121,8 @@ describe('useMagicNetwork', () => {
         rpc: undefined,
       }),
     )
-    confirmMock.mockReturnValue(true)
-    Object.defineProperty(window, 'confirm', {
-      writable: true,
-      configurable: true,
-      value: confirmMock,
-    })
+    confirmMock.mockResolvedValue(true)
+    mockUseConfirmationDialog.mockReturnValue({ confirm: confirmMock })
   })
 
   it('decodes percent-encoded values', () => {
@@ -285,7 +287,7 @@ describe('useMagicNetwork', () => {
   })
 
   it('requires explicit confirmation before applying network updates', async () => {
-    confirmMock.mockReturnValue(false)
+    confirmMock.mockResolvedValue(false)
     mockUseSearchParams.mockReturnValue(
       createSearchParams({
         chainId: '84532',

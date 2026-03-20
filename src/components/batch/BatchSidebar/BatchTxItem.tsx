@@ -11,6 +11,7 @@ import TxData from '@/components/transactions/TxDetails/TxData'
 import { MethodDetails } from '@/components/transactions/TxDetails/TxData/DecodedData/MethodDetails'
 import { TxDataRow } from '@/components/transactions/TxDetails/Summary/TxDataRow'
 import { dateString } from '@/utils/formatters'
+import { useConfirmationDialog } from '@/components/common/ConfirmationDialog'
 
 type BatchTxItemProps = DraftBatchItem & {
   id: string
@@ -29,6 +30,7 @@ const BatchTxItem = ({
   dragging = false,
   draggable = false,
 }: BatchTxItemProps) => {
+  const { confirm } = useConfirmationDialog()
   const txSummary = useMemo(
     () => ({
       timestamp,
@@ -43,11 +45,23 @@ const BatchTxItem = ({
   const handleDelete = useCallback(
     (e: SyntheticEvent) => {
       e.stopPropagation()
-      if (confirm('Are you sure you want to delete this transaction?')) {
-        onDelete?.(id)
-      }
+      void (async () => {
+        const isConfirmed = await confirm({
+          title: 'Delete transaction',
+          message: 'Are you sure you want to delete this transaction?',
+          confirmText: 'Delete',
+          confirmButtonProps: {
+            variant: 'danger',
+            disableElevation: true,
+          },
+        })
+
+        if (isConfirmed) {
+          onDelete?.(id)
+        }
+      })()
     },
-    [onDelete, id],
+    [confirm, onDelete, id],
   )
 
   return (
