@@ -50,6 +50,7 @@ const CustomChain: NextPage = () => {
     // Required fields
     if (!formValues.chainId) newErrors.chainId = 'Chain ID is required'
     else if (!/^\d+$/.test(formValues.chainId)) newErrors.chainId = 'Chain ID must be a number'
+    else if (Number(formValues.chainId) <= 0) newErrors.chainId = 'Chain ID must be greater than 0'
 
     if (!formValues.chain) newErrors.chain = 'Network name is required'
 
