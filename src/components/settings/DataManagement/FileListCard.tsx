@@ -69,6 +69,7 @@ const getItems = ({
   addedSafes,
   addressBook,
   customTokens,
+  customChains,
   addedTxs,
   settings,
   safeApps,
@@ -83,6 +84,7 @@ const getItems = ({
   const addedSafeChainAmount = Object.keys(addedSafes || {}).length
   const addressBookChainAmount = Object.keys(addressBook || {}).length
   const customTokensChainAmount = Object.keys(customTokens || {}).length
+  const customChainAmount = customChains?.length || 0
   const addedTxsChainAmount = Object.keys(addedTxs || {}).length
 
   const items: Array<ListItemTextProps> = []
@@ -140,6 +142,18 @@ const getItems = ({
     items.push(addedTransactionsPreview)
   }
 
+  if (customChainAmount > 0) {
+    const customChainsPreview: ListItemTextProps = {
+      primary: (
+        <>
+          <b>Custom networks</b> for {customChainAmount} {customChainAmount === 1 ? 'chain' : 'chains'}
+        </>
+      ),
+    }
+
+    items.push(customChainsPreview)
+  }
+
   if (settings) {
     const settingsPreview: ListItemTextProps = {
       primary: (
@@ -191,6 +205,7 @@ export const FileListCard = ({
     addedSafes,
     addressBook,
     customTokens,
+    customChains,
     addedTxs,
     settings,
     safeApps,

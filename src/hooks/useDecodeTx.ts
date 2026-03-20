@@ -7,7 +7,7 @@ import useAsync from './useAsync'
 import useChainId from './useChainId'
 import { getFunctionSignature } from '@/utils/hash-lookup'
 import { ethers } from 'ethers'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 // Helper function to decode transaction data using ethers
 const decodeWithEthers = async (
@@ -73,18 +73,15 @@ const useDecodeTx = (tx?: SafeTransaction, useRemoteApi: boolean = false): Async
   const [localLoading, setLocalLoading] = useState<boolean>(false)
 
   // Remote API decoding
-  const asyncCallback =
-    useRemoteApi && encodedData && !isEmptyData
-      ? () => getDecodedData(chainId, encodedData, tx!.data.to)
-      : () => undefined
+  const asyncCallback = useCallback(() => {
+    if (!useRemoteApi || !encodedData || isEmptyData) {
+      return undefined
+    }
 
-  const [remoteData, remoteError, remoteLoading] = useAsync<DecodedDataResponse>(asyncCallback, [
-    useRemoteApi,
-    chainId,
-    encodedData,
-    isEmptyData,
-    tx?.data.to,
-  ])
+    return getDecodedData(chainId, encodedData, tx!.data.to)
+  }, [useRemoteApi, encodedData, isEmptyData, chainId, tx])
+
+  const [remoteData, remoteError, remoteLoading] = useAsync<DecodedDataResponse>(asyncCallback, [asyncCallback])
 
   // Local decoding using hash-lookup and ethers
   useEffect(() => {

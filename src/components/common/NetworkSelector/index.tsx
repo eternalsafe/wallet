@@ -16,12 +16,8 @@ import { AppRoutes } from '@/config/routes'
 import { useAppDispatch } from '@/store'
 import { removeChain } from '@/store/customChainsSlice'
 import { showNotification } from '@/store/notificationsSlice'
-import { removeAddedSafesByChain } from '@/store/addedSafesSlice'
-import { removeAddressBookByChain } from '@/store/addressBookSlice'
-import { removeByChain as removeCustomTokensByChain } from '@/store/customTokensSlice'
-import { removeAddedTxsByChain } from '@/store/addedTxsSlice'
-import { removeSafeAppsByChain } from '@/store/safeAppsSlice'
 import { setRpc } from '@/store/settingsSlice'
+import { useConfirmationDialog } from '@/components/common/ConfirmationDialog'
 
 const keepPathRoutes = [AppRoutes.welcome.index, AppRoutes.newSafe.load, AppRoutes.newSafe.create]
 
@@ -32,6 +28,7 @@ const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement =>
   const chainId = useChainId()
   const router = useRouter()
   const dispatch = useAppDispatch()
+  const { confirm } = useConfirmationDialog()
 
   // Separate custom chains from regular ones
   const [customChains, regularChains] = useMemo(() => partition(configs, (config) => config.custom === true), [configs])
@@ -70,33 +67,45 @@ const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement =>
       e.preventDefault()
       e.stopPropagation()
 
-      // Remove the chain from the store
-      dispatch(removeAddedSafesByChain(chain.chainId))
-      dispatch(removeAddressBookByChain(chain.chainId))
-      dispatch(removeCustomTokensByChain(chain.chainId))
-      dispatch(removeAddedTxsByChain(chain.chainId))
-      dispatch(removeSafeAppsByChain(chain.chainId))
-      dispatch(setRpc({ chainId: chain.chainId, rpc: undefined }))
-      dispatch(removeChain(chain.chainId))
+      void (async () => {
+        const isConfirmed = await confirm({
+          title: 'Delete network',
+          message: `Delete "${chain.chainName}" and its RPC override? Saved chain data will be kept.`,
+          confirmText: 'Delete',
+          confirmButtonProps: {
+            variant: 'danger',
+            disableElevation: true,
+          },
+        })
 
-      // Show notification
-      dispatch(
-        showNotification({
-          message: `${chain.chainName} network has been removed`,
-          groupKey: 'delete-network-success',
-          variant: 'success',
-        }),
-      )
-
-      // If we're currently on this chain, redirect to mainnet or another chain
-      if (chainId === chain.chainId) {
-        const defaultChain = configs.find((c) => !c.custom)
-        if (defaultChain) {
-          router.push(getNetworkLink(defaultChain.shortName))
+        if (!isConfirmed) {
+          return
         }
-      }
+
+        // Remove chain config and its RPC override. Chain-specific data is intentionally preserved
+        // so that users can recover it if they re-add the same chain later.
+        dispatch(setRpc({ chainId: chain.chainId, rpc: undefined }))
+        dispatch(removeChain(chain.chainId))
+
+        // Show notification
+        dispatch(
+          showNotification({
+            message: `${chain.chainName} network has been removed`,
+            groupKey: 'delete-network-success',
+            variant: 'success',
+          }),
+        )
+
+        // If we're currently on this chain, redirect to mainnet or another chain
+        if (chainId === chain.chainId) {
+          const defaultChain = configs.find((c) => !c.custom)
+          if (defaultChain) {
+            router.push(getNetworkLink(defaultChain.shortName))
+          }
+        }
+      })()
     },
-    [dispatch, chainId, configs, router, getNetworkLink],
+    [confirm, dispatch, chainId, configs, router, getNetworkLink],
   )
 
   const onChange = (event: SelectChangeEvent) => {

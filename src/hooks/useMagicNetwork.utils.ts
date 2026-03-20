@@ -5,6 +5,7 @@ import type { ChainInfo } from '@/store/customChainsSlice'
 const WEB_URL_PROTOCOLS = new Set(['http:', 'https:'])
 const RPC_URL_PROTOCOLS = new Set(['http:', 'https:', 'ws:', 'wss:'])
 const SHORT_NAME_REGEX = /^[a-zA-Z0-9-]+$/
+const CHAIN_ID_REGEX = /^[1-9]\d*$/
 
 export const MAGIC_NETWORK_QUERY_KEYS = [
   'chainId',
@@ -102,6 +103,14 @@ export const getMagicNetworkValidationError = (
   existingChain: ChainInfo | undefined,
   supportedChains: Array<ChainInfo>,
 ): MagicNetworkNotification | undefined => {
+  if (!CHAIN_ID_REGEX.test(params.chainIdParam)) {
+    return {
+      message: 'Invalid chainId. It must be a number greater than 0.',
+      groupKey: 'magic-network-invalid-chain-id',
+      variant: 'error',
+    }
+  }
+
   if (existingChain && !existingChain.custom) {
     return {
       message: `Cannot override built-in network ${existingChain.chainName} via URL.`,

@@ -10,6 +10,7 @@ import type { AddedTxsState } from '@/store/addedTxsSlice'
 import type { SafeAppsState } from '@/store/safeAppsSlice'
 import type { SettingsState } from '@/store/settingsSlice'
 import type { ChainInfo } from '@/store/customChainsSlice'
+import getChainsConfig from '@/config/supportedChains'
 
 import { useMemo } from 'react'
 
@@ -28,6 +29,11 @@ export enum ImportErrors {
 
 const WEB_URL_PROTOCOLS = new Set(['http:', 'https:'])
 const RPC_URL_PROTOCOLS = new Set(['http:', 'https:', 'ws:', 'wss:'])
+const CHAIN_ID_REGEX = /^[1-9]\d*$/
+const SHORT_NAME_REGEX = /^[a-zA-Z0-9-]+$/
+const BUILT_IN_CHAINS = getChainsConfig()
+const BUILT_IN_CHAIN_IDS = new Set(BUILT_IN_CHAINS.map((chain) => chain.chainId))
+const BUILT_IN_SHORT_NAMES = new Set(BUILT_IN_CHAINS.map((chain) => chain.shortName.toLowerCase()))
 
 const isUrlWithAllowedProtocol = (url: string, allowedProtocols: Set<string>): boolean => {
   try {
@@ -52,12 +58,18 @@ const isValidImportedCustomChain = (chain: unknown): chain is ChainInfo => {
   if (!candidate.chainId || typeof candidate.chainId !== 'string') {
     return false
   }
+  if (!CHAIN_ID_REGEX.test(candidate.chainId)) {
+    return false
+  }
 
   if (!candidate.chainName || typeof candidate.chainName !== 'string') {
     return false
   }
 
   if (!candidate.shortName || typeof candidate.shortName !== 'string') {
+    return false
+  }
+  if (!SHORT_NAME_REGEX.test(candidate.shortName)) {
     return false
   }
 
@@ -104,11 +116,23 @@ const sanitizeImportedCustomChains = (chains: unknown): ChainInfo[] | undefined 
   }
 
   const byChainId = new Map<string, ChainInfo>()
+  const shortNames = new Set<string>()
 
   for (const chain of chains) {
     if (!isValidImportedCustomChain(chain)) {
       continue
     }
+
+    const normalizedShortName = chain.shortName.toLowerCase()
+
+    if (BUILT_IN_CHAIN_IDS.has(chain.chainId) || BUILT_IN_SHORT_NAMES.has(normalizedShortName)) {
+      continue
+    }
+    if (byChainId.has(chain.chainId) || shortNames.has(normalizedShortName)) {
+      continue
+    }
+
+    shortNames.add(normalizedShortName)
     byChainId.set(chain.chainId, {
       ...chain,
       custom: true,

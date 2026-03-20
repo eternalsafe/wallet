@@ -200,6 +200,33 @@ describe('useMagicNetwork', () => {
     expect(setRpc).not.toHaveBeenCalled()
   })
 
+  it('rejects invalid chainId values', async () => {
+    mockUseSearchParams.mockReturnValue(
+      createSearchParams({
+        chainId: '0',
+        chain: 'Invalid',
+        rpc: 'https://sepolia.base.org',
+        shortName: 'invalid-chain',
+        currency: 'Ether',
+        symbol: 'ETH',
+      }),
+    )
+
+    renderHook(() => useMagicNetwork())
+
+    await waitFor(() => {
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          groupKey: 'magic-network-invalid-chain-id',
+        }),
+      )
+    })
+
+    expect(confirmMock).not.toHaveBeenCalled()
+    expect(upsertChain).not.toHaveBeenCalled()
+    expect(setRpc).not.toHaveBeenCalled()
+  })
+
   it('requires both multisend overrides when either is provided', async () => {
     mockUseSearchParams.mockReturnValue(
       createSearchParams({

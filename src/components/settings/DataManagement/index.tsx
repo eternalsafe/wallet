@@ -10,7 +10,7 @@ import { safeAppsSlice, selectSafeApps } from '@/store/safeAppsSlice'
 import { selectSettings, settingsSlice } from '@/store/settingsSlice'
 import { addedTxsSlice, selectAllAddedTxs } from '@/store/addedTxsSlice'
 import { customTokensSlice, selectCustomTokens } from '@/store/customTokensSlice'
-import { customChainsSlice } from '@/store/customChainsSlice'
+import { customChainsSlice, selectAllCustomChains } from '@/store/customChainsSlice'
 import InfoIcon from '@/public/images/notifications/info.svg'
 import { ImportFileUpload } from '@/components/settings/DataManagement/ImportFileUpload'
 import { ImportDialog } from '@/components/settings/DataManagement/ImportDialog'
@@ -68,6 +68,7 @@ const DataManagement = () => {
   const settings = useAppSelector(selectSettings)
   const safeApps = useAppSelector(selectSafeApps)
   const customTokens = useAppSelector(selectCustomTokens)
+  const customChains = useAppSelector(selectAllCustomChains)
   const addedTransactions = useAppSelector(selectAllAddedTxs)
 
   useEffect(() => {
@@ -106,6 +107,7 @@ const DataManagement = () => {
               addedSafes={addedSafes}
               addressBook={addressBook}
               customTokens={customTokens}
+              customChains={customChains}
               addedTxs={addedTransactions}
               settings={settings}
               safeApps={safeApps}
