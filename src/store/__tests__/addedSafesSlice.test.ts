@@ -40,22 +40,15 @@ describe('addedSafesSlice', () => {
       })
     })
 
-    it('should persist multisend metadata separately from SafeInfo', () => {
+    it('should not persist unsupported multisend fields in added safes state', () => {
       const safe = { chainId: '1', address: { value: '0x0' }, threshold: 1, owners: [{ value: '0x123' }] } as SafeInfo
 
-      const state = addedSafesSlice.reducer(
-        undefined,
-        addOrUpdateSafe({
-          safe,
-          metadata: {
-            multisendAddress: '0x1111111111111111111111111111111111111111',
-            multisendCallOnlyAddress: '0x2222222222222222222222222222222222222222',
-          },
-        }),
-      )
+      const state = addedSafesSlice.reducer(undefined, addOrUpdateSafe({ safe }))
 
-      expect(state['1']['0x0'].multisendAddress).toBe('0x1111111111111111111111111111111111111111')
-      expect(state['1']['0x0'].multisendCallOnlyAddress).toBe('0x2222222222222222222222222222222222222222')
+      expect(state['1']['0x0']).toEqual({
+        owners: [{ value: '0x123' }],
+        threshold: 1,
+      })
     })
   })
 

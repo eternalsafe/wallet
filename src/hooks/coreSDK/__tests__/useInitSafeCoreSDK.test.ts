@@ -96,4 +96,42 @@ describe('useInitSafeCoreSDK hook', () => {
       }),
     )
   })
+
+  it('uses chain-level multisend overrides even if safe-level metadata exists', async () => {
+    const mockSafe = {} as Safe
+    const initMock = jest.spyOn(coreSDK, 'initSafeSDK').mockReturnValue(Promise.resolve(mockSafe))
+    const setSDKMock = jest.spyOn(coreSDK, 'setSafeSDK')
+
+    jest.spyOn(useChains, 'useCurrentChain').mockReturnValue({
+      chainId: mockChainId,
+      multisendAddress: '0x1111111111111111111111111111111111111111',
+      multisendCallOnlyAddress: '0x2222222222222222222222222222222222222222',
+    } as any)
+
+    renderHook(() => useInitSafeCoreSDK(), {
+      initialReduxState: {
+        addedSafes: {
+          [mockChainId]: {
+            [mockSafeAddress]: {
+              owners: [],
+              threshold: 1,
+              multisendAddress: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+              multisendCallOnlyAddress: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+            },
+          },
+        },
+      },
+    })
+
+    await waitFor(() => {
+      expect(setSDKMock).toHaveBeenCalledWith(mockSafe)
+    })
+
+    expect(initMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        multisendAddress: '0x1111111111111111111111111111111111111111',
+        multisendCallOnlyAddress: '0x2222222222222222222222222222222222222222',
+      }),
+    )
+  })
 })

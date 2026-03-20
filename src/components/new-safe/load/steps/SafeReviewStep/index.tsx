@@ -39,10 +39,6 @@ const SafeReviewStep = ({ data, onBack }: StepRenderProps<LoadSafeFormData>) => 
           })),
           chainId,
         },
-        metadata: {
-          multisendAddress: data.multisendAddress,
-          multisendCallOnlyAddress: data.multisendCallOnlyAddress,
-        },
       }),
     )
 
@@ -113,15 +109,6 @@ const SafeReviewStep = ({ data, onBack }: StepRenderProps<LoadSafeFormData>) => 
               </Typography>
             }
           />
-          {data.multisendAddress && (
-            <ReviewRow name="MultiSend Address" value={<Typography>{data.multisendAddress}</Typography>} />
-          )}
-          {data.multisendCallOnlyAddress && (
-            <ReviewRow
-              name="MultiSendCallOnly Address"
-              value={<Typography>{data.multisendCallOnlyAddress}</Typography>}
-            />
-          )}
         </Grid>
       </Box>
       <Divider />
