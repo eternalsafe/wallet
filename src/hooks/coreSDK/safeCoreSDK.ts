@@ -1,11 +1,23 @@
 import { getMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { _SAFE_DEPLOYMENTS } from '@safe-global/safe-deployments/dist/deployments'
+import {
+  getCompatibilityFallbackHandlerDeployment,
+  getCreateCallDeployment,
+  getMultiSendCallOnlyDeployment,
+  getMultiSendDeployment,
+  getProxyFactoryDeployment,
+  getSafeL2SingletonDeployment,
+  getSafeSingletonDeployment,
+  getSignMessageLibDeployment,
+  getSimulateTxAccessorDeployment,
+} from '@safe-global/safe-deployments'
+import type { DeploymentFilter, SingletonDeployment } from '@safe-global/safe-deployments/dist/types'
 import ExternalStore from '@/services/ExternalStore'
 import { Gnosis_safe__factory } from '@/types/contracts'
 import { invariant } from '@/utils/helpers'
 import type { Web3Provider } from '@ethersproject/providers'
 import Safe, { EthersAdapter } from '@safe-global/protocol-kit'
-import type { ContractNetworksConfig } from '@safe-global/protocol-kit/dist/src/types'
+import type { ContractNetworkConfig, ContractNetworksConfig } from '@safe-global/protocol-kit/dist/src/types'
 import type { SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import type { Provider } from '@ethersproject/providers'
 import { ethers } from 'ethers'
@@ -58,6 +70,159 @@ type SafeCoreSDKProps = {
 
 export type MultiSendContractOverrides = Pick<SafeCoreSDKProps, 'multisendAddress' | 'multisendCallOnlyAddress'>
 
+type SafeDeploymentVersion = ModernSafeVersion | '1.0.0'
+
+type SafeDeploymentVersionConfig = {
+  safeMasterCopyVersion: string
+  safeMasterCopyL2Version?: string
+  safeProxyFactoryVersion: string
+  compatibilityFallbackHandler: string
+  multiSendVersion: string
+  multiSendCallOnlyVersion: string
+  signMessageLibVersion: string
+  createCallVersion: string
+}
+
+const SAFE_DEPLOYMENT_VERSIONS: Record<SafeDeploymentVersion, SafeDeploymentVersionConfig> = {
+  '1.4.1': {
+    safeMasterCopyVersion: '1.4.1',
+    safeMasterCopyL2Version: '1.4.1',
+    safeProxyFactoryVersion: '1.4.1',
+    compatibilityFallbackHandler: '1.4.1',
+    multiSendVersion: '1.4.1',
+    multiSendCallOnlyVersion: '1.4.1',
+    signMessageLibVersion: '1.4.1',
+    createCallVersion: '1.4.1',
+  },
+  '1.3.0': {
+    safeMasterCopyVersion: '1.3.0',
+    safeMasterCopyL2Version: '1.3.0',
+    safeProxyFactoryVersion: '1.3.0',
+    compatibilityFallbackHandler: '1.3.0',
+    multiSendVersion: '1.3.0',
+    multiSendCallOnlyVersion: '1.3.0',
+    signMessageLibVersion: '1.3.0',
+    createCallVersion: '1.3.0',
+  },
+  '1.2.0': {
+    safeMasterCopyVersion: '1.2.0',
+    safeProxyFactoryVersion: '1.1.1',
+    compatibilityFallbackHandler: '1.3.0',
+    multiSendVersion: '1.1.1',
+    multiSendCallOnlyVersion: '1.3.0',
+    signMessageLibVersion: '1.3.0',
+    createCallVersion: '1.3.0',
+  },
+  '1.1.1': {
+    safeMasterCopyVersion: '1.1.1',
+    safeProxyFactoryVersion: '1.1.1',
+    compatibilityFallbackHandler: '1.3.0',
+    multiSendVersion: '1.1.1',
+    multiSendCallOnlyVersion: '1.3.0',
+    signMessageLibVersion: '1.3.0',
+    createCallVersion: '1.3.0',
+  },
+  '1.0.0': {
+    safeMasterCopyVersion: '1.0.0',
+    safeProxyFactoryVersion: '1.0.0',
+    compatibilityFallbackHandler: '1.3.0',
+    multiSendVersion: '1.1.1',
+    multiSendCallOnlyVersion: '1.3.0',
+    signMessageLibVersion: '1.3.0',
+    createCallVersion: '1.3.0',
+  },
+}
+
+const SAFE_DEPLOYMENT_VERSION_ORDER: SafeDeploymentVersion[] = ['1.4.1', '1.3.0', '1.2.0', '1.1.1', '1.0.0']
+
+const getSafeDeploymentVersionConfig = (safeVersion: string): SafeDeploymentVersionConfig => {
+  const matchedVersion =
+    SAFE_DEPLOYMENT_VERSION_ORDER.find((version) => semverSatisfies(safeVersion, version)) || '1.3.0'
+
+  return SAFE_DEPLOYMENT_VERSIONS[matchedVersion]
+}
+
+const getDeploymentAddress = (
+  getDeployment: (filter?: DeploymentFilter) => SingletonDeployment | undefined,
+  chainId: string,
+  version?: string,
+): string | undefined => {
+  if (!version) {
+    return undefined
+  }
+
+  return getDeployment({
+    version,
+    network: chainId,
+    released: true,
+  })?.defaultAddress
+}
+
+const getBaseContractNetworkConfig = (
+  chainId: string,
+  safeVersion: string,
+  isL1SafeMasterCopy: boolean,
+): ContractNetworkConfig | undefined => {
+  const deploymentVersions = getSafeDeploymentVersionConfig(safeVersion)
+
+  const safeMasterCopyAddress = isL1SafeMasterCopy
+    ? getDeploymentAddress(getSafeSingletonDeployment, chainId, deploymentVersions.safeMasterCopyVersion)
+    : getDeploymentAddress(getSafeL2SingletonDeployment, chainId, deploymentVersions.safeMasterCopyL2Version) ||
+      getDeploymentAddress(getSafeSingletonDeployment, chainId, deploymentVersions.safeMasterCopyVersion)
+
+  const safeProxyFactoryAddress = getDeploymentAddress(
+    getProxyFactoryDeployment,
+    chainId,
+    deploymentVersions.safeProxyFactoryVersion,
+  )
+  const fallbackHandlerAddress = getDeploymentAddress(
+    getCompatibilityFallbackHandlerDeployment,
+    chainId,
+    deploymentVersions.compatibilityFallbackHandler,
+  )
+  const multiSendAddress = getDeploymentAddress(getMultiSendDeployment, chainId, deploymentVersions.multiSendVersion)
+  const multiSendCallOnlyAddress = getDeploymentAddress(
+    getMultiSendCallOnlyDeployment,
+    chainId,
+    deploymentVersions.multiSendCallOnlyVersion,
+  )
+  const signMessageLibAddress = getDeploymentAddress(
+    getSignMessageLibDeployment,
+    chainId,
+    deploymentVersions.signMessageLibVersion,
+  )
+  const createCallAddress = getDeploymentAddress(getCreateCallDeployment, chainId, deploymentVersions.createCallVersion)
+  const simulateTxAccessorAddress = getDeploymentAddress(
+    getSimulateTxAccessorDeployment,
+    chainId,
+    deploymentVersions.createCallVersion,
+  )
+
+  if (
+    !safeMasterCopyAddress ||
+    !safeProxyFactoryAddress ||
+    !multiSendAddress ||
+    !multiSendCallOnlyAddress ||
+    !fallbackHandlerAddress ||
+    !signMessageLibAddress ||
+    !createCallAddress ||
+    !simulateTxAccessorAddress
+  ) {
+    return undefined
+  }
+
+  return {
+    safeMasterCopyAddress,
+    safeProxyFactoryAddress,
+    multiSendAddress,
+    multiSendCallOnlyAddress,
+    fallbackHandlerAddress,
+    signMessageLibAddress,
+    createCallAddress,
+    simulateTxAccessorAddress,
+  }
+}
+
 const normalizeAddressOverride = (address?: string): string | undefined => {
   const trimmed = address?.trim()
   return trimmed ? trimmed : undefined
@@ -65,20 +230,33 @@ const normalizeAddressOverride = (address?: string): string | undefined => {
 
 export const getContractNetworksForOverrides = (
   chainId: string,
+  safeVersion: string,
+  isL1SafeMasterCopy: boolean,
   overrides: MultiSendContractOverrides,
 ): ContractNetworksConfig | undefined => {
   const multisendAddress = normalizeAddressOverride(overrides.multisendAddress)
   const multisendCallOnlyAddress = normalizeAddressOverride(overrides.multisendCallOnlyAddress)
 
-  if (!multisendAddress || !multisendCallOnlyAddress) {
+  if (!multisendAddress && !multisendCallOnlyAddress) {
     return undefined
   }
 
+  const contractConfig = getBaseContractNetworkConfig(chainId, safeVersion, isL1SafeMasterCopy)
+
+  if (!contractConfig) {
+    return undefined
+  }
+
+  if (multisendAddress) {
+    contractConfig.multiSendAddress = multisendAddress
+  }
+
+  if (multisendCallOnlyAddress) {
+    contractConfig.multiSendCallOnlyAddress = multisendCallOnlyAddress
+  }
+
   return {
-    [chainId]: {
-      multiSendAddress: multisendAddress,
-      multiSendCallOnlyAddress: multisendCallOnlyAddress,
-    } as unknown as ContractNetworksConfig[string],
+    [chainId]: contractConfig,
   }
 }
 
@@ -92,10 +270,6 @@ export const initSafeSDK = async ({
   multisendCallOnlyAddress,
 }: SafeCoreSDKProps): Promise<Safe> => {
   const safeVersion = await Gnosis_safe__factory.connect(address, provider).VERSION()
-  const contractNetworks = getContractNetworksForOverrides(chainId, {
-    multisendAddress,
-    multisendCallOnlyAddress,
-  })
 
   // find out if the implementation is any of the possible L1Safe singletons
   let isL1SafeMasterCopy = _SAFE_DEPLOYMENTS.some((safeDeployments) =>
@@ -106,6 +280,11 @@ export const initSafeSDK = async ({
   if (isLegacyVersion(safeVersion)) {
     isL1SafeMasterCopy = true
   }
+
+  const contractNetworks = getContractNetworksForOverrides(chainId, safeVersion, isL1SafeMasterCopy, {
+    multisendAddress,
+    multisendCallOnlyAddress,
+  })
 
   return Safe.create({
     ethAdapter: createReadOnlyEthersAdapter(provider),

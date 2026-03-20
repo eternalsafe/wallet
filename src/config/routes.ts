@@ -3,9 +3,9 @@ export const AppRoutes = {
   _offline: '/_offline',
   index: '/',
   imprint: '/imprint',
-  customChain: '/customChain',
+  customChain: '/custom-chain',
   addressBook: '/address-book',
-  addOwner: '/addOwner',
+  addOwner: '/add-owner',
   balances: {
     nfts: '/balances/nfts',
     index: '/balances',
@@ -31,7 +31,6 @@ export const AppRoutes = {
     history: '/transactions/history',
   },
   welcome: {
-    socialLogin: '/welcome/social-login',
     index: '/welcome',
   },
   walletConnect: {

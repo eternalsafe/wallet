@@ -5,6 +5,9 @@ import { useRouter } from 'next/router'
 import { Box, Button, Checkbox, Container, FormControlLabel, Grid, TextField, Typography, Paper } from '@mui/material'
 import { AppRoutes } from '@/config/routes'
 
+const WEB_URL_PROTOCOLS = new Set(['http:', 'https:'])
+const RPC_URL_PROTOCOLS = new Set(['http:', 'https:', 'ws:', 'wss:'])
+
 const CustomChain: NextPage = () => {
   const router = useRouter()
   const [formValues, setFormValues] = useState({
@@ -52,25 +55,26 @@ const CustomChain: NextPage = () => {
       newErrors.shortName = 'Short name can only contain letters, numbers, and hyphens'
 
     if (!formValues.rpc) newErrors.rpc = 'RPC URL is required'
-    else if (!isValidUrl(formValues.rpc)) newErrors.rpc = 'Invalid URL format'
+    else if (!isValidUrl(formValues.rpc, RPC_URL_PROTOCOLS)) newErrors.rpc = 'Invalid RPC URL format'
 
     if (!formValues.currency) newErrors.currency = 'Currency name is required'
     if (!formValues.symbol) newErrors.symbol = 'Currency symbol is required'
 
     // Optional URL validations
-    if (formValues.logo && !isValidUrl(formValues.logo)) newErrors.logo = 'Invalid URL format'
-    if (formValues.expAddr && !isValidUrl(formValues.expAddr)) newErrors.expAddr = 'Invalid URL format'
-    if (formValues.expTx && !isValidUrl(formValues.expTx)) newErrors.expTx = 'Invalid URL format'
+    if (formValues.logo && !isValidUrl(formValues.logo, WEB_URL_PROTOCOLS)) newErrors.logo = 'Invalid URL format'
+    if (formValues.expAddr && !isValidUrl(formValues.expAddr, WEB_URL_PROTOCOLS))
+      newErrors.expAddr = 'Invalid URL format'
+    if (formValues.expTx && !isValidUrl(formValues.expTx, WEB_URL_PROTOCOLS)) newErrors.expTx = 'Invalid URL format'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const isValidUrl = (url: string) => {
+  const isValidUrl = (url: string, allowedProtocols: Set<string>) => {
     try {
-      new URL(url)
-      return true
-    } catch (e) {
+      const parsed = new URL(url)
+      return allowedProtocols.has(parsed.protocol)
+    } catch {
       return false
     }
   }
