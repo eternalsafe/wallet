@@ -48,12 +48,14 @@ describe('useInitSafeCoreSDK hook', () => {
       expect(setSDKMock).toHaveBeenCalledWith(mockSafe)
     })
 
-    expect(initMock).toHaveBeenCalledWith({
-      chainId: mockChainId,
-      provider: mockProvider,
-      address: mockSafeAddress,
-      implementation: mockImplementation,
-    })
+    expect(initMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        chainId: mockChainId,
+        provider: mockProvider,
+        address: mockSafeAddress,
+        implementation: mockImplementation,
+      }),
+    )
   })
 
   it('does not initialize a Core SDK instance if the provider is not initialized', async () => {

@@ -4,16 +4,26 @@ import { useAppDispatch } from '@/store'
 import { setRpc } from '@/store/settingsSlice'
 import { addChain, type ChainInfo } from '@/store/customChainsSlice'
 import { type RPC_AUTHENTICATION } from '@safe-global/safe-gateway-typescript-sdk'
-import useChainId from '@/hooks/useChainId'
 import useChains from './useChains'
 import { showNotification } from '@/store/notificationsSlice'
 import { useRouter } from 'next/router'
+
+export const decodeSearchParamValue = (value: string | null): string | undefined => {
+  if (!value) {
+    return undefined
+  }
+
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
 
 export const useMagicNetwork = (): void => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
-  const chainId = useChainId()
   const supportedChains = useChains()
 
   useEffect(() => {
@@ -24,10 +34,9 @@ export const useMagicNetwork = (): void => {
     const shortName = searchParams.get('shortName')
     const currencyName = searchParams.get('currency')
     const currencySymbol = searchParams.get('symbol')
-    const logoParam = searchParams.get('logo')
-    const currencyLogo = logoParam ? decodeURIComponent(logoParam) : null
-    const explorerAddr = searchParams.get('expAddr')
-    const explorerTx = searchParams.get('expTx')
+    const currencyLogo = decodeSearchParamValue(searchParams.get('logo')) ?? null
+    const explorerAddr = decodeSearchParamValue(searchParams.get('expAddr'))
+    const explorerTx = decodeSearchParamValue(searchParams.get('expTx'))
     const l2 = searchParams.get('l2')
     const isTestnet = searchParams.get('testnet')
 
@@ -87,15 +96,15 @@ export const useMagicNetwork = (): void => {
         },
         publicRpcUri: {
           authentication: 'NO_AUTH' as RPC_AUTHENTICATION,
-          value: decodeURIComponent(rpcUrl),
+          value: decodeSearchParamValue(rpcUrl) || rpcUrl,
         },
         rpcUri: {
           authentication: 'NO_AUTH' as RPC_AUTHENTICATION,
-          value: decodeURIComponent(rpcUrl),
+          value: decodeSearchParamValue(rpcUrl) || rpcUrl,
         },
         safeAppsRpcUri: {
           authentication: 'NO_AUTH' as RPC_AUTHENTICATION,
-          value: decodeURIComponent(rpcUrl),
+          value: decodeSearchParamValue(rpcUrl) || rpcUrl,
         },
         transactionService: '',
         gasPrice: [],
@@ -109,12 +118,12 @@ export const useMagicNetwork = (): void => {
     dispatch(
       setRpc({
         chainId: chainIdParam,
-        rpc: decodeURIComponent(rpcUrl),
+        rpc: decodeSearchParamValue(rpcUrl) || rpcUrl,
       }),
     )
 
     router.replace({ query: { chain: shortName } })
-  }, [searchParams, dispatch, chainId, supportedChains, router])
+  }, [searchParams, dispatch, supportedChains, router])
 }
 
 export default useMagicNetwork

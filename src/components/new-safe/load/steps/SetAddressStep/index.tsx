@@ -2,6 +2,9 @@ import type { StepRenderProps } from '@/components/new-safe/CardStepper/useCardS
 import type { LoadSafeFormData } from '@/components/new-safe/load'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   CircularProgress,
@@ -9,6 +12,7 @@ import {
   Grid,
   InputAdornment,
   SvgIcon,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material'
@@ -20,6 +24,7 @@ import NetworkSelector from '@/components/common/NetworkSelector'
 import { useMnemonicSafeName } from '@/hooks/useMnemonicName'
 import { useAddressResolver } from '@/hooks/useAddressResolver'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import AddressInput from '@/components/common/AddressInput'
 import React from 'react'
 import useChainId from '@/hooks/useChainId'
@@ -30,15 +35,20 @@ import MUILink from '@mui/material/Link'
 import Link from 'next/link'
 import { getSafeSDKAndImplementation } from '@/hooks/coreSDK/useInitSafeCoreSDK'
 import { useWeb3ReadOnly } from '@/hooks/wallets/web3'
+import { ethers } from 'ethers'
 
 enum Field {
   name = 'name',
   address = 'address',
+  multisendAddress = 'multisendAddress',
+  multisendCallOnlyAddress = 'multisendCallOnlyAddress',
 }
 
 type FormData = {
   [Field.name]: string
   [Field.address]: string
+  [Field.multisendAddress]?: string
+  [Field.multisendCallOnlyAddress]?: string
 }
 
 const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeFormData>) => {
@@ -49,6 +59,8 @@ const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeForm
     defaultValues: {
       [Field.name]: data.name,
       [Field.address]: data.address,
+      [Field.multisendAddress]: data.multisendAddress || '',
+      [Field.multisendCallOnlyAddress]: data.multisendCallOnlyAddress || '',
     },
   })
 
@@ -57,9 +69,12 @@ const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeForm
     formState: { errors, isValid },
     watch,
     getValues,
+    register,
   } = formMethods
 
   const safeAddress = watch(Field.address)
+  const multisendAddress = watch(Field.multisendAddress)
+  const multisendCallOnlyAddress = watch(Field.multisendCallOnlyAddress)
 
   const randomName = useMnemonicSafeName()
   const { ens, name, resolving } = useAddressResolver(safeAddress)
@@ -79,10 +94,24 @@ const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeForm
     }
 
     try {
-      await getSafeSDKAndImplementation(web3ReadOnly, address, currentChainId)
+      await getSafeSDKAndImplementation(
+        web3ReadOnly,
+        address,
+        currentChainId,
+        multisendAddress,
+        multisendCallOnlyAddress,
+      )
     } catch (error: any) {
       return 'Address given is not a valid Safe Account address on the current network.'
     }
+  }
+
+  const validateEthereumAddress = (address?: string) => {
+    if (!address) {
+      return true
+    }
+
+    return ethers.utils.isAddress(address) || 'Invalid Ethereum address'
   }
 
   const onFormSubmit = handleSubmit((data: FormData) => {
@@ -138,6 +167,46 @@ const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeForm
           </Grid>
 
           <AddressInput label="Safe Account" validate={validateSafeAddress} name={Field.address} />
+
+          <Accordion sx={{ mt: 3 }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="advanced-options-content">
+              <Typography>Advanced options</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                Only needed when your chain uses custom MultiSend contracts.
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    label="MultiSend Contract Address"
+                    fullWidth
+                    {...register(Field.multisendAddress, { validate: validateEthereumAddress })}
+                    error={!!errors[Field.multisendAddress]}
+                    helperText={
+                      errors[Field.multisendAddress]?.message || 'Optional: custom MultiSend contract address'
+                    }
+                    placeholder="0x..."
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="MultiSendCallOnly Contract Address"
+                    fullWidth
+                    {...register(Field.multisendCallOnlyAddress, { validate: validateEthereumAddress })}
+                    error={!!errors[Field.multisendCallOnlyAddress]}
+                    helperText={
+                      errors[Field.multisendCallOnlyAddress]?.message ||
+                      'Optional: custom MultiSendCallOnly contract address'
+                    }
+                    placeholder="0x..."
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+              </Grid>
+            </AccordionDetails>
+          </Accordion>
 
           <Typography mt={4}>
             By continuing, you agree to have read and understood the{' '}

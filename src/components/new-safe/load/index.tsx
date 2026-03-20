@@ -11,8 +11,10 @@ import SafeOwnerStep from '@/components/new-safe/load/steps/SafeOwnerStep'
 import SafeReviewStep from '@/components/new-safe/load/steps/SafeReviewStep'
 
 export type LoadSafeFormData = NamedAddress & {
-  threshold: number
-  owners: NamedAddress[]
+  threshold?: number
+  owners?: NamedAddress[]
+  multisendAddress?: string
+  multisendCallOnlyAddress?: string
 }
 
 export const LoadSafeSteps: TxStepperProps<LoadSafeFormData>['steps'] = [

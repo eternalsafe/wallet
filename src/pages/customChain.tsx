@@ -84,14 +84,14 @@ const CustomChain: NextPage = () => {
     params.append('chainId', formValues.chainId)
     params.append('chain', formValues.chain)
     params.append('shortName', formValues.shortName)
-    params.append('rpc', encodeURIComponent(formValues.rpc))
+    params.append('rpc', formValues.rpc)
     params.append('currency', formValues.currency)
     params.append('symbol', formValues.symbol)
 
     // Add optional parameters if they exist
-    if (formValues.logo) params.append('logo', encodeURIComponent(formValues.logo))
-    if (formValues.expAddr) params.append('expAddr', encodeURIComponent(formValues.expAddr))
-    if (formValues.expTx) params.append('expTx', encodeURIComponent(formValues.expTx))
+    if (formValues.logo) params.append('logo', formValues.logo)
+    if (formValues.expAddr) params.append('expAddr', formValues.expAddr)
+    if (formValues.expTx) params.append('expTx', formValues.expTx)
     if (formValues.l2) params.append('l2', 'true')
     if (formValues.testnet) params.append('testnet', 'true')
 

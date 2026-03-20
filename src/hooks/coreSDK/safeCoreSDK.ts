@@ -5,6 +5,7 @@ import { Gnosis_safe__factory } from '@/types/contracts'
 import { invariant } from '@/utils/helpers'
 import type { Web3Provider } from '@ethersproject/providers'
 import Safe, { EthersAdapter } from '@safe-global/protocol-kit'
+import type { ContractNetworksConfig } from '@safe-global/protocol-kit/dist/src/types'
 import type { SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import type { Provider } from '@ethersproject/providers'
 import { ethers } from 'ethers'
@@ -51,11 +52,50 @@ type SafeCoreSDKProps = {
   chainId: SafeInfo['chainId']
   address: SafeInfo['address']['value']
   implementation: SafeInfo['implementation']['value']
+  multisendAddress?: string
+  multisendCallOnlyAddress?: string
+}
+
+export type MultiSendContractOverrides = Pick<SafeCoreSDKProps, 'multisendAddress' | 'multisendCallOnlyAddress'>
+
+const normalizeAddressOverride = (address?: string): string | undefined => {
+  const trimmed = address?.trim()
+  return trimmed ? trimmed : undefined
+}
+
+export const getContractNetworksForOverrides = (
+  chainId: string,
+  overrides: MultiSendContractOverrides,
+): ContractNetworksConfig | undefined => {
+  const multisendAddress = normalizeAddressOverride(overrides.multisendAddress)
+  const multisendCallOnlyAddress = normalizeAddressOverride(overrides.multisendCallOnlyAddress)
+
+  if (!multisendAddress || !multisendCallOnlyAddress) {
+    return undefined
+  }
+
+  return {
+    [chainId]: {
+      multiSendAddress: multisendAddress,
+      multiSendCallOnlyAddress: multisendCallOnlyAddress,
+    } as unknown as ContractNetworksConfig[string],
+  }
 }
 
 // Safe Core SDK
-export const initSafeSDK = async ({ provider, address, implementation }: SafeCoreSDKProps): Promise<Safe> => {
+export const initSafeSDK = async ({
+  provider,
+  chainId,
+  address,
+  implementation,
+  multisendAddress,
+  multisendCallOnlyAddress,
+}: SafeCoreSDKProps): Promise<Safe> => {
   const safeVersion = await Gnosis_safe__factory.connect(address, provider).VERSION()
+  const contractNetworks = getContractNetworksForOverrides(chainId, {
+    multisendAddress,
+    multisendCallOnlyAddress,
+  })
 
   // find out if the implementation is any of the possible L1Safe singletons
   let isL1SafeMasterCopy = _SAFE_DEPLOYMENTS.some((safeDeployments) =>
@@ -71,6 +111,7 @@ export const initSafeSDK = async ({ provider, address, implementation }: SafeCor
     ethAdapter: createReadOnlyEthersAdapter(provider),
     safeAddress: address,
     isL1SafeMasterCopy,
+    contractNetworks,
   })
 }
 

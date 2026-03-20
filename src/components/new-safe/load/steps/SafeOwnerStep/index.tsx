@@ -29,7 +29,10 @@ type FormData = {
 const SafeOwnerStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeFormData>) => {
   const chainId = useChainId()
   const formMethods = useForm<FormData>({
-    defaultValues: data,
+    defaultValues: {
+      owners: data.owners || [],
+      threshold: data.threshold || 0,
+    },
     mode: 'onChange',
   })
   const {
@@ -53,13 +56,19 @@ const SafeOwnerStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeFormD
     }
 
     if (data.address) {
-      let [sdk, implementation] = await getSafeSDKAndImplementation(web3ReadOnly, data.address, chainId)
+      let [sdk, implementation] = await getSafeSDKAndImplementation(
+        web3ReadOnly,
+        data.address,
+        chainId,
+        data.multisendAddress,
+        data.multisendCallOnlyAddress,
+      )
       if (!sdk) {
         throw new Error('Unable to initialize Safe SDK')
       }
       return await getSafeInfo(sdk, implementation)
     }
-  }, [data.address, web3ReadOnly, chainId])
+  }, [data.address, data.multisendAddress, data.multisendCallOnlyAddress, web3ReadOnly, chainId])
 
   useEffect(() => {
     if (!safeInfo) return

@@ -32,12 +32,16 @@ const SafeReviewStep = ({ data, onBack }: StepRenderProps<LoadSafeFormData>) => 
         safe: {
           ...defaultSafeInfo,
           address: { value: safeAddress, name: safeName },
-          threshold: data.threshold,
-          owners: data.owners.map((owner) => ({
+          threshold: data.threshold || 0,
+          owners: (data.owners || []).map((owner) => ({
             value: owner.address,
             name: owner.name || owner.ens,
           })),
           chainId,
+        },
+        metadata: {
+          multisendAddress: data.multisendAddress,
+          multisendCallOnlyAddress: data.multisendCallOnlyAddress,
         },
       }),
     )
@@ -50,7 +54,7 @@ const SafeReviewStep = ({ data, onBack }: StepRenderProps<LoadSafeFormData>) => 
       }),
     )
 
-    for (const { address, name, ens } of data.owners) {
+    for (const { address, name, ens } of data.owners || []) {
       const entryName = name || ens
 
       if (!entryName) {
@@ -86,7 +90,7 @@ const SafeReviewStep = ({ data, onBack }: StepRenderProps<LoadSafeFormData>) => 
             name="Owners"
             value={
               <Box className={css.ownersArray}>
-                {data.owners.map((owner, index) => (
+                {(data.owners || []).map((owner, index) => (
                   <EthHashInfo
                     address={owner.address}
                     name={owner.name || owner.ens}
@@ -105,10 +109,19 @@ const SafeReviewStep = ({ data, onBack }: StepRenderProps<LoadSafeFormData>) => 
             name="Threshold"
             value={
               <Typography>
-                {data.threshold} out of {data.owners.length} owner(s)
+                {data.threshold} out of {(data.owners || []).length} owner(s)
               </Typography>
             }
           />
+          {data.multisendAddress && (
+            <ReviewRow name="MultiSend Address" value={<Typography>{data.multisendAddress}</Typography>} />
+          )}
+          {data.multisendCallOnlyAddress && (
+            <ReviewRow
+              name="MultiSendCallOnly Address"
+              value={<Typography>{data.multisendCallOnlyAddress}</Typography>}
+            />
+          )}
         </Grid>
       </Box>
       <Divider />
