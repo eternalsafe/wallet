@@ -16,6 +16,12 @@ import { AppRoutes } from '@/config/routes'
 import { useAppDispatch } from '@/store'
 import { removeChain } from '@/store/customChainsSlice'
 import { showNotification } from '@/store/notificationsSlice'
+import { removeAddedSafesByChain } from '@/store/addedSafesSlice'
+import { removeAddressBookByChain } from '@/store/addressBookSlice'
+import { removeByChain as removeCustomTokensByChain } from '@/store/customTokensSlice'
+import { removeAddedTxsByChain } from '@/store/addedTxsSlice'
+import { removeSafeAppsByChain } from '@/store/safeAppsSlice'
+import { setRpc } from '@/store/settingsSlice'
 
 const keepPathRoutes = [AppRoutes.welcome.index, AppRoutes.newSafe.load, AppRoutes.newSafe.create]
 
@@ -65,6 +71,12 @@ const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement =>
       e.stopPropagation()
 
       // Remove the chain from the store
+      dispatch(removeAddedSafesByChain(chain.chainId))
+      dispatch(removeAddressBookByChain(chain.chainId))
+      dispatch(removeCustomTokensByChain(chain.chainId))
+      dispatch(removeAddedTxsByChain(chain.chainId))
+      dispatch(removeSafeAppsByChain(chain.chainId))
+      dispatch(setRpc({ chainId: chain.chainId, rpc: undefined }))
       dispatch(removeChain(chain.chainId))
 
       // Show notification

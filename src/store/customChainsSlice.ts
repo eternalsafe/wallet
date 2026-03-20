@@ -7,6 +7,8 @@ import type { Loadable } from '@/store/common'
 export type ChainInfo = ChainInfoSDK & {
   isTestnet?: boolean
   custom?: boolean
+  multisendAddress?: string
+  multisendCallOnlyAddress?: string
 }
 const initialState: ChainInfo[] = []
 
@@ -16,6 +18,19 @@ export const customChainsSlice = createSlice({
   reducers: {
     setCustomChains: (state, action: PayloadAction<ChainInfo[]>) => {
       return action.payload
+    },
+    upsertChain: (state, action: PayloadAction<ChainInfo>) => {
+      const index = state.findIndex((chain) => chain.chainId === action.payload.chainId)
+
+      if (index >= 0) {
+        state[index] = {
+          ...state[index],
+          ...action.payload,
+        }
+        return
+      }
+
+      state.push(action.payload)
     },
     addChain: (state, action: PayloadAction<ChainInfo>) => {
       // Check if chain already exists
@@ -30,7 +45,7 @@ export const customChainsSlice = createSlice({
   },
 })
 
-export const { addChain, removeChain, setCustomChains } = customChainsSlice.actions
+export const { addChain, upsertChain, removeChain, setCustomChains } = customChainsSlice.actions
 
 export const selectAllCustomChains = (state: RootState): ChainInfo[] => {
   return state[customChainsSlice.name] || initialState

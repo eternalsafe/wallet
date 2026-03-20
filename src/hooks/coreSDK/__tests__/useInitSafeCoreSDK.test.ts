@@ -4,6 +4,7 @@ import * as web3 from '@/hooks/wallets/web3'
 import * as router from 'next/router'
 import * as useSafeAddress from '@/hooks/useSafeAddress'
 import * as useChainId from '@/hooks/useChainId'
+import * as useChains from '@/hooks/useChains'
 import * as coreSDK from '@/hooks/coreSDK/safeCoreSDK'
 import { waitFor } from '@testing-library/react'
 import type Safe from '@safe-global/protocol-kit'
@@ -32,6 +33,7 @@ describe('useInitSafeCoreSDK hook', () => {
     jest.spyOn(web3, 'useMultiWeb3ReadOnly').mockReturnValue(mockProvider)
     jest.spyOn(useSafeAddress, 'default').mockReturnValue(mockSafeAddress)
     jest.spyOn(useChainId, 'default').mockReturnValue(mockChainId)
+    jest.spyOn(useChains, 'useCurrentChain').mockReturnValue(undefined)
     jest
       .spyOn(router, 'useRouter')
       .mockReturnValue({ query: { safe: `gno:${mockSafeAddress}` } } as unknown as router.NextRouter)
@@ -68,5 +70,30 @@ describe('useInitSafeCoreSDK hook', () => {
 
     expect(initMock).not.toHaveBeenCalled()
     expect(setSDKMock).toHaveBeenCalledWith(undefined)
+  })
+
+  it('uses chain-level multisend overrides when no safe-level metadata exists', async () => {
+    const mockSafe = {} as Safe
+    const initMock = jest.spyOn(coreSDK, 'initSafeSDK').mockReturnValue(Promise.resolve(mockSafe))
+    const setSDKMock = jest.spyOn(coreSDK, 'setSafeSDK')
+
+    jest.spyOn(useChains, 'useCurrentChain').mockReturnValue({
+      chainId: mockChainId,
+      multisendAddress: '0x1111111111111111111111111111111111111111',
+      multisendCallOnlyAddress: '0x2222222222222222222222222222222222222222',
+    } as any)
+
+    renderHook(() => useInitSafeCoreSDK())
+
+    await waitFor(() => {
+      expect(setSDKMock).toHaveBeenCalledWith(mockSafe)
+    })
+
+    expect(initMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        multisendAddress: '0x1111111111111111111111111111111111111111',
+        multisendCallOnlyAddress: '0x2222222222222222222222222222222222222222',
+      }),
+    )
   })
 })

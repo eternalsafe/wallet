@@ -26,6 +26,98 @@ export enum ImportErrors {
   NO_IMPORT_DATA_FOUND = 'This file contains no importable data.',
 }
 
+const WEB_URL_PROTOCOLS = new Set(['http:', 'https:'])
+const RPC_URL_PROTOCOLS = new Set(['http:', 'https:', 'ws:', 'wss:'])
+
+const isUrlWithAllowedProtocol = (url: string, allowedProtocols: Set<string>): boolean => {
+  try {
+    return allowedProtocols.has(new URL(url).protocol)
+  } catch {
+    return false
+  }
+}
+
+const isEthAddress = (value?: string): boolean => {
+  if (!value) return false
+  return /^0x[a-fA-F0-9]{40}$/.test(value)
+}
+
+const isValidImportedCustomChain = (chain: unknown): chain is ChainInfo => {
+  if (!chain || typeof chain !== 'object') {
+    return false
+  }
+
+  const candidate = chain as Partial<ChainInfo>
+
+  if (!candidate.chainId || typeof candidate.chainId !== 'string') {
+    return false
+  }
+
+  if (!candidate.chainName || typeof candidate.chainName !== 'string') {
+    return false
+  }
+
+  if (!candidate.shortName || typeof candidate.shortName !== 'string') {
+    return false
+  }
+
+  const rpc = candidate.rpcUri?.value
+  const publicRpc = candidate.publicRpcUri?.value
+  const safeAppsRpc = candidate.safeAppsRpcUri?.value
+
+  if (!rpc || !isUrlWithAllowedProtocol(rpc, RPC_URL_PROTOCOLS)) {
+    return false
+  }
+
+  if (!publicRpc || !isUrlWithAllowedProtocol(publicRpc, RPC_URL_PROTOCOLS)) {
+    return false
+  }
+
+  if (!safeAppsRpc || !isUrlWithAllowedProtocol(safeAppsRpc, RPC_URL_PROTOCOLS)) {
+    return false
+  }
+
+  const explorerAddressUrl = candidate.blockExplorerUriTemplate?.address
+  const explorerTxUrl = candidate.blockExplorerUriTemplate?.txHash
+
+  if (explorerAddressUrl && !isUrlWithAllowedProtocol(explorerAddressUrl, WEB_URL_PROTOCOLS)) {
+    return false
+  }
+
+  if (explorerTxUrl && !isUrlWithAllowedProtocol(explorerTxUrl, WEB_URL_PROTOCOLS)) {
+    return false
+  }
+
+  const hasAnyMultisendOverride = !!candidate.multisendAddress || !!candidate.multisendCallOnlyAddress
+  if (hasAnyMultisendOverride) {
+    if (!isEthAddress(candidate.multisendAddress) || !isEthAddress(candidate.multisendCallOnlyAddress)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+const sanitizeImportedCustomChains = (chains: unknown): ChainInfo[] | undefined => {
+  if (!Array.isArray(chains)) {
+    return undefined
+  }
+
+  const byChainId = new Map<string, ChainInfo>()
+
+  for (const chain of chains) {
+    if (!isValidImportedCustomChain(chain)) {
+      continue
+    }
+    byChainId.set(chain.chainId, {
+      ...chain,
+      custom: true,
+    })
+  }
+
+  return byChainId.size > 0 ? Array.from(byChainId.values()) : undefined
+}
+
 const countEntries = (data: { [chainId: string]: { [address: string]: unknown } }) =>
   Object.values(data).reduce<number>((count, entry) => count + Object.keys(entry).length, 0)
 
@@ -151,7 +243,7 @@ export const useGlobalImportJsonParser = (jsonData: string | undefined): Data =>
         data.addedTxs = parsedFile.data.addedTxs
         data.settings = parsedFile.data.settings
         data.safeApps = parsedFile.data.safeApps
-        data.customChains = parsedFile.data.customChains
+        data.customChains = sanitizeImportedCustomChains(parsedFile.data.customChains)
 
         break
       }

@@ -45,10 +45,13 @@ export const safeAppsSlice = createSlice({
       // We must return as we are overwriting the entire state
       return payload
     },
+    removeSafeAppsByChain: (state, { payload }: PayloadAction<string>) => {
+      delete state[payload]
+    },
   },
 })
 
-export const { setPinned, markOpened } = safeAppsSlice.actions
+export const { setPinned, markOpened, removeSafeAppsByChain } = safeAppsSlice.actions
 
 export const selectSafeApps = (state: RootState): SafeAppsState => {
   return state[safeAppsSlice.name]

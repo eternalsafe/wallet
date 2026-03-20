@@ -13,6 +13,7 @@ import type { Provider } from '@ethersproject/providers'
 import { ethers } from 'ethers'
 import useChainId from '@/hooks/useChainId'
 import { selectAddedSafes } from '@/store/addedSafesSlice'
+import { useCurrentChain } from '@/hooks/useChains'
 
 export const getSafeImplementation = async (web3: Provider, safeAddress: string, chainId: string) => {
   return web3
@@ -93,9 +94,12 @@ export const useInitSafeCoreSDK = () => {
   const web3ReadOnly = useMultiWeb3ReadOnly()
   const address = useSafeAddress()
   const chainId = useChainId()
+  const currentChain = useCurrentChain()
   const addedSafes = useAppSelector((state) => selectAddedSafes(state, chainId))
-  const multisendAddress = address ? addedSafes?.[address]?.multisendAddress : undefined
-  const multisendCallOnlyAddress = address ? addedSafes?.[address]?.multisendCallOnlyAddress : undefined
+  const multisendAddress =
+    (address ? addedSafes?.[address]?.multisendAddress : undefined) || currentChain?.multisendAddress
+  const multisendCallOnlyAddress =
+    (address ? addedSafes?.[address]?.multisendCallOnlyAddress : undefined) || currentChain?.multisendCallOnlyAddress
 
   useEffect(() => {
     if (!web3ReadOnly || !address || !chainId) {

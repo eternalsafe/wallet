@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { Box, Button, Checkbox, Container, FormControlLabel, Grid, TextField, Typography, Paper } from '@mui/material'
 import { AppRoutes } from '@/config/routes'
+import { ethers } from 'ethers'
 
 const WEB_URL_PROTOCOLS = new Set(['http:', 'https:'])
 const RPC_URL_PROTOCOLS = new Set(['http:', 'https:', 'ws:', 'wss:'])
@@ -20,6 +21,8 @@ const CustomChain: NextPage = () => {
     logo: '',
     expAddr: '',
     expTx: '',
+    multisendAddress: '',
+    multisendCallOnlyAddress: '',
     l2: false,
     testnet: false,
   })
@@ -65,6 +68,14 @@ const CustomChain: NextPage = () => {
     if (formValues.expAddr && !isValidUrl(formValues.expAddr, WEB_URL_PROTOCOLS))
       newErrors.expAddr = 'Invalid URL format'
     if (formValues.expTx && !isValidUrl(formValues.expTx, WEB_URL_PROTOCOLS)) newErrors.expTx = 'Invalid URL format'
+    if ((formValues.multisendAddress && !formValues.multisendCallOnlyAddress) || formValues.multisendCallOnlyAddress) {
+      if (!formValues.multisendAddress || !ethers.utils.isAddress(formValues.multisendAddress)) {
+        newErrors.multisendAddress = 'Invalid Ethereum address'
+      }
+      if (!formValues.multisendCallOnlyAddress || !ethers.utils.isAddress(formValues.multisendCallOnlyAddress)) {
+        newErrors.multisendCallOnlyAddress = 'Invalid Ethereum address'
+      }
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -97,6 +108,10 @@ const CustomChain: NextPage = () => {
     if (formValues.logo) params.append('logo', formValues.logo)
     if (formValues.expAddr) params.append('expAddr', formValues.expAddr)
     if (formValues.expTx) params.append('expTx', formValues.expTx)
+    if (formValues.multisendAddress && formValues.multisendCallOnlyAddress) {
+      params.append('multisendAddress', formValues.multisendAddress)
+      params.append('multisendCallOnlyAddress', formValues.multisendCallOnlyAddress)
+    }
     if (formValues.l2) params.append('l2', 'true')
     if (formValues.testnet) params.append('testnet', 'true')
 
@@ -252,6 +267,30 @@ const CustomChain: NextPage = () => {
                     errors.expTx ||
                     "Block explorer URL template for transactions (e.g. 'https://etherscan.io/tx/{{hash}}')"
                   }
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="MultiSend Address"
+                  name="multisendAddress"
+                  value={formValues.multisendAddress}
+                  onChange={handleChange}
+                  error={!!errors.multisendAddress}
+                  helperText={errors.multisendAddress || 'Optional: custom MultiSend contract address'}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="MultiSendCallOnly Address"
+                  name="multisendCallOnlyAddress"
+                  value={formValues.multisendCallOnlyAddress}
+                  onChange={handleChange}
+                  error={!!errors.multisendCallOnlyAddress}
+                  helperText={errors.multisendCallOnlyAddress || 'Optional: custom MultiSendCallOnly contract address'}
                 />
               </Grid>
 

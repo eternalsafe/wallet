@@ -96,6 +96,9 @@ export const addedSafesSlice = createSlice({
         delete state[chainId]
       }
     },
+    removeAddedSafesByChain: (state, { payload }: PayloadAction<string>) => {
+      delete state[payload]
+    },
   },
   extraReducers(builder) {
     builder.addCase(safeInfoSlice.actions.set, (state, { payload }) => {
@@ -115,7 +118,7 @@ export const addedSafesSlice = createSlice({
   },
 })
 
-export const { addOrUpdateSafe, updateAddedSafeBalance, removeSafe } = addedSafesSlice.actions
+export const { addOrUpdateSafe, updateAddedSafeBalance, removeSafe, removeAddedSafesByChain } = addedSafesSlice.actions
 
 export const selectAllAddedSafes = (state: RootState): AddedSafesState => {
   return state[addedSafesSlice.name]
