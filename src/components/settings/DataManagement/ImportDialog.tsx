@@ -15,7 +15,7 @@ import { showNotification } from '@/store/notificationsSlice'
 
 import css from './styles.module.css'
 import { customTokensSlice } from '@/store/customTokensSlice'
-import { customChainsSlice } from '@/store/customChainsSlice'
+import { setCustomChains } from '@/store/customChainsSlice'
 import { addedTxsSlice } from '@/store/addedTxsSlice'
 
 export const ImportDialog = ({
@@ -79,7 +79,7 @@ export const ImportDialog = ({
     }
 
     if (customChains) {
-      dispatch(customChainsSlice.actions.setCustomChains(customChains))
+      dispatch(setCustomChains(customChains))
     }
 
     dispatch(

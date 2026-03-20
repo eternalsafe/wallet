@@ -3,6 +3,7 @@ export const AppRoutes = {
   _offline: '/_offline',
   index: '/',
   imprint: '/imprint',
+  customChain: '/customChain',
   addressBook: '/address-book',
   addOwner: '/addOwner',
   balances: {

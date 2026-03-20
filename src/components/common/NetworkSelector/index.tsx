@@ -19,8 +19,6 @@ import { showNotification } from '@/store/notificationsSlice'
 
 const keepPathRoutes = [AppRoutes.welcome.index, AppRoutes.newSafe.load, AppRoutes.newSafe.create]
 
-// Define the route for custom chain page in the pages directory
-const CUSTOM_CHAIN_ROUTE = '/customChain'
 const CUSTOM_CHAIN_VALUE = 'custom-chain'
 
 const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement => {
@@ -94,7 +92,7 @@ const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement =>
     const newChainId = event.target.value
     // Handle the custom chain option
     if (newChainId === CUSTOM_CHAIN_VALUE) {
-      router.push(CUSTOM_CHAIN_ROUTE)
+      router.push(AppRoutes.customChain)
       return
     }
 
@@ -168,7 +166,7 @@ const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement =>
       {/* Create Custom Chain Option */}
       <Divider sx={{ my: 1 }} />
       <MenuItem value={CUSTOM_CHAIN_VALUE} className={css.menuItem}>
-        <Link href={CUSTOM_CHAIN_ROUTE} onClick={props.onChainSelect} className={css.item}>
+        <Link href={AppRoutes.customChain} onClick={props.onChainSelect} className={css.item}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <AddCircleOutlineIcon sx={{ mr: 1, fontSize: '1rem' }} />
             <span>Create Custom Chain</span>

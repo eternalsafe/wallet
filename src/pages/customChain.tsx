@@ -3,6 +3,7 @@ import Head from 'next/head'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { Box, Button, Checkbox, Container, FormControlLabel, Grid, TextField, Typography, Paper } from '@mui/material'
+import { AppRoutes } from '@/config/routes'
 
 const CustomChain: NextPage = () => {
   const router = useRouter()
@@ -96,8 +97,10 @@ const CustomChain: NextPage = () => {
     if (formValues.testnet) params.append('testnet', 'true')
 
     // Let the magic network hook handle the rest by redirecting to the home page with the parameters
-    const networkUrl = `/?${params.toString()}`
-    router.push(networkUrl)
+    router.push({
+      pathname: AppRoutes.index,
+      query: Object.fromEntries(params.entries()),
+    })
   }
 
   return (

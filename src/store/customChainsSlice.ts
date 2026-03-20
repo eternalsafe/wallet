@@ -12,7 +12,7 @@ const initialState: ChainInfo[] = []
 
 export const customChainsSlice = createSlice({
   name: 'customChains',
-  initialState: [] as ChainInfo[],
+  initialState,
   reducers: {
     setCustomChains: (state, action: PayloadAction<ChainInfo[]>) => {
       return action.payload
@@ -30,7 +30,7 @@ export const customChainsSlice = createSlice({
   },
 })
 
-export const { addChain, removeChain } = customChainsSlice.actions
+export const { addChain, removeChain, setCustomChains } = customChainsSlice.actions
 
 export const selectAllCustomChains = (state: RootState): ChainInfo[] => {
   return state[customChainsSlice.name] || initialState
