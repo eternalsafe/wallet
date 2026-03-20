@@ -85,4 +85,20 @@ describe('NetworkSelector', () => {
     expect(dispatchMock).not.toHaveBeenCalledWith(setRpc({ chainId: '84532', rpc: undefined }))
     expect(dispatchMock).not.toHaveBeenCalledWith(removeChain('84532'))
   })
+
+  it('deletes a custom network after confirmation', async () => {
+    render(<NetworkSelector />)
+
+    fireEvent.mouseDown(screen.getByRole('combobox'))
+    fireEvent.click(await screen.findByLabelText('Delete network'))
+
+    await waitFor(() => {
+      expect(dispatchMock).toHaveBeenCalledWith(setRpc({ chainId: '84532', rpc: undefined }))
+      expect(dispatchMock).toHaveBeenCalledWith(removeChain('84532'))
+      expect(dispatchMock).toHaveBeenCalledTimes(3)
+      expect(typeof dispatchMock.mock.calls[2][0]).toBe('function')
+    })
+
+    expect(pushMock).not.toHaveBeenCalled()
+  })
 })
