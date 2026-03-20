@@ -61,30 +61,33 @@ const NetworkSelector = (props: { onChainSelect?: () => void }): ReactElement =>
     [router],
   )
 
-  const handleDeleteChain = (e: React.MouseEvent, chain: ChainInfo) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleDeleteChain = useCallback(
+    (e: React.MouseEvent, chain: ChainInfo) => {
+      e.preventDefault()
+      e.stopPropagation()
 
-    // Remove the chain from the store
-    dispatch(removeChain(chain.chainId))
+      // Remove the chain from the store
+      dispatch(removeChain(chain.chainId))
 
-    // Show notification
-    dispatch(
-      showNotification({
-        message: `${chain.chainName} network has been removed`,
-        groupKey: 'delete-network-success',
-        variant: 'success',
-      }),
-    )
+      // Show notification
+      dispatch(
+        showNotification({
+          message: `${chain.chainName} network has been removed`,
+          groupKey: 'delete-network-success',
+          variant: 'success',
+        }),
+      )
 
-    // If we're currently on this chain, redirect to mainnet or another chain
-    if (chainId === chain.chainId) {
-      const defaultChain = configs.find((c) => !c.custom)
-      if (defaultChain) {
-        router.push(getNetworkLink(defaultChain.shortName))
+      // If we're currently on this chain, redirect to mainnet or another chain
+      if (chainId === chain.chainId) {
+        const defaultChain = configs.find((c) => !c.custom)
+        if (defaultChain) {
+          router.push(getNetworkLink(defaultChain.shortName))
+        }
       }
-    }
-  }
+    },
+    [dispatch, chainId, configs, router, getNetworkLink],
+  )
 
   const onChange = (event: SelectChangeEvent) => {
     event.preventDefault() // Prevent the link click
