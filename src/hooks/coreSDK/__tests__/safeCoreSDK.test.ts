@@ -120,6 +120,39 @@ describe('safeCoreSDK', () => {
         expect(sdk).toBeInstanceOf(Safe)
       })
 
+      it('should not perform HTTP fetch calls when overrides are provided', async () => {
+        const chainId = '1'
+        const version = '1.3.0'
+        const fetchMock = jest.fn()
+        const previousFetch = global.fetch
+        Object.defineProperty(global, 'fetch', {
+          configurable: true,
+          writable: true,
+          value: fetchMock,
+        })
+
+        try {
+          const mockProvider = getMockProvider(chainId, version)
+
+          await initSafeSDK({
+            provider: mockProvider,
+            chainId,
+            address: ethers.utils.hexZeroPad('0x1', 20),
+            implementation: MAINNET_MASTER_COPY,
+            multisendAddress: '0x1111111111111111111111111111111111111111',
+            multisendCallOnlyAddress: '0x2222222222222222222222222222222222222222',
+          })
+
+          expect(fetchMock).not.toHaveBeenCalled()
+        } finally {
+          Object.defineProperty(global, 'fetch', {
+            configurable: true,
+            writable: true,
+            value: previousFetch,
+          })
+        }
+      })
+
       it('should return an L1 SDK instance for mainnet', async () => {
         const chainId = '1'
         const version = '1.3.0'

@@ -17,6 +17,7 @@ import { Gnosis_safe__factory } from '@/types/contracts'
 import { invariant } from '@/utils/helpers'
 import type { Web3Provider } from '@ethersproject/providers'
 import Safe, { EthersAdapter } from '@safe-global/protocol-kit'
+import { safeDeploymentsVersions } from '@safe-global/protocol-kit/dist/src/contracts/config'
 import type { ContractNetworkConfig, ContractNetworksConfig } from '@safe-global/protocol-kit/dist/src/types'
 import type { SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import type { Provider } from '@ethersproject/providers'
@@ -69,77 +70,12 @@ type SafeCoreSDKProps = {
 }
 
 export type MultiSendContractOverrides = Pick<SafeCoreSDKProps, 'multisendAddress' | 'multisendCallOnlyAddress'>
-
-type SafeDeploymentVersion = ModernSafeVersion | '1.0.0'
-
-type SafeDeploymentVersionConfig = {
-  safeMasterCopyVersion: string
-  safeMasterCopyL2Version?: string
-  safeProxyFactoryVersion: string
-  compatibilityFallbackHandler: string
-  multiSendVersion: string
-  multiSendCallOnlyVersion: string
-  signMessageLibVersion: string
-  createCallVersion: string
-}
-
-const SAFE_DEPLOYMENT_VERSIONS: Record<SafeDeploymentVersion, SafeDeploymentVersionConfig> = {
-  '1.4.1': {
-    safeMasterCopyVersion: '1.4.1',
-    safeMasterCopyL2Version: '1.4.1',
-    safeProxyFactoryVersion: '1.4.1',
-    compatibilityFallbackHandler: '1.4.1',
-    multiSendVersion: '1.4.1',
-    multiSendCallOnlyVersion: '1.4.1',
-    signMessageLibVersion: '1.4.1',
-    createCallVersion: '1.4.1',
-  },
-  '1.3.0': {
-    safeMasterCopyVersion: '1.3.0',
-    safeMasterCopyL2Version: '1.3.0',
-    safeProxyFactoryVersion: '1.3.0',
-    compatibilityFallbackHandler: '1.3.0',
-    multiSendVersion: '1.3.0',
-    multiSendCallOnlyVersion: '1.3.0',
-    signMessageLibVersion: '1.3.0',
-    createCallVersion: '1.3.0',
-  },
-  '1.2.0': {
-    safeMasterCopyVersion: '1.2.0',
-    safeProxyFactoryVersion: '1.1.1',
-    compatibilityFallbackHandler: '1.3.0',
-    multiSendVersion: '1.1.1',
-    multiSendCallOnlyVersion: '1.3.0',
-    signMessageLibVersion: '1.3.0',
-    createCallVersion: '1.3.0',
-  },
-  '1.1.1': {
-    safeMasterCopyVersion: '1.1.1',
-    safeProxyFactoryVersion: '1.1.1',
-    compatibilityFallbackHandler: '1.3.0',
-    multiSendVersion: '1.1.1',
-    multiSendCallOnlyVersion: '1.3.0',
-    signMessageLibVersion: '1.3.0',
-    createCallVersion: '1.3.0',
-  },
-  '1.0.0': {
-    safeMasterCopyVersion: '1.0.0',
-    safeProxyFactoryVersion: '1.0.0',
-    compatibilityFallbackHandler: '1.3.0',
-    multiSendVersion: '1.1.1',
-    multiSendCallOnlyVersion: '1.3.0',
-    signMessageLibVersion: '1.3.0',
-    createCallVersion: '1.3.0',
-  },
-}
-
-const SAFE_DEPLOYMENT_VERSION_ORDER: SafeDeploymentVersion[] = ['1.4.1', '1.3.0', '1.2.0', '1.1.1', '1.0.0']
+type SafeDeploymentVersionConfig = (typeof safeDeploymentsVersions)[string]
+const SAFE_DEPLOYMENT_VERSION_ORDER = ['1.4.1', '1.3.0', '1.2.0', '1.1.1', '1.0.0']
 
 const getSafeDeploymentVersionConfig = (safeVersion: string): SafeDeploymentVersionConfig => {
-  const matchedVersion =
-    SAFE_DEPLOYMENT_VERSION_ORDER.find((version) => semverSatisfies(safeVersion, version)) || '1.3.0'
-
-  return SAFE_DEPLOYMENT_VERSIONS[matchedVersion]
+  const matchedVersion = SAFE_DEPLOYMENT_VERSION_ORDER.find((version) => semverSatisfies(safeVersion, version))
+  return safeDeploymentsVersions[matchedVersion || '1.3.0']
 }
 
 const getDeploymentAddress = (
@@ -237,7 +173,7 @@ export const getContractNetworksForOverrides = (
   const multisendAddress = normalizeAddressOverride(overrides.multisendAddress)
   const multisendCallOnlyAddress = normalizeAddressOverride(overrides.multisendCallOnlyAddress)
 
-  if (!multisendAddress && !multisendCallOnlyAddress) {
+  if (!multisendAddress || !multisendCallOnlyAddress) {
     return undefined
   }
 
@@ -247,16 +183,12 @@ export const getContractNetworksForOverrides = (
     return undefined
   }
 
-  if (multisendAddress) {
-    contractConfig.multiSendAddress = multisendAddress
-  }
-
-  if (multisendCallOnlyAddress) {
-    contractConfig.multiSendCallOnlyAddress = multisendCallOnlyAddress
-  }
-
   return {
-    [chainId]: contractConfig,
+    [chainId]: {
+      ...contractConfig,
+      multiSendAddress: multisendAddress,
+      multiSendCallOnlyAddress: multisendCallOnlyAddress,
+    },
   }
 }
 
