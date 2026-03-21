@@ -22,6 +22,23 @@ Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-g
 You can view the diff from the original Safe{Wallet} here: [https://github.com/eternalsafe/wallet/compare/eternalsafe..safe-global:safe-wallet-monorepo:v1.26.2](https://github.com/eternalsafe/wallet/compare/eternalsafe..safe-global:safe-wallet-monorepo:v1.26.2).  
 **Note**: This diff is viewed backwards, i.e. additions in this diff are actually lines which are removed in Eternal Safe, and vice versa. [Seems to be a bug in GitHub](https://github.com/eternalsafe/wallet/issues/18#issuecomment-2558403419).
 
+### Smart Links
+
+Eternal Safe uses Smart Links to collect signatures in the name of decentralization, without relying on backend proposal services or external APIs.
+
+- A Smart Link is a URL with the Safe (`safe=...`) and an encoded transaction payload (`tx=...`).
+- It is expected that signers share these links with other owners through Telegram, Discord, email, or similar channels.
+- Each signer opens the link, reviews/signs, and re-shares the updated Smart Link so confirmations build up step by step.
+
+How signatures build up:
+
+1. The transaction (including known signatures) is serialized and URL-safe encoded into `tx`.
+2. The receiver decodes it, computes the transaction hash (`txKey`), and stores it locally by `chainId -> safeAddress -> txKey`.
+3. Opening the same transaction again merges signatures by signer address, so each re-shared link can carry more confirmations.
+4. The UI then rewrites `?tx=...` to `?id=multisig_<safeAddress>_<txKey>` for a stable local reference.
+
+Note: Smart Links are encoded, not encrypted. Share only with trusted signers.
+
 ### RPC
 
 Eternal Safe relies completely on the provided RPC URL. It is very important to provide a stable and performant RPC node. Typically, public RPC URLs are not sufficient, and it is recommended to run against a private RPC URL or your own node directly.
