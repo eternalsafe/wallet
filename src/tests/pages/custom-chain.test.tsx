@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useRouter } from 'next/router'
-import CustomChain from './custom-chain'
+import CustomChain from '@/pages/custom-chain'
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
