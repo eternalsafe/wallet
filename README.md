@@ -24,26 +24,20 @@ You can view the diff from the original Safe{Wallet} here: [https://github.com/e
 
 ### Smart Links
 
-Eternal Safe uses Smart Links to share unsigned or partially signed transactions between owners.
+Eternal Safe uses Smart Links to collect signatures in the name of decentralization, without relying on backend proposal services or external APIs.
 
-Simple explanation:
+- A Smart Link is a URL with the Safe (`safe=...`) and an encoded transaction payload (`tx=...`).
+- It is expected that signers share these links with other owners through Telegram, Discord, email, or similar channels.
+- Each signer opens the link, reviews/signs, and re-shares the updated Smart Link so confirmations build up step by step.
 
-- A Smart Link is a URL that includes the Safe address and a serialized transaction payload.
-- Opening the link lets another signer load the same transaction details without a backend proposal service.
-- Each signer can add their signature, then share the updated Smart Link with the next signer.
-- This is how signatures can be collected step by step in a fully decentralized flow.
+How signatures build up:
 
-Advanced explanation:
+1. The transaction (including known signatures) is serialized and URL-safe encoded into `tx`.
+2. The receiver decodes it, computes the transaction hash (`txKey`), and stores it locally by `chainId -> safeAddress -> txKey`.
+3. Opening the same transaction again merges signatures by signer address, so each re-shared link can carry more confirmations.
+4. The UI then rewrites `?tx=...` to `?id=multisig_<safeAddress>_<txKey>` for a stable local reference.
 
-1. The transaction is serialized from a Safe SDK `SafeTransaction` object, including current signatures.
-2. Signature `Map` data is converted into JSON-safe entries, then encoded into a URL-safe Base64 string (`tx` query param).
-3. The Safe address is included as `safe=<chainPrefix>:<address>`.
-4. On load, Eternal Safe decodes `tx`, rebuilds signatures, and computes a deterministic transaction hash (`safeTxHash`) from transaction data.
-5. The app stores the transaction locally under `chainId -> safeAddress -> txKey`, where `txKey` is the computed hash.
-6. If the same transaction is loaded again (same hash), transaction fields and signatures are merged by signer address, so signature sets build up over time as links are shared.
-7. After loading, the UI rewrites the URL from `?tx=...` to `?id=multisig_<safeAddress>_<txKey>` for a stable local reference.
-
-Note: Smart Links are encoded for transport, not encrypted. Share them only with trusted signers.
+Note: Smart Links are encoded, not encrypted. Share only with trusted signers.
 
 ### RPC
 
