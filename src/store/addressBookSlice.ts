@@ -40,10 +40,14 @@ export const addressBookSlice = createSlice({
       if (Object.keys(state[chainId]).length > 0) return state
       delete state[chainId]
     },
+    removeAddressBookByChain: (state, action: PayloadAction<string>) => {
+      delete state[action.payload]
+    },
   },
 })
 
-export const { setAddressBook, upsertAddressBookEntry, removeAddressBookEntry } = addressBookSlice.actions
+export const { setAddressBook, upsertAddressBookEntry, removeAddressBookEntry, removeAddressBookByChain } =
+  addressBookSlice.actions
 
 export const selectAllAddressBooks = (state: RootState): AddressBookState => {
   return state[addressBookSlice.name]

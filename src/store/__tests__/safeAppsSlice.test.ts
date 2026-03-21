@@ -1,4 +1,4 @@
-import { markOpened, safeAppsSlice, setPinned } from '../safeAppsSlice'
+import { markOpened, removeSafeAppsByChain, safeAppsSlice, setPinned } from '../safeAppsSlice'
 import type { SafeAppsState } from '../safeAppsSlice'
 
 describe('safeAppsSlice', () => {
@@ -171,6 +171,30 @@ describe('safeAppsSlice', () => {
         ['5']: {
           pinned: [safeAppId1, safeAppId2],
           opened: [safeAppId2],
+        },
+      })
+    })
+  })
+
+  describe('removeSafeAppsByChain', () => {
+    it('should remove all safe apps for the target chain only', () => {
+      const initialState: SafeAppsState = {
+        '1': {
+          pinned: [safeAppId1],
+          opened: [safeAppId2],
+        },
+        '5': {
+          pinned: [safeAppId3],
+          opened: [],
+        },
+      }
+
+      const state = safeAppsSlice.reducer(initialState, removeSafeAppsByChain('1'))
+
+      expect(state).toStrictEqual({
+        '5': {
+          pinned: [safeAppId3],
+          opened: [],
         },
       })
     })

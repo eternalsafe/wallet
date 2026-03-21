@@ -23,6 +23,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import AddressInput from '@/components/common/AddressInput'
 import React from 'react'
 import useChainId from '@/hooks/useChainId'
+import { useCurrentChain } from '@/hooks/useChains'
 import { useAppSelector } from '@/store'
 import { selectAddedSafes } from '@/store/addedSafesSlice'
 import { AppRoutes } from '@/config/routes'
@@ -43,6 +44,7 @@ type FormData = {
 
 const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeFormData>) => {
   const currentChainId = useChainId()
+  const currentChain = useCurrentChain()
   const addedSafes = useAppSelector((state) => selectAddedSafes(state, currentChainId))
   const formMethods = useForm<FormData>({
     mode: 'all',
@@ -79,8 +81,14 @@ const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeForm
     }
 
     try {
-      await getSafeSDKAndImplementation(web3ReadOnly, address, currentChainId)
-    } catch (error: any) {
+      await getSafeSDKAndImplementation(
+        web3ReadOnly,
+        address,
+        currentChainId,
+        currentChain?.multisendAddress,
+        currentChain?.multisendCallOnlyAddress,
+      )
+    } catch (_error: any) {
       return 'Address given is not a valid Safe Account address on the current network.'
     }
   }

@@ -5,6 +5,7 @@ import type { AddedSafesState } from '../addedSafesSlice'
 import {
   addOrUpdateSafe,
   removeSafe,
+  removeAddedSafesByChain,
   addedSafesSlice,
   updateAddedSafeBalance,
   addedSafesListener,
@@ -36,6 +37,17 @@ describe('addedSafesSlice', () => {
           ['0x2']: { owners: [{ value: '0x789' }], threshold: 1 },
         },
         '4': { ['0x1']: { threshold: 1, owners: [{ value: '0x456' }] } },
+      })
+    })
+
+    it('should not persist unsupported multisend fields in added safes state', () => {
+      const safe = { chainId: '1', address: { value: '0x0' }, threshold: 1, owners: [{ value: '0x123' }] } as SafeInfo
+
+      const state = addedSafesSlice.reducer(undefined, addOrUpdateSafe({ safe }))
+
+      expect(state['1']['0x0']).toEqual({
+        owners: [{ value: '0x123' }],
+        threshold: 1,
       })
     })
   })
@@ -131,6 +143,22 @@ describe('addedSafesSlice', () => {
         removeSafe({ chainId: '1', address: '0x0' }),
       )
       expect(state).toEqual({ '4': { ['0x0']: {} as SafeInfo } })
+    })
+  })
+
+  describe('removeAddedSafesByChain', () => {
+    it('should remove all added safes for the target chain only', () => {
+      const state = addedSafesSlice.reducer(
+        {
+          '1': { ['0x0']: { threshold: 1, owners: [{ value: '0x1' }] } },
+          '4': { ['0x2']: { threshold: 2, owners: [{ value: '0x2' }] } },
+        },
+        removeAddedSafesByChain('1'),
+      )
+
+      expect(state).toEqual({
+        '4': { ['0x2']: { threshold: 2, owners: [{ value: '0x2' }] } },
+      })
     })
   })
 

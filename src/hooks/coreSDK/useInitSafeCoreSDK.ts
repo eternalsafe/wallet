@@ -12,6 +12,7 @@ import type Safe from '@safe-global/protocol-kit'
 import type { Provider } from '@ethersproject/providers'
 import { ethers } from 'ethers'
 import useChainId from '@/hooks/useChainId'
+import { useCurrentChain } from '@/hooks/useChains'
 
 export const getSafeImplementation = async (web3: Provider, safeAddress: string, chainId: string) => {
   return web3
@@ -66,6 +67,8 @@ export const getSafeSDKAndImplementation = async (
   web3: Provider,
   safeAddress: string,
   chainId: string,
+  multisendAddress?: string,
+  multisendCallOnlyAddress?: string,
 ): Promise<[Safe, string]> => {
   const implementation = await getSafeImplementation(web3, safeAddress, chainId)
   if (!implementation || implementation === ethers.constants.HashZero) {
@@ -78,6 +81,8 @@ export const getSafeSDKAndImplementation = async (
     chainId,
     address: safeAddress,
     implementation: implementationAddress,
+    multisendAddress,
+    multisendCallOnlyAddress,
   })
 
   return [sdk, implementationAddress]
@@ -88,6 +93,9 @@ export const useInitSafeCoreSDK = () => {
   const web3ReadOnly = useMultiWeb3ReadOnly()
   const address = useSafeAddress()
   const chainId = useChainId()
+  const currentChain = useCurrentChain()
+  const multisendAddress = currentChain?.multisendAddress
+  const multisendCallOnlyAddress = currentChain?.multisendCallOnlyAddress
 
   useEffect(() => {
     if (!web3ReadOnly || !address || !chainId) {
@@ -112,6 +120,8 @@ export const useInitSafeCoreSDK = () => {
           chainId,
           address,
           implementation,
+          multisendAddress,
+          multisendCallOnlyAddress,
         })
       })
       .then(setSafeSDK)
@@ -133,5 +143,5 @@ export const useInitSafeCoreSDK = () => {
         )
         trackError(ErrorCodes._105, e.message)
       })
-  }, [dispatch, address, chainId, web3ReadOnly])
+  }, [dispatch, address, chainId, web3ReadOnly, multisendAddress, multisendCallOnlyAddress])
 }

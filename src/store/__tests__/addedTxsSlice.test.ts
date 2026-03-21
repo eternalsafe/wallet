@@ -2,7 +2,7 @@ import { transactionKey } from '@/services/tx/txMagicLink'
 import { OperationType, type SafeTransaction } from '@safe-global/safe-core-sdk-types'
 import EthSafeTransaction from '@safe-global/protocol-kit/dist/src/utils/transactions/SafeTransaction'
 import { EthSafeSignature } from '@safe-global/protocol-kit'
-import { addedTxsSlice, addOrUpdateTx } from '../addedTxsSlice'
+import { addedTxsSlice, addOrUpdateTx, removeAddedTxsByChain } from '../addedTxsSlice'
 import * as safeCoreSDK from '@/hooks/coreSDK/safeCoreSDK'
 import type Safe from '@safe-global/protocol-kit'
 
@@ -133,6 +133,46 @@ describe('addedTxsSlice', () => {
                 '0x4567890123456789012345678901234567890123': '0x457',
               },
               timestamp: expect.any(Number),
+            },
+          },
+        },
+      })
+    })
+  })
+
+  describe('removeAddedTxsByChain', () => {
+    it('should remove all txs for the target chain only', () => {
+      const state = addedTxsSlice.reducer(
+        {
+          '1': {
+            '0xsafe1': {
+              tx1: {
+                data: {} as any,
+                signatures: {},
+                timestamp: 1,
+              },
+            },
+          },
+          '4': {
+            '0xsafe4': {
+              tx2: {
+                data: {} as any,
+                signatures: {},
+                timestamp: 2,
+              },
+            },
+          },
+        },
+        removeAddedTxsByChain('1'),
+      )
+
+      expect(state).toEqual({
+        '4': {
+          '0xsafe4': {
+            tx2: {
+              data: {} as any,
+              signatures: {},
+              timestamp: 2,
             },
           },
         },

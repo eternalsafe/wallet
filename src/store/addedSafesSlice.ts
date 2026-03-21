@@ -43,9 +43,10 @@ export const addedSafesSlice = createSlice({
       const { chainId, address, owners, threshold } = payload.safe
 
       state[chainId] ??= {}
+      const existingData = state[chainId][address.value] ?? {}
       state[chainId][address.value] = {
         // Keep balance
-        ...(state[chainId][address.value] ?? {}),
+        ...existingData,
         owners,
         threshold,
       }
@@ -79,6 +80,9 @@ export const addedSafesSlice = createSlice({
         delete state[chainId]
       }
     },
+    removeAddedSafesByChain: (state, { payload }: PayloadAction<string>) => {
+      delete state[payload]
+    },
   },
   extraReducers(builder) {
     builder.addCase(safeInfoSlice.actions.set, (state, { payload }) => {
@@ -98,7 +102,7 @@ export const addedSafesSlice = createSlice({
   },
 })
 
-export const { addOrUpdateSafe, updateAddedSafeBalance, removeSafe } = addedSafesSlice.actions
+export const { addOrUpdateSafe, updateAddedSafeBalance, removeSafe, removeAddedSafesByChain } = addedSafesSlice.actions
 
 export const selectAllAddedSafes = (state: RootState): AddedSafesState => {
   return state[addedSafesSlice.name]

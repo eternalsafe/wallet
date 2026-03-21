@@ -9,6 +9,7 @@ import type { SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import type { Provider } from '@ethersproject/providers'
 import { ethers } from 'ethers'
 import semverSatisfies from 'semver/functions/satisfies'
+import { getContractNetworksForOverrides } from './safeCoreSDK.utils'
 
 export const isLegacyVersion = (safeVersion: string): boolean => {
   const LEGACY_VERSION = '<1.3.0'
@@ -51,10 +52,22 @@ type SafeCoreSDKProps = {
   chainId: SafeInfo['chainId']
   address: SafeInfo['address']['value']
   implementation: SafeInfo['implementation']['value']
+  multisendAddress?: string
+  multisendCallOnlyAddress?: string
 }
 
+export type { MultiSendContractOverrides } from './safeCoreSDK.utils'
+export { getContractNetworksForOverrides } from './safeCoreSDK.utils'
+
 // Safe Core SDK
-export const initSafeSDK = async ({ provider, address, implementation }: SafeCoreSDKProps): Promise<Safe> => {
+export const initSafeSDK = async ({
+  provider,
+  chainId,
+  address,
+  implementation,
+  multisendAddress,
+  multisendCallOnlyAddress,
+}: SafeCoreSDKProps): Promise<Safe> => {
   const safeVersion = await Gnosis_safe__factory.connect(address, provider).VERSION()
 
   // find out if the implementation is any of the possible L1Safe singletons
@@ -67,10 +80,16 @@ export const initSafeSDK = async ({ provider, address, implementation }: SafeCor
     isL1SafeMasterCopy = true
   }
 
+  const contractNetworks = getContractNetworksForOverrides(chainId, safeVersion, isL1SafeMasterCopy, {
+    multisendAddress,
+    multisendCallOnlyAddress,
+  })
+
   return Safe.create({
     ethAdapter: createReadOnlyEthersAdapter(provider),
     safeAddress: address,
     isL1SafeMasterCopy,
+    contractNetworks,
   })
 }
 

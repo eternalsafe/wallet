@@ -43,10 +43,13 @@ export const customTokensSlice = createSlice({
         chainState.splice(index, 1)
       }
     },
+    removeByChain: (state, action: PayloadAction<string>) => {
+      delete state[action.payload]
+    },
   },
 })
 
-export const { add, remove } = customTokensSlice.actions
+export const { add, remove, removeByChain } = customTokensSlice.actions
 
 export const selectCustomTokens = (state: RootState): CustomTokensState => {
   return state[customTokensSlice.name]

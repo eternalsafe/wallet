@@ -53,20 +53,10 @@ jobs:
             echo "No base bundle artifact found. Skipping bundle comparison."
           fi
 
-      - name: Get Comment Body
-        id: get-comment-body
-        if: success() && github.event.number
-        # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-strings
-        run: |
-          if [ -s .next/analyze/__bundle_analysis_comment.txt ]; then
-            echo "body<<EOF" >> $GITHUB_OUTPUT
-            cat .next/analyze/__bundle_analysis_comment.txt >> $GITHUB_OUTPUT
-            echo EOF >> $GITHUB_OUTPUT
-          fi
-
       - name: Comment
-        if: success() && github.event.number && steps.get-comment-body.outputs.body != ''
+        if: success() && github.event.number
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: next-bundle-analysis
-          message: ${{ steps.get-comment-body.outputs.body }}
+          path: .next/analyze/__bundle_analysis_comment.txt
+          ignore_empty: true

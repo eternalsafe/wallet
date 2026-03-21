@@ -31,7 +31,7 @@ Eternal Safe relies completely on the provided RPC URL. It is very important to 
 You can add custom networks to Eternal Safe by including network parameters in the URL. Here's an example for adding Base Sepolia as a testnet:
 
 ```
-https://eternalsafe.eth.limo?chainId=84532&chain=Base%20Sepolia&shortName=base-sepolia&rpc=https%3A%2F%2Fsepolia.base.org&currency=ETH&symbol=ETH&expAddr=https%3A%2F%2Fsepolia.basescan.org%2Faddress%2F%7B%7Baddress%7D%7D&expTx=https%3A%2F%2Fsepolia.basescan.org%2Ftx%2F%7B%7Bhash%7D%7D&l2=true&testnet=true
+https://eternalsafe.eth.limo?chainId=84532&chain=Base%20Sepolia&shortName=base-sepolia&rpc=https%3A%2F%2Fsepolia.base.org&currency=ETH&symbol=ETH&expAddr=https%3A%2F%2Fsepolia.basescan.org%2Faddress%2F%7B%7Baddress%7D%7D&expTx=https%3A%2F%2Fsepolia.basescan.org%2Ftx%2F%7B%7BtxHash%7D%7D&l2=true&testnet=true&multisendAddress=0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526&multisendCallOnlyAddress=0x9641d764fc13c8B624c04430C7356C1C7C8102e2
 ```
 
 Required URL parameters:
@@ -48,10 +48,18 @@ Optional URL parameters:
 - `logo`: URL to the currency logo image (URL-encoded)
 - `expAddr`: Block explorer URL template for addresses (URL-encoded)
 - `expTx`: Block explorer URL template for transactions (URL-encoded)
+- `multisendAddress`: Override the chain MultiSend contract address (must be a valid Ethereum address)
+- `multisendCallOnlyAddress`: Override the chain MultiSendCallOnly contract address (must be a valid Ethereum address)
 - `l2`: Whether the network is a Layer 2 network (boolean, defaults to false)
 - `testnet`: Whether the network is a testnet (boolean, defaults to false)
 
-Note: For explorer URLs, use `{{address}}` and `{{txHash}}` as placeholders that will be replaced with actual values.
+Validation and safety notes:
+
+- URL protocol allowlist is enforced: RPC must use `http`, `https`, `ws`, or `wss`; explorer/logo URLs must use `http` or `https`.
+- If you provide one multisend override, you must provide both.
+- Built-in networks can not be overridden via URL parameters.
+- A confirmation prompt is required before any URL-based network/RPC change is applied.
+- For explorer URLs, use `{{address}}` and `{{txHash}}` as placeholders that will be replaced with actual values.
 
 ## Contributing
 

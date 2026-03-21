@@ -1,4 +1,5 @@
 import { type ChainInfo as ChainInfoSDK } from '@safe-global/safe-gateway-typescript-sdk'
+import type { PayloadAction } from '@reduxjs/toolkit'
 import { createSlice } from '@reduxjs/toolkit'
 import type { RootState } from '.'
 import type { Loadable } from '@/store/common'
@@ -6,6 +7,8 @@ import type { Loadable } from '@/store/common'
 export type ChainInfo = ChainInfoSDK & {
   isTestnet?: boolean
   custom?: boolean
+  multisendAddress?: string
+  multisendCallOnlyAddress?: string
 }
 const initialState: ChainInfo[] = []
 
@@ -13,16 +16,40 @@ export const customChainsSlice = createSlice({
   name: 'customChains',
   initialState,
   reducers: {
-    addChain: (state, action: { payload: ChainInfo }) => {
-      const exists = state.find((chain) => chain.chainId === action.payload.chainId)
+    setCustomChains: (state, action: PayloadAction<ChainInfo[]>) => {
+      return action.payload
+    },
+    upsertChain: (state, action: PayloadAction<ChainInfo>) => {
+      const index = state.findIndex((chain) => chain.chainId === action.payload.chainId)
+
+      if (index >= 0) {
+        state[index] = {
+          ...state[index],
+          ...action.payload,
+        }
+        return
+      }
+
+      state.push(action.payload)
+    },
+    addChain: (state, action: PayloadAction<ChainInfo>) => {
+      // Check if chain already exists
+      const exists = state.some((chain) => chain.chainId === action.payload.chainId)
       if (!exists) {
         state.push(action.payload)
       }
     },
+    removeChain: (state, action: PayloadAction<string>) => {
+      return state.filter((chain) => chain.chainId !== action.payload)
+    },
   },
 })
 
-export const { addChain } = customChainsSlice.actions
+export const { addChain, upsertChain, removeChain, setCustomChains } = customChainsSlice.actions
+
+export const selectAllCustomChains = (state: RootState): ChainInfo[] => {
+  return state[customChainsSlice.name] || initialState
+}
 
 export const selectCustomChainsAsLoadable = (state: RootState): Loadable<ChainInfo[]> => {
   const customChains = state[customChainsSlice.name] || initialState

@@ -15,6 +15,7 @@ import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { getSafeSDKAndImplementation } from '@/hooks/coreSDK/useInitSafeCoreSDK'
 import { getSafeInfo } from '@/hooks/loadables/useLoadSafeInfo'
 import ErrorMessage from '@/components/tx/ErrorMessage'
+import { useCurrentChain } from '@/hooks/useChains'
 
 enum Field {
   owners = 'owners',
@@ -28,8 +29,12 @@ type FormData = {
 
 const SafeOwnerStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeFormData>) => {
   const chainId = useChainId()
+  const currentChain = useCurrentChain()
   const formMethods = useForm<FormData>({
-    defaultValues: data,
+    defaultValues: {
+      owners: data.owners || [],
+      threshold: data.threshold || 0,
+    },
     mode: 'onChange',
   })
   const {
@@ -53,13 +58,19 @@ const SafeOwnerStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeFormD
     }
 
     if (data.address) {
-      let [sdk, implementation] = await getSafeSDKAndImplementation(web3ReadOnly, data.address, chainId)
+      let [sdk, implementation] = await getSafeSDKAndImplementation(
+        web3ReadOnly,
+        data.address,
+        chainId,
+        currentChain?.multisendAddress,
+        currentChain?.multisendCallOnlyAddress,
+      )
       if (!sdk) {
         throw new Error('Unable to initialize Safe SDK')
       }
       return await getSafeInfo(sdk, implementation)
     }
-  }, [data.address, web3ReadOnly, chainId])
+  }, [data.address, web3ReadOnly, chainId, currentChain])
 
   useEffect(() => {
     if (!safeInfo) return

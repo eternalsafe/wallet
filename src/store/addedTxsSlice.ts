@@ -75,10 +75,13 @@ export const addedTxsSlice = createSlice({
 
       state[chainId][safeAddress][txKey] = storedTx
     },
+    removeAddedTxsByChain: (state, { payload }: PayloadAction<string>) => {
+      delete state[payload]
+    },
   },
 })
 
-export const { addOrUpdateTx } = addedTxsSlice.actions
+export const { addOrUpdateTx, removeAddedTxsByChain } = addedTxsSlice.actions
 
 // Note, this does not return SafeTransaction objects, but the raw data
 // the other selectors will convert this into SafeTransaction objects

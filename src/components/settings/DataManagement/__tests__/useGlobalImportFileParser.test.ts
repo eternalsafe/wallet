@@ -356,4 +356,223 @@ describe('useGlobalImportFileParser', () => {
     expect(safeApps['5'].pinned).toEqual([1, 2, 3])
     expect(safeApps['1'].pinned).toEqual([4, 5, 6])
   })
+
+  it('should sanitize imported v2.5 custom chains', () => {
+    const validChain = {
+      chainId: '84532',
+      chainName: 'Base Sepolia',
+      shortName: 'base-sepolia',
+      custom: true,
+      description: '',
+      chainLogoUri: null,
+      l2: true,
+      isTestnet: true,
+      nativeCurrency: {
+        name: 'Ether',
+        symbol: 'ETH',
+        decimals: 18,
+        logoUri: '',
+      },
+      blockExplorerUriTemplate: {
+        address: 'https://sepolia.basescan.org/address/{{address}}',
+        txHash: 'https://sepolia.basescan.org/tx/{{txHash}}',
+        api: '',
+      },
+      features: [],
+      disabledWallets: [],
+      theme: {
+        textColor: '#001428',
+        backgroundColor: '#DDDDDD',
+      },
+      publicRpcUri: {
+        authentication: 'NO_AUTH',
+        value: 'https://sepolia.base.org',
+      },
+      rpcUri: {
+        authentication: 'NO_AUTH',
+        value: 'https://sepolia.base.org',
+      },
+      safeAppsRpcUri: {
+        authentication: 'NO_AUTH',
+        value: 'https://sepolia.base.org',
+      },
+      transactionService: '',
+      gasPrice: [],
+      multisendAddress: '0x1111111111111111111111111111111111111111',
+      multisendCallOnlyAddress: '0x2222222222222222222222222222222222222222',
+    }
+
+    const invalidChain = {
+      ...validChain,
+      chainId: '999',
+      shortName: 'bad-chain',
+      rpcUri: {
+        authentication: 'NO_AUTH',
+        value: 'javascript:alert(1)',
+      },
+      publicRpcUri: {
+        authentication: 'NO_AUTH',
+        value: 'javascript:alert(1)',
+      },
+      safeAppsRpcUri: {
+        authentication: 'NO_AUTH',
+        value: 'javascript:alert(1)',
+      },
+    }
+
+    const jsonData = JSON.stringify({
+      version: '2.5',
+      data: {
+        customChains: [validChain, invalidChain],
+      },
+    })
+
+    const { result } = renderHook(() => useGlobalImportJsonParser(jsonData))
+
+    expect(result.current.customChains).toEqual([
+      expect.objectContaining({
+        chainId: '84532',
+        shortName: 'base-sepolia',
+        custom: true,
+      }),
+    ])
+  })
+
+  it('should reject imported v2.5 custom chains that collide with built-in chains', () => {
+    const collidingById = {
+      chainId: '1',
+      chainName: 'Ethereum Custom',
+      shortName: 'eth-custom',
+      custom: true,
+      description: '',
+      chainLogoUri: null,
+      l2: false,
+      isTestnet: false,
+      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18, logoUri: '' },
+      blockExplorerUriTemplate: {
+        address: 'https://etherscan.io/address/{{address}}',
+        txHash: 'https://etherscan.io/tx/{{txHash}}',
+        api: '',
+      },
+      features: [],
+      disabledWallets: [],
+      theme: { textColor: '#001428', backgroundColor: '#DDDDDD' },
+      publicRpcUri: { authentication: 'NO_AUTH', value: 'https://rpc.example.com' },
+      rpcUri: { authentication: 'NO_AUTH', value: 'https://rpc.example.com' },
+      safeAppsRpcUri: { authentication: 'NO_AUTH', value: 'https://rpc.example.com' },
+      transactionService: '',
+      gasPrice: [],
+    }
+
+    const collidingByShortName = {
+      ...collidingById,
+      chainId: '84532',
+      shortName: 'eth',
+    }
+
+    const jsonData = JSON.stringify({
+      version: '2.5',
+      data: {
+        customChains: [collidingById, collidingByShortName],
+      },
+    })
+
+    const { result } = renderHook(() => useGlobalImportJsonParser(jsonData))
+
+    expect(result.current.customChains).toBeUndefined()
+  })
+
+  it('should reject imported v2.5 custom chains with invalid chain IDs', () => {
+    const invalidChain = {
+      chainId: '0',
+      chainName: 'Invalid',
+      shortName: 'invalid',
+      custom: true,
+      description: '',
+      chainLogoUri: null,
+      l2: false,
+      isTestnet: false,
+      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18, logoUri: '' },
+      blockExplorerUriTemplate: {
+        address: 'https://etherscan.io/address/{{address}}',
+        txHash: 'https://etherscan.io/tx/{{txHash}}',
+        api: '',
+      },
+      features: [],
+      disabledWallets: [],
+      theme: { textColor: '#001428', backgroundColor: '#DDDDDD' },
+      publicRpcUri: { authentication: 'NO_AUTH', value: 'https://rpc.example.com' },
+      rpcUri: { authentication: 'NO_AUTH', value: 'https://rpc.example.com' },
+      safeAppsRpcUri: { authentication: 'NO_AUTH', value: 'https://rpc.example.com' },
+      transactionService: '',
+      gasPrice: [],
+    }
+
+    const jsonData = JSON.stringify({
+      version: '2.5',
+      data: {
+        customChains: [invalidChain],
+      },
+    })
+
+    const { result } = renderHook(() => useGlobalImportJsonParser(jsonData))
+
+    expect(result.current.customChains).toBeUndefined()
+  })
+
+  it('should drop imported v2.5 custom chains with incomplete multisend overrides', () => {
+    const invalidMultisendChain = {
+      chainId: '84532',
+      chainName: 'Base Sepolia',
+      shortName: 'base-sepolia',
+      custom: true,
+      description: '',
+      chainLogoUri: null,
+      l2: true,
+      isTestnet: true,
+      nativeCurrency: {
+        name: 'Ether',
+        symbol: 'ETH',
+        decimals: 18,
+        logoUri: '',
+      },
+      blockExplorerUriTemplate: {
+        address: 'https://sepolia.basescan.org/address/{{address}}',
+        txHash: 'https://sepolia.basescan.org/tx/{{txHash}}',
+        api: '',
+      },
+      features: [],
+      disabledWallets: [],
+      theme: {
+        textColor: '#001428',
+        backgroundColor: '#DDDDDD',
+      },
+      publicRpcUri: {
+        authentication: 'NO_AUTH',
+        value: 'https://sepolia.base.org',
+      },
+      rpcUri: {
+        authentication: 'NO_AUTH',
+        value: 'https://sepolia.base.org',
+      },
+      safeAppsRpcUri: {
+        authentication: 'NO_AUTH',
+        value: 'https://sepolia.base.org',
+      },
+      transactionService: '',
+      gasPrice: [],
+      multisendAddress: '0x1111111111111111111111111111111111111111',
+    }
+
+    const jsonData = JSON.stringify({
+      version: '2.5',
+      data: {
+        customChains: [invalidMultisendChain],
+      },
+    })
+
+    const { result } = renderHook(() => useGlobalImportJsonParser(jsonData))
+
+    expect(result.current.customChains).toBeUndefined()
+  })
 })

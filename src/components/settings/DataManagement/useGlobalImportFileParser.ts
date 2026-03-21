@@ -9,18 +9,137 @@ import type { CustomTokensState } from '@/store/customTokensSlice'
 import type { AddedTxsState } from '@/store/addedTxsSlice'
 import type { SafeAppsState } from '@/store/safeAppsSlice'
 import type { SettingsState } from '@/store/settingsSlice'
+import type { ChainInfo } from '@/store/customChainsSlice'
+import getChainsConfig from '@/config/supportedChains'
 
 import { useMemo } from 'react'
 
 export const enum SAFE_EXPORT_VERSION {
   V1 = '1.0',
   V2 = '2.0',
+  V2_5 = '2.5', // Note: 2.5 is chosen specifically to be different from versions from the safe team
+  // https://github.com/safe-global/safe-wallet-monorepo/blob/85aaeafca7a646fcc658a12d67c2e57808f226b7/apps/web/src/components/settings/DataManagement/useGlobalImportFileParser.ts#L52
 }
 
 export enum ImportErrors {
   INVALID_VERSION = 'The file is not an Eternal Safe export.',
   INVALID_JSON_FORMAT = 'The JSON format is invalid.',
   NO_IMPORT_DATA_FOUND = 'This file contains no importable data.',
+}
+
+const WEB_URL_PROTOCOLS = new Set(['http:', 'https:'])
+const RPC_URL_PROTOCOLS = new Set(['http:', 'https:', 'ws:', 'wss:'])
+const CHAIN_ID_REGEX = /^[1-9]\d*$/
+const SHORT_NAME_REGEX = /^[a-zA-Z0-9-]+$/
+const BUILT_IN_CHAINS = getChainsConfig()
+const BUILT_IN_CHAIN_IDS = new Set(BUILT_IN_CHAINS.map((chain) => chain.chainId))
+const BUILT_IN_SHORT_NAMES = new Set(BUILT_IN_CHAINS.map((chain) => chain.shortName.toLowerCase()))
+
+const isUrlWithAllowedProtocol = (url: string, allowedProtocols: Set<string>): boolean => {
+  try {
+    return allowedProtocols.has(new URL(url).protocol)
+  } catch {
+    return false
+  }
+}
+
+const isEthAddress = (value?: string): boolean => {
+  if (!value) return false
+  return /^0x[a-fA-F0-9]{40}$/.test(value)
+}
+
+const isValidImportedCustomChain = (chain: unknown): chain is ChainInfo => {
+  if (!chain || typeof chain !== 'object') {
+    return false
+  }
+
+  const candidate = chain as Partial<ChainInfo>
+
+  if (!candidate.chainId || typeof candidate.chainId !== 'string') {
+    return false
+  }
+  if (!CHAIN_ID_REGEX.test(candidate.chainId)) {
+    return false
+  }
+
+  if (!candidate.chainName || typeof candidate.chainName !== 'string') {
+    return false
+  }
+
+  if (!candidate.shortName || typeof candidate.shortName !== 'string') {
+    return false
+  }
+  if (!SHORT_NAME_REGEX.test(candidate.shortName)) {
+    return false
+  }
+
+  const rpc = candidate.rpcUri?.value
+  const publicRpc = candidate.publicRpcUri?.value
+  const safeAppsRpc = candidate.safeAppsRpcUri?.value
+
+  if (!rpc || !isUrlWithAllowedProtocol(rpc, RPC_URL_PROTOCOLS)) {
+    return false
+  }
+
+  if (!publicRpc || !isUrlWithAllowedProtocol(publicRpc, RPC_URL_PROTOCOLS)) {
+    return false
+  }
+
+  if (!safeAppsRpc || !isUrlWithAllowedProtocol(safeAppsRpc, RPC_URL_PROTOCOLS)) {
+    return false
+  }
+
+  const explorerAddressUrl = candidate.blockExplorerUriTemplate?.address
+  const explorerTxUrl = candidate.blockExplorerUriTemplate?.txHash
+
+  if (explorerAddressUrl && !isUrlWithAllowedProtocol(explorerAddressUrl, WEB_URL_PROTOCOLS)) {
+    return false
+  }
+
+  if (explorerTxUrl && !isUrlWithAllowedProtocol(explorerTxUrl, WEB_URL_PROTOCOLS)) {
+    return false
+  }
+
+  const hasAnyMultisendOverride = !!candidate.multisendAddress || !!candidate.multisendCallOnlyAddress
+  if (hasAnyMultisendOverride) {
+    if (!isEthAddress(candidate.multisendAddress) || !isEthAddress(candidate.multisendCallOnlyAddress)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+const sanitizeImportedCustomChains = (chains: unknown): ChainInfo[] | undefined => {
+  if (!Array.isArray(chains)) {
+    return undefined
+  }
+
+  const byChainId = new Map<string, ChainInfo>()
+  const shortNames = new Set<string>()
+
+  for (const chain of chains) {
+    if (!isValidImportedCustomChain(chain)) {
+      continue
+    }
+
+    const normalizedShortName = chain.shortName.toLowerCase()
+
+    if (BUILT_IN_CHAIN_IDS.has(chain.chainId) || BUILT_IN_SHORT_NAMES.has(normalizedShortName)) {
+      continue
+    }
+    if (byChainId.has(chain.chainId) || shortNames.has(normalizedShortName)) {
+      continue
+    }
+
+    shortNames.add(normalizedShortName)
+    byChainId.set(chain.chainId, {
+      ...chain,
+      custom: true,
+    })
+  }
+
+  return byChainId.size > 0 ? Array.from(byChainId.values()) : undefined
 }
 
 const countEntries = (data: { [chainId: string]: { [address: string]: unknown } }) =>
@@ -59,6 +178,17 @@ export const _filterValidAbEntries = (ab?: AddressBookState): AddressBookState |
  *  - added Safes
  *  - safeApps
  *  - settings
+ *  - added txs
+ *  - customTokens
+ *
+ * 2.5: eternalsafe exclusive!
+ *  - address book
+ *  - added Safes
+ *  - safeApps
+ *  - settings
+ *  - added txs
+ *  - customTokens
+ *  - customChains
  *
  * @param jsonData
  * @returns data to import and some insights about it
@@ -68,6 +198,7 @@ type Data = {
   addedSafes?: AddedSafesState
   addressBook?: AddressBookState
   customTokens?: CustomTokensState
+  customChains?: ChainInfo[]
   addedTxs?: AddedTxsState
   settings?: SettingsState
   safeApps?: SafeAppsState
@@ -84,6 +215,7 @@ export const useGlobalImportJsonParser = (jsonData: string | undefined): Data =>
       addressBook: undefined,
       addedSafes: undefined,
       customTokens: undefined,
+      customChains: undefined,
       addedTxs: undefined,
       settings: undefined,
       safeApps: undefined,
@@ -124,6 +256,18 @@ export const useGlobalImportJsonParser = (jsonData: string | undefined): Data =>
         data.addedTxs = parsedFile.data.addedTxs
         data.settings = parsedFile.data.settings
         data.safeApps = parsedFile.data.safeApps
+
+        break
+      }
+
+      case SAFE_EXPORT_VERSION.V2_5: {
+        data.addressBook = _filterValidAbEntries(parsedFile.data.addressBook)
+        data.addedSafes = parsedFile.data.addedSafes
+        data.customTokens = parsedFile.data.customTokens
+        data.addedTxs = parsedFile.data.addedTxs
+        data.settings = parsedFile.data.settings
+        data.safeApps = parsedFile.data.safeApps
+        data.customChains = sanitizeImportedCustomChains(parsedFile.data.customChains)
 
         break
       }

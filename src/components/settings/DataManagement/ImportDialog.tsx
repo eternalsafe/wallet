@@ -15,6 +15,7 @@ import { showNotification } from '@/store/notificationsSlice'
 
 import css from './styles.module.css'
 import { customTokensSlice } from '@/store/customTokensSlice'
+import { setCustomChains } from '@/store/customChainsSlice'
 import { addedTxsSlice } from '@/store/addedTxsSlice'
 
 export const ImportDialog = ({
@@ -40,10 +41,12 @@ export const ImportDialog = ({
     addedTxs,
     settings,
     safeApps,
+    customChains,
     error,
   } = useGlobalImportJsonParser(jsonData)
 
-  const isDisabled = (!addedSafes && !addressBook && !settings && !safeApps) || !!error
+  const isDisabled =
+    (!addedSafes && !addressBook && !customTokens && !addedTxs && !settings && !safeApps && !customChains) || !!error
 
   const handleClose = () => {
     setFileName(undefined)
@@ -74,6 +77,10 @@ export const ImportDialog = ({
 
     if (safeApps) {
       dispatch(safeAppsSlice.actions.setSafeApps(safeApps))
+    }
+
+    if (customChains) {
+      dispatch(setCustomChains(customChains))
     }
 
     dispatch(
@@ -114,6 +121,7 @@ export const ImportDialog = ({
               customTokens={customTokens}
               addedTxs={addedTxs}
               settings={settings}
+              customChains={customChains}
               safeApps={safeApps}
               error={error}
               showPreview
@@ -121,8 +129,7 @@ export const ImportDialog = ({
             {!isDisabled && (
               <Alert severity="warning">
                 <AlertTitle sx={{ fontWeight: 700 }}>Overwrite your current data?</AlertTitle>
-                This action will overwrite your currently added Safe Accounts, address book and settings with those from
-                the imported file.
+                This action will overwrite your current data for all imported sections.
               </Alert>
             )}
           </>

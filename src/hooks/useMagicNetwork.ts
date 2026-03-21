@@ -2,118 +2,141 @@ import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAppDispatch } from '@/store'
 import { setRpc } from '@/store/settingsSlice'
-import { addChain, type ChainInfo } from '@/store/customChainsSlice'
+import { upsertChain, type ChainInfo } from '@/store/customChainsSlice'
 import { type RPC_AUTHENTICATION } from '@safe-global/safe-gateway-typescript-sdk'
-import useChainId from '@/hooks/useChainId'
 import useChains from './useChains'
 import { showNotification } from '@/store/notificationsSlice'
 import { useRouter } from 'next/router'
+import { useConfirmationDialog } from '@/components/common/ConfirmationDialog'
+import {
+  clearMagicNetworkParams,
+  decodeSearchParamValue,
+  getMagicNetworkValidationError,
+  hasRequiredMagicNetworkParams,
+  parseMagicNetworkParams,
+} from './useMagicNetwork.utils'
+
+export { decodeSearchParamValue }
 
 export const useMagicNetwork = (): void => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
-  const chainId = useChainId()
   const supportedChains = useChains()
+  const { confirm } = useConfirmationDialog()
 
   useEffect(() => {
-    // Get params
-    const chainIdParam = searchParams.get('chainId')
-    const chainName = searchParams.get('chain')
-    const rpcUrl = searchParams.get('rpc')
-    const shortName = searchParams.get('shortName')
-    const currencyName = searchParams.get('currency')
-    const currencySymbol = searchParams.get('symbol')
-    const currencyLogo = searchParams.get('logo')
-    const explorerAddr = searchParams.get('expAddr')
-    const explorerTx = searchParams.get('expTx')
-    const l2 = searchParams.get('l2')
-    const isTestnet = searchParams.get('testnet')
+    const run = async () => {
+      const params = parseMagicNetworkParams(searchParams)
 
-    // Return if no RPC param, chainId or chainName
-    if (!rpcUrl || !chainIdParam || !chainName) return
+      // Return if no RPC param, chainId or chainName
+      if (!hasRequiredMagicNetworkParams(params)) return
 
-    // Check if chain already exists in supported chains
-    const existingChain = supportedChains.configs.find((chain) => chain.chainId === chainIdParam)
+      const existingChain = supportedChains.configs.find((chain) => chain.chainId === params.chainIdParam)
+      const validationError = getMagicNetworkValidationError(params, existingChain, supportedChains.configs)
 
-    if (!existingChain) {
-      // Return if no currency info
-      if (!currencyName || !currencySymbol || !shortName) {
-        const missingParams = [
-          !currencyName ? 'currency' : '',
-          !currencySymbol ? 'symbol' : '',
-          !shortName ? 'shortName' : '',
-          !chainName ? 'chain' : '',
-        ]
-          .filter(Boolean)
-          .join(', ')
-        dispatch(
-          showNotification({
-            message: `Missing required network params: ${missingParams}`,
-            groupKey: 'missing-network-params',
-            variant: 'error',
-          }),
-        )
+      if (validationError) {
+        dispatch(showNotification(validationError))
+        clearMagicNetworkParams(router)
         return
       }
 
-      // Create a new chain configuration
-      const newChain = {
-        custom: true,
-        chainId: chainIdParam,
-        chainName,
-        shortName,
-        description: '',
-        chainLogoUri: currencyLogo || null,
-        l2: l2 === 'true',
-        isTestnet: isTestnet === 'true',
-        nativeCurrency: {
-          name: currencyName,
-          symbol: currencySymbol,
-          decimals: 18,
-          logoUri: currencyLogo || '',
-        },
-        blockExplorerUriTemplate: {
-          address: explorerAddr || 'https://example.com/address/{{address}}',
-          txHash: explorerTx || 'https://example.com/tx/{{txHash}}',
-          api: '',
-        },
-        features: [],
-        disabledWallets: [],
-        theme: {
-          textColor: '#001428',
-          backgroundColor: '#DDDDDD',
-        },
-        publicRpcUri: {
-          authentication: 'NO_AUTH' as RPC_AUTHENTICATION,
-          value: decodeURIComponent(rpcUrl),
-        },
-        rpcUri: {
-          authentication: 'NO_AUTH' as RPC_AUTHENTICATION,
-          value: decodeURIComponent(rpcUrl),
-        },
-        safeAppsRpcUri: {
-          authentication: 'NO_AUTH' as RPC_AUTHENTICATION,
-          value: decodeURIComponent(rpcUrl),
-        },
-        transactionService: '',
-        gasPrice: [],
-      } as ChainInfo
+      const isConfirmed = await confirm({
+        title: 'Apply network configuration',
+        message: `Apply network configuration for "${existingChain?.chainName || params.chainName}" (chainId ${
+          params.chainIdParam
+        })?`,
+        confirmText: 'Apply',
+      })
 
-      // Add the chain to Redux store
-      dispatch(addChain(newChain))
+      if (!isConfirmed) {
+        dispatch(
+          showNotification({
+            message: 'Custom network changes canceled.',
+            groupKey: 'magic-network-canceled',
+            variant: 'warning',
+          }),
+        )
+        clearMagicNetworkParams(router)
+        return
+      }
+
+      const targetShortName = existingChain?.shortName || params.shortName
+
+      if (!existingChain) {
+        // Create a new chain configuration
+        const newChain = {
+          custom: true,
+          chainId: params.chainIdParam,
+          chainName: params.chainName,
+          shortName: params.shortName,
+          description: '',
+          chainLogoUri: params.currencyLogo || null,
+          l2: params.l2 === 'true',
+          isTestnet: params.isTestnet === 'true',
+          nativeCurrency: {
+            name: params.currencyName,
+            symbol: params.currencySymbol,
+            decimals: 18,
+            logoUri: params.currencyLogo || '',
+          },
+          blockExplorerUriTemplate: {
+            address: params.explorerAddr || 'https://example.com/address/{{address}}',
+            txHash: params.explorerTx || 'https://example.com/tx/{{txHash}}',
+            api: '',
+          },
+          features: [],
+          disabledWallets: [],
+          theme: {
+            textColor: '#001428',
+            backgroundColor: '#DDDDDD',
+          },
+          publicRpcUri: {
+            authentication: 'NO_AUTH' as RPC_AUTHENTICATION,
+            value: params.decodedRpcUrl,
+          },
+          rpcUri: {
+            authentication: 'NO_AUTH' as RPC_AUTHENTICATION,
+            value: params.decodedRpcUrl,
+          },
+          safeAppsRpcUri: {
+            authentication: 'NO_AUTH' as RPC_AUTHENTICATION,
+            value: params.decodedRpcUrl,
+          },
+          transactionService: '',
+          gasPrice: [],
+          multisendAddress: params.multisendAddress,
+          multisendCallOnlyAddress: params.multisendCallOnlyAddress,
+        } as ChainInfo
+
+        dispatch(upsertChain(newChain))
+      } else if (existingChain.custom && params.multisendAddress && params.multisendCallOnlyAddress) {
+        dispatch(
+          upsertChain({
+            ...existingChain,
+            multisendAddress: params.multisendAddress,
+            multisendCallOnlyAddress: params.multisendCallOnlyAddress,
+          }),
+        )
+      }
+
+      // Store RPC URL in settings
+      dispatch(
+        setRpc({
+          chainId: params.chainIdParam,
+          rpc: params.decodedRpcUrl,
+        }),
+      )
+
+      if (targetShortName) {
+        router.replace({ query: { chain: targetShortName } })
+      } else {
+        clearMagicNetworkParams(router)
+      }
     }
 
-    // Store RPC URL in settings
-    dispatch(
-      setRpc({
-        chainId: chainIdParam,
-        rpc: decodeURIComponent(rpcUrl),
-      }),
-    )
-
-    router.replace({ query: { chain: shortName } })
-  }, [searchParams, dispatch, chainId, supportedChains, router])
+    void run()
+  }, [searchParams, dispatch, supportedChains, router, confirm])
 }
 
 export default useMagicNetwork
