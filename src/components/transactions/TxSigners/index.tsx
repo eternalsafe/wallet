@@ -16,6 +16,7 @@ import type {
   TransactionDetails,
   TransactionSummary,
 } from '@safe-global/safe-gateway-typescript-sdk'
+import { TransactionStatus } from '@safe-global/safe-gateway-typescript-sdk'
 
 import useWallet from '@/hooks/wallets/useWallet'
 import useIsPending from '@/hooks/useIsPending'
@@ -130,6 +131,7 @@ export const TxSigners = ({ txDetails, txSummary }: TxSignersProps): ReactElemen
   const canExecute = wallet?.address ? isExecutable(txSummary, wallet.address, safe) : false
   const confirmationsNeeded = confirmationsRequired - confirmations.length
   const isConfirmed = confirmationsNeeded <= 0 || canExecute || executor
+  const isExecuted = Boolean(executor || txDetails.executedAt || txDetails.txStatus === TransactionStatus.SUCCESS)
   const showConfirmationCount = confirmationsRequired > 0 && !executor
 
   return (
@@ -194,11 +196,11 @@ export const TxSigners = ({ txDetails, txSummary }: TxSignersProps): ReactElemen
           </ListItem>
         )}
         <ListItem>
-          <StyledListItemIcon $state={executor ? StepState.CONFIRMED : StepState.DISABLED}>
-            {executor ? <Check /> : <MissingConfirmation />}
+          <StyledListItemIcon $state={isExecuted ? StepState.CONFIRMED : StepState.DISABLED}>
+            {isExecuted ? <Check /> : <MissingConfirmation />}
           </StyledListItemIcon>
           <ListItemText data-testid="tx-action-status" primaryTypographyProps={{ fontWeight: 700 }}>
-            {executor ? 'Executed' : isPending ? txStatus : 'Can be executed'}
+            {isExecuted ? 'Executed' : isPending ? txStatus : 'Can be executed'}
           </ListItemText>
         </ListItem>
       </List>
