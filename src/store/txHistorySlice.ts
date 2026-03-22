@@ -12,7 +12,21 @@ export const selectTxHistory = selector
 
 export const selectTxFromHistory = createSelector(
   [selectTxHistory, (_: RootState, txId: string | undefined) => [txId]],
-  (txHistory, [txId]): TxHistoryItem | undefined => (txId ? txHistory?.data?.[txId] : undefined),
+  (txHistory, [txId]): TxHistoryItem | undefined => {
+    if (!txId) {
+      return undefined
+    }
+
+    const exactMatch = txHistory?.data?.[txId]
+    if (exactMatch) {
+      return exactMatch
+    }
+
+    // Tx ids can differ only by checksum casing in the embedded Safe address.
+    const normalizedTxId = txId.toLowerCase()
+
+    return Object.entries(txHistory?.data ?? {}).find(([key]) => key.toLowerCase() === normalizedTxId)?.[1]
+  },
 )
 
 export const txHistoryListener = (listenerMiddleware: typeof listenerMiddlewareInstance) => {
