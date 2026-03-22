@@ -1,6 +1,9 @@
 name: Unit tests
 on:
   pull_request:
+  push:
+    branches:
+      - eternalsafe
 
 permissions:
   contents: read
@@ -20,7 +23,12 @@ jobs:
       - name: Install dependencies
         uses: ./.github/workflows/yarn
 
-      - name: Annotations and coverage report
+      - name: Run tests (push)
+        if: github.event_name == 'push'
+        run: yarn test:ci
+
+      - name: Annotations and coverage report (pull request)
+        if: github.event_name == 'pull_request'
         uses: ArtiomTr/jest-coverage-report-action@v2
         with:
           skip-step: install
