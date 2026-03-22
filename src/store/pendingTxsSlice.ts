@@ -2,6 +2,7 @@ import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolki
 
 import type { RootState } from '@/store'
 import { sameAddress } from '@/utils/addresses'
+import { normalizeTxId } from '@/utils/tx-id'
 
 export enum PendingStatus {
   SIGNING = 'SIGNING',
@@ -33,10 +34,10 @@ export const pendingTxsSlice = createSlice({
   reducers: {
     setPendingTx: (state, action: PayloadAction<PendingTx & { txId: string }>) => {
       const { txId, ...pendingTx } = action.payload
-      state[txId] = pendingTx
+      state[normalizeTxId(txId)] = pendingTx
     },
     clearPendingTx: (state, action: PayloadAction<{ txId: string }>) => {
-      delete state[action.payload.txId]
+      delete state[normalizeTxId(action.payload.txId)]
     },
   },
 })
@@ -49,7 +50,7 @@ export const selectPendingTxs = (state: RootState): PendingTxsState => {
 
 export const selectPendingTxById = createSelector(
   [selectPendingTxs, (_: RootState, txId: string) => txId],
-  (pendingTxs, txId) => pendingTxs[txId],
+  (pendingTxs, txId) => pendingTxs[normalizeTxId(txId)],
 )
 
 export const selectPendingTxIdsBySafe = createSelector(

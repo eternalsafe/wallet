@@ -10,6 +10,7 @@ import { showNotification } from '@/store/notificationsSlice'
 import { getSafeContract } from '@/utils/safe-versions'
 import type { SafeTransactionData } from '@safe-global/safe-core-sdk-types'
 import type { Result } from 'ethers/lib/utils'
+import { buildMultisigTxId } from '@/utils/tx-id'
 
 export type TxHistoryItem = {
   txId: string
@@ -75,7 +76,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
           ])
 
           return {
-            txId: `multisig_${safeAddress}_${log.args.txHash}`,
+            txId: buildMultisigTxId(safeAddress, log.args.txHash),
             txHash: log.transactionHash,
             safeTxHash: log.args.txHash,
             timestamp,

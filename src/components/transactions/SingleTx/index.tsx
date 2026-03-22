@@ -16,6 +16,7 @@ import { selectAddedTx } from '@/store/addedTxsSlice'
 import { extractTxDetails } from '@/services/tx/extractTxInfo'
 import { useTransactionMagicLink } from '@/hooks/useMagicLink'
 import { selectTxFromHistory } from '@/store/txHistorySlice'
+import { buildMultisigTxId, normalizeTxId } from '@/utils/tx-id'
 
 const SingleTxGrid = ({ txDetails }: { txDetails: TransactionDetails }): ReactElement => {
   const tx: Transaction = makeTxFromDetails(txDetails)
@@ -39,7 +40,8 @@ const SingleTxGrid = ({ txDetails }: { txDetails: TransactionDetails }): ReactEl
 const SingleTx = () => {
   const router = useRouter()
   const { id } = router.query
-  const transactionId = Array.isArray(id) ? id[0] : id
+  const transactionIdRaw = Array.isArray(id) ? id[0] : id
+  const transactionId = transactionIdRaw ? normalizeTxId(transactionIdRaw) : undefined
   const transactionKey = transactionId ? transactionId.split('_')[2] : undefined
   const { txKey } = useTransactionMagicLink()
 
@@ -67,7 +69,7 @@ const SingleTx = () => {
   useEffect(() => {
     if (txKey && safeAddress && router) {
       let query = { ...router.query }
-      query.id = `multisig_${safeAddress}_${txKey}`
+      query.id = buildMultisigTxId(safeAddress, txKey)
       delete query.tx
       router.push({ query })
     }

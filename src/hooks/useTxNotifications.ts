@@ -14,6 +14,7 @@ import useIsSafeOwner from '@/hooks/useIsSafeOwner'
 import useWallet from './wallets/useWallet'
 import useSafeAddress from './useSafeAddress'
 import { getExplorerLink } from '@/utils/gateway'
+import { normalizeTxId } from '@/utils/tx-id'
 
 const TxNotifications = {
   [TxEvent.SIGN_FAILED]: 'Failed to sign. Please try again.',
@@ -45,10 +46,12 @@ export const getTxLink = (
   chain: ChainInfo,
   safeAddress: string,
 ): { href: LinkProps['href']; title: string } => {
+  const normalizedTxId = normalizeTxId(txId)
+
   return {
     href: {
       pathname: AppRoutes.transactions.tx,
-      query: { id: txId, safe: `${chain?.shortName}:${safeAddress}` },
+      query: { id: normalizedTxId, safe: `${chain?.shortName}:${safeAddress}` },
     },
     title: 'View transaction',
   }
@@ -119,7 +122,7 @@ const useTxNotifications = (): void => {
 
     return data.filter(({ transaction }) => {
       const isAwaitingConfirmations = transaction.txStatus === TransactionStatus.AWAITING_CONFIRMATIONS
-      const isPending = !!pendingTxs[transaction.id]
+      const isPending = !!pendingTxs[normalizeTxId(transaction.id)]
       const canSign = isSignableBy(transaction, wallet?.address || '')
       return isAwaitingConfirmations && !isPending && canSign
     })

@@ -17,6 +17,7 @@ import { txDispatch, TxEvent } from '@/services/tx/txEvents'
 import { extractTxDetails } from '@/services/tx/extractTxInfo'
 import { useSafeSDK } from '@/hooks/coreSDK/safeCoreSDK'
 import useTxQueue from '@/hooks/useTxQueue'
+import { buildMultisigTxId } from '@/utils/tx-id'
 
 type TxActions = {
   signTx: (safeTx?: SafeTransaction, txId?: string, origin?: string) => Promise<string>
@@ -56,7 +57,7 @@ export const useTxActions = (): TxActions => {
       const txKey = await addOrUpdateTx(safeTx)
       if (!txKey) throw new Error('Failed to propose tx')
 
-      const proposedTxId = `multisig_${safe.address.value}_${txKey}`
+      const proposedTxId = buildMultisigTxId(safe.address.value, txKey)
 
       // Dispatch a success event only if the tx is signed
       // Unsigned txs are proposed only temporarily and won't appear in the queue

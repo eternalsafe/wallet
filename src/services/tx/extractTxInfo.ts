@@ -17,6 +17,7 @@ import { addressEx } from '@/utils/addresses'
 import type { Custom, MultisigExecutionDetails, TransactionData } from '@safe-global/safe-apps-sdk'
 import { ethers } from 'ethers'
 import { EternalSafeTransaction } from '@/store/addedTxsSlice'
+import { buildMultisigTxId, normalizeTxId } from '@/utils/tx-id'
 
 const ZERO_ADDRESS: string = '0x0000000000000000000000000000000000000000'
 const EMPTY_DATA: string = '0x'
@@ -177,7 +178,7 @@ export const extractTxDetails = async (
     trusted: true,
   }
 
-  const proposedTxId = txId ?? `multisig_${safeAddress}_${txKey}`
+  const proposedTxId = txId ? normalizeTxId(txId) : buildMultisigTxId(safeAddress, txKey)
 
   // modified in `enrichTransactionDetailsFromHistory`
   const txStatus =

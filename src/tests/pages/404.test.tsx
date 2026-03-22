@@ -32,7 +32,7 @@ describe('_getRedirectUrl', () => {
       search: '',
     } as Location)
     expect(url).toBe(
-      '/transactions/tx?safe=eth:0xA77DE01e157f9f57C7c4A326eeE9C4874D0598b6&id=multisig_0xA77DE01e157f9f57C7c4A326eeE9C4874D0598b6_0x102f72ce18d977a144ddef78c1f35a3102d04e94cc39e3e59d874874f22a7ec2',
+      '/transactions/tx?safe=eth:0xA77DE01e157f9f57C7c4A326eeE9C4874D0598b6&id=multisig_0xa77de01e157f9f57c7c4a326eee9c4874d0598b6_0x102f72ce18d977a144ddef78c1f35a3102d04e94cc39e3e59d874874f22a7ec2',
     )
   })
 
