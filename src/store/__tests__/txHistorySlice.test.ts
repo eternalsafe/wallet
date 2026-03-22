@@ -3,12 +3,36 @@ import { LabelValue, TransactionListItemType } from '@safe-global/safe-gateway-t
 import type { TransactionListItem, Label, ConflictHeader, DateLabel } from '@safe-global/safe-gateway-typescript-sdk'
 
 import * as txEvents from '@/services/tx/txEvents'
-import { txHistoryListener, txHistorySlice } from '../txHistorySlice'
+import { selectTxFromHistory, txHistoryListener, txHistorySlice } from '../txHistorySlice'
 import type { PendingTxsState } from '../pendingTxsSlice'
 import { PendingStatus } from '../pendingTxsSlice'
 import type { RootState } from '..'
 
 describe('txHistorySlice', () => {
+  describe('selectTxFromHistory', () => {
+    it('should match tx ids regardless of address casing', () => {
+      const txIdLower = 'multisig_0xa710c854ede0eeaf84ea272363083cfa547dd552_0xabc'
+      const txIdChecksum = 'multisig_0xa710c854edE0eEaF84eA272363083cfA547dd552_0xabc'
+
+      const state = {
+        txHistory: {
+          loading: false,
+          data: {
+            [txIdLower]: {
+              txId: txIdLower,
+              txHash: '0x123',
+              safeTxHash: '0xabc',
+              timestamp: 0,
+              executor: '0x0000000000000000000000000000000000000001',
+            },
+          },
+        },
+      } as RootState
+
+      expect(selectTxFromHistory(state, txIdChecksum)).toEqual(state.txHistory.data[txIdLower])
+    })
+  })
+
   describe('txHistoryListener', () => {
     const listenerMiddlewareInstance = createListenerMiddleware<RootState>()
 
