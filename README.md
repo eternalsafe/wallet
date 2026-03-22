@@ -1,7 +1,7 @@
 # Eternal Safe
 
 [![License](https://img.shields.io/github/license/eternalsafe/wallet)](https://github.com/eternalsafe/wallet/blob/eternal-safe/LICENSE)
-[![Tests](https://img.shields.io/github/actions/workflow/status/eternalsafe/wallet/unit-tests.yml?branch=eternalsafe&label=tests)](https://github.com/eternalsafe/wallet/actions/workflows/unit-tests.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/eternalsafe/wallet/unit-tests.yml?event=pull_request&label=tests)](https://github.com/eternalsafe/wallet/actions/workflows/unit-tests.yml)
 
 Eternal Safe is a decentralized fork of [Safe{Wallet}](https://github.com/safe-global/safe-wallet-monorepo), forked at v1.26.2. Funded by the [Safe Grants Program](https://app.charmverse.io/safe-grants-program/page-005239065690887612).
 
