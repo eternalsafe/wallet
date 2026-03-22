@@ -8,7 +8,6 @@ import { useWeb3ReadOnly } from '@/hooks/wallets/web3'
 import useTxHistory from './useTxHistory'
 import { isTransactionListItem } from '@/utils/transaction-guards'
 import useSafeInfo from './useSafeInfo'
-import { normalizeTxId } from '@/utils/tx-id'
 
 const pendingStatuses: Partial<Record<TxEvent, PendingStatus | null>> = {
   [TxEvent.SIGNATURE_PROPOSED]: null,
@@ -79,18 +78,17 @@ const useTxPendingStatuses = (): void => {
         // All pending txns should have a txId
         const txId = 'txId' in detail && detail.txId
         if (!txId) return
-        const normalizedTxId = normalizeTxId(txId)
 
         // Clear the pending status if the tx is no longer pending
         const isFinished = status === null
         if (isFinished) {
-          dispatch(clearPendingTx({ txId: normalizedTxId }))
+          dispatch(clearPendingTx({ txId }))
           return
         }
 
         // If we have future issues with statuses, we should refactor `useTxPendingStatuses`
         // @see https://github.com/safe-global/safe-wallet-web/issues/1754
-        const isIndexed = historicalTxs.some((tx) => normalizeTxId(tx.transaction.id) === normalizedTxId)
+        const isIndexed = historicalTxs.some((tx) => tx.transaction.id === txId)
 
         if (!isIndexed) {
           // Or set a new status
@@ -98,7 +96,7 @@ const useTxPendingStatuses = (): void => {
             setPendingTx({
               chainId,
               safeAddress: 'safeAddress' in detail ? detail.safeAddress : safeAddress,
-              txId: normalizedTxId,
+              txId,
               status,
               txHash: 'txHash' in detail ? detail.txHash : undefined,
               groupKey: 'groupKey' in detail ? detail.groupKey : undefined,

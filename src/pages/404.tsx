@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import type { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { AppRoutes } from '@/config/routes'
-import { normalizeTxId } from '@/utils/tx-id'
 
 // Rewrite the URL to put the Safe address into the query.
 export const _getRedirectUrl = (location: Location): string | undefined => {
@@ -19,9 +18,8 @@ export const _getRedirectUrl = (location: Location): string | undefined => {
       const isStaticPath = Object.values(AppRoutes.transactions).some((route) => route === newPath)
       if (!isStaticPath) {
         const txId = newPath.match(/\/transactions\/([^/]+)/)?.[1]
-        const normalizedTxId = txId ? normalizeTxId(txId) : undefined
         newPath = AppRoutes.transactions.tx
-        newSearch = normalizedTxId ? `${newSearch}&id=${normalizedTxId}` : newSearch
+        newSearch = `${newSearch}&id=${txId}`
       }
     }
 
