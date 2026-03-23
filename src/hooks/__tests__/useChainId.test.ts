@@ -86,6 +86,15 @@ describe('useChainId hook', () => {
     expect(result.current).toBe('100')
   })
 
+  it('should return the chainId based on the Sonic chain query', () => {
+    ;(useParams as any).mockImplementation(() => ({
+      chain: 'sonic',
+    }))
+
+    const { result } = renderHook(() => useChainId())
+    expect(result.current).toBe('146')
+  })
+
   it('should return the chainId from the safe address', () => {
     ;(useParams as any).mockImplementation(() => ({
       safe: 'matic:0x0000000000000000000000000000000000000000',
