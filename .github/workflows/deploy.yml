@@ -7,6 +7,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      statuses: write
     steps:
       - uses: actions/checkout@v4
 
@@ -27,7 +30,7 @@ jobs:
           storacha-key: ${{ secrets.W3_PRINCIPAL }}
           storacha-proof: ${{ secrets.W3_PROOF }}
           github-token: ${{ github.token }}
-          set-github-status: 'false'
+          set-github-status: 'true'
           set-pr-comment: 'false'
 
       - run: echo  "IPFS_HASH=${{ steps.ipfs.outputs.cid }}" >> $GITHUB_ENV
