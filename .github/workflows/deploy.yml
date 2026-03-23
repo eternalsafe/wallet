@@ -26,7 +26,6 @@ jobs:
           path-to-deploy: 'out'
           storacha-key: ${{ secrets.W3_PRINCIPAL }}
           storacha-proof: ${{ secrets.W3_PROOF }}
-          pinata-jwt-token: ${{ secrets.PINATA_JWT }}
           github-token: ${{ github.token }}
           set-github-status: 'false'
           set-pr-comment: 'false'
