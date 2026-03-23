@@ -7,6 +7,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      statuses: write
     steps:
       - uses: actions/checkout@v4
 
@@ -19,15 +22,18 @@ jobs:
           secrets: ${{ toJSON(secrets) }}
           prod: ${{ true }}
 
-      - name: Deploy using web3.storage
-        uses: web3-storage/add-to-web3@v3
-        id: w3up
+      - name: Deploy to IPFS
+        uses: ipfs/ipfs-deploy-action@v1
+        id: ipfs
         with:
-          path_to_add: 'out'
-          secret_key: ${{ secrets.W3_PRINCIPAL }}
-          proof: ${{ secrets.W3_PROOF }}
+          path-to-deploy: 'out'
+          storacha-key: ${{ secrets.W3_PRINCIPAL }}
+          storacha-proof: ${{ secrets.W3_PROOF }}
+          github-token: ${{ github.token }}
+          set-github-status: 'true'
+          set-pr-comment: 'false'
 
-      - run: echo  "IPFS_HASH=${{ steps.w3up.outputs.cid }}" >> $GITHUB_ENV
+      - run: echo  "IPFS_HASH=${{ steps.ipfs.outputs.cid }}" >> $GITHUB_ENV
 
       # Credit to https://github.com/DarkFlorist/Horswap/blob/adf430d7f208431b9e591f64f212a4b895b1ea21/.github/workflows/ipfs-deploy.yml
       - name: Create a release
