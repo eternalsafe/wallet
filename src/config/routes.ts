@@ -6,6 +6,12 @@ export const AppRoutes = {
   customChain: '/custom-chain',
   addressBook: '/address-book',
   addOwner: '/add-owner',
+  apps: {
+    open: '/apps/open',
+    index: '/apps',
+    custom: '/apps/custom',
+    bookmarked: '/apps/bookmarked',
+  },
   balances: {
     nfts: '/balances/nfts',
     index: '/balances',
