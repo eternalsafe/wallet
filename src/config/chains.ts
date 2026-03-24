@@ -16,6 +16,9 @@ const chains = networks.reduce<Chains>((result, { shortName, chainId }) => {
   return result
 }, {})
 
+// Keep Sonic available until protocol-kit ships the shortName mapping in this app's pinned version.
+chains.sonic = '146'
+
 const ChainLogos = {
   [chains.eth]: '/images/networks/mainnet.svg',
   [chains.bnb]: '/images/networks/bnb.svg',
@@ -29,6 +32,7 @@ const ChainLogos = {
   [chains.celo]: '/images/networks/celo.svg',
   [chains.arb1]: '/images/networks/arb.svg',
   [chains.avax]: '/images/networks/avax.svg',
+  [chains.sonic]: '/images/networks/sonic.svg',
   [chains.sep]: '/images/networks/sep.png',
 }
 
