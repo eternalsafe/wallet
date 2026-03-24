@@ -38,7 +38,7 @@ function encodeMetaTransaction(tx: MetaTransactionData): string {
   const data = arrayify(tx.data)
   const encoded = solidityPack(
     ['uint8', 'address', 'uint256', 'uint256', 'bytes'],
-    [tx.operation, tx.to, tx.value, data.length, data]
+    [tx.operation, tx.to, tx.value, data.length, data],
   )
   return encoded.slice(2)
 }

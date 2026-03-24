@@ -94,10 +94,10 @@ const MessageDialogError = ({ isOwner, submitError }: { isOwner: boolean; submit
     !wallet || !onboard
       ? 'No wallet is connected.'
       : !isOwner
-        ? "You are currently not an owner of this Safe Account and won't be able to confirm this message."
-        : submitError
-          ? 'Error confirming the message. Please try again.'
-          : null
+      ? "You are currently not an owner of this Safe Account and won't be able to confirm this message."
+      : submitError
+      ? 'Error confirming the message. Please try again.'
+      : null
 
   if (errorMessage) {
     return <ErrorMessage>{errorMessage}</ErrorMessage>
@@ -230,7 +230,6 @@ const SignMessage = ({ message, safeAppId, requestId }: ProposeProps | ConfirmPr
               <MessageHashField label="SafeMessage hash" hashValue={safeMessageHash} />
             </AccordionDetails>
           </Accordion>
-
         </CardContent>
       </TxCard>
 
@@ -260,7 +259,6 @@ const SignMessage = ({ message, safeAppId, requestId }: ProposeProps | ConfirmPr
             <WrongChainWarning />
 
             <MessageDialogError isOwner={isOwner} submitError={submitError} />
-
           </TxCard>
           <TxCard>
             <CardActions>

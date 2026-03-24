@@ -3,7 +3,9 @@ import SafeAppIframe from '@/components/safe-apps/AppFrame/SafeAppIframe'
 
 describe('SafeAppIframe', () => {
   it('renders a safe app iframe with sandbox permissions', () => {
-    render(<SafeAppIframe appUrl="https://tx-builder.safe.global" allowedFeaturesList="clipboard-read" title="Tx Builder" />)
+    render(
+      <SafeAppIframe appUrl="https://tx-builder.safe.global" allowedFeaturesList="clipboard-read" title="Tx Builder" />,
+    )
 
     const iframe = screen.getByTitle('Tx Builder')
 
