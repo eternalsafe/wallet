@@ -41,7 +41,12 @@ import css from './styles.module.css'
 import SafeAppIframe from './SafeAppIframe'
 import useGetSafeInfo from './useGetSafeInfo'
 import { hasFeature, FEATURES } from '@/utils/chains'
-import { selectTokenList, selectOnChainSigning, TOKEN_LISTS } from '@/store/settingsSlice'
+import {
+  selectSafeAppsUseLightBackground,
+  selectTokenList,
+  selectOnChainSigning,
+  TOKEN_LISTS,
+} from '@/store/settingsSlice'
 import { TxModalContext } from '@/components/tx-flow'
 import { SafeAppsTxFlow, SignMessageFlow, SignMessageOnChainFlow } from '@/components/tx-flow/flows'
 
@@ -64,6 +69,7 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
   const { safe, safeLoaded, safeAddress } = useSafeInfo()
   const tokenlist = useAppSelector(selectTokenList)
   const onChainSigning = useAppSelector(selectOnChainSigning)
+  const useLightSafeAppsBackground = useAppSelector(selectSafeAppsUseLightBackground)
 
   const addressBook = useAddressBook()
   const chain = useCurrentChain()
@@ -261,7 +267,7 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
         <title>{`Safe Apps - Viewer - ${remoteApp ? remoteApp.name : UNKNOWN_APP_NAME}`}</title>
       </Head>
 
-      <div className={css.wrapper}>
+      <div className={css.wrapper} style={{ backgroundColor: useLightSafeAppsBackground ? '#fff' : undefined }}>
         {appIsLoading && (
           <div className={css.loadingContainer}>
             {isLoadingSlow && (
@@ -278,6 +284,7 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
             height: '100%',
             display: appIsLoading ? 'none' : 'block',
             paddingBottom: queueBarVisible ? TRANSACTION_BAR_HEIGHT : 0,
+            backgroundColor: useLightSafeAppsBackground ? '#fff' : undefined,
           }}
         >
           <SafeAppIframe
