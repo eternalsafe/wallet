@@ -15,7 +15,6 @@ import type {
 } from '@safe-global/safe-apps-sdk'
 import { Methods } from '@safe-global/safe-apps-sdk'
 
-import { trackSafeAppOpenCount } from '@/services/safe-apps/track-app-usage-count'
 import { TxEvent, txSubscribe } from '@/services/tx/txEvents'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import useChainId from '@/hooks/useChainId'
@@ -213,10 +212,6 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
       setPermissionsRequest(undefined)
     }
   }
-
-  useEffect(() => {
-    trackSafeAppOpenCount(safeAppFromManifest.id)
-  }, [safeAppFromManifest.id])
 
   const onIframeLoad = useCallback(() => {
     const iframe = iframeRef.current

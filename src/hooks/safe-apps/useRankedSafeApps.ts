@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import type { SafeAppData } from '@safe-global/safe-gateway-typescript-sdk'
-import { rankSafeApps } from '@/services/safe-apps/track-app-usage-count'
 import { SafeAppsTag } from '@/config/constants'
 
 // number of ranked Safe Apps that we want to display
@@ -10,12 +9,10 @@ const useRankedSafeApps = (safeApps: SafeAppData[], pinnedSafeApps: SafeAppData[
   return useMemo(() => {
     if (!safeApps.length) return []
 
-    const mostUsedApps = rankSafeApps(safeApps)
-    const rankedPinnedApps = rankSafeApps(pinnedSafeApps)
-    const randomApps = safeApps.slice().sort(() => Math.random() - 0.5)
+    const sortedApps = safeApps.slice().sort((a, b) => a.name.localeCompare(b.name))
 
-    const allRankedApps = rankedPinnedApps
-      .concat(pinnedSafeApps, mostUsedApps, randomApps)
+    const allRankedApps = pinnedSafeApps
+      .concat(sortedApps)
       // Filter out Featured Apps because they are in their own section
       .filter((app) => !app.tags.includes(SafeAppsTag.DASHBOARD_FEATURED))
 

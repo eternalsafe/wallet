@@ -29,10 +29,6 @@ jest.mock('@/hooks/useChains', () => ({
   useCurrentChain: jest.fn(() => undefined),
 }))
 
-jest.mock('@/services/safe-apps/track-app-usage-count', () => ({
-  trackSafeAppOpenCount: jest.fn(),
-}))
-
 jest.mock('@/services/tx/txEvents', () => ({
   TxEvent: { SAFE_APPS_REQUEST: 'SAFE_APPS_REQUEST' },
   txSubscribe: jest.fn(() => jest.fn()),

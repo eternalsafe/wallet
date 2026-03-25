@@ -5,7 +5,6 @@ import SendToBlock from '@/components/tx/SendToBlock'
 import SignOrExecuteForm from '@/components/tx/SignOrExecuteForm'
 import { useCurrentChain } from '@/hooks/useChains'
 import type { SafeAppsTxParams } from '.'
-import { trackSafeAppTxCount } from '@/services/safe-apps/track-app-usage-count'
 import { createMultiSendCallOnlyTx, createTx, dispatchSafeAppsTx } from '@/services/tx/tx-sender'
 import useOnboard from '@/hooks/wallets/useOnboard'
 import useSafeInfo from '@/hooks/useSafeInfo'
@@ -21,7 +20,7 @@ type ReviewSafeAppsTxProps = {
 }
 
 const ReviewSafeAppsTx = ({
-  safeAppsTx: { txs, requestId, params, appId, app },
+  safeAppsTx: { txs, requestId, params, app },
   onSubmit,
 }: ReviewSafeAppsTxProps): ReactElement => {
   const { safe } = useSafeInfo()
@@ -51,7 +50,6 @@ const ReviewSafeAppsTx = ({
   const handleSubmit = async (txId: string) => {
     console.log('handleSubmit', safeTx)
     if (!safeTx || !onboard) return
-    trackSafeAppTxCount(Number(appId))
 
     let safeTxHash = ''
     try {
