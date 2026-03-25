@@ -7,9 +7,14 @@ jest.mock('@/hooks/useChainId', () => jest.fn(() => '1'))
 
 jest.mock('@/hooks/useSafeInfo', () =>
   jest.fn(() => ({
-    safe: { chainId: '1' },
+    safe: {
+      chainId: '1',
+      threshold: 1,
+      nonce: 0,
+      owners: [{ value: '0x0000000000000000000000000000000000000001' }],
+    },
     safeLoaded: true,
-    safeAddress: '0x123',
+    safeAddress: '0x0000000000000000000000000000000000000123',
   })),
 )
 
@@ -95,6 +100,9 @@ jest.mock('@/components/tx-flow/flows', () => ({
   SignMessageOnChainFlow: () => null,
 }))
 
+const mockUseAppCommunicator = jest.requireMock('@/components/safe-apps/AppFrame/useAppCommunicator')
+  .default as jest.Mock
+
 const safeAppFromManifest = {
   id: 0.1,
   url: 'https://example.com',
@@ -113,6 +121,7 @@ const safeAppFromManifest = {
 describe('AppFrame appearance', () => {
   beforeEach(() => {
     localStorage.clear()
+    jest.clearAllMocks()
   })
 
   it('uses a light app surface by default', () => {
@@ -143,5 +152,89 @@ describe('AppFrame appearance', () => {
 
     expect(wrapper).not.toHaveStyle({ backgroundColor: '#fff' })
     expect(appContainer).not.toHaveStyle({ backgroundColor: '#fff' })
+  })
+
+  it('returns local balances via communicator handler', async () => {
+    render(<AppFrame appUrl="https://example.com" allowedFeaturesList="" safeAppFromManifest={safeAppFromManifest} />, {
+      initialReduxState: {
+        balances: {
+          data: [
+            {
+              tokenInfo: {
+                type: 'NATIVE_TOKEN',
+                address: '0x0000000000000000000000000000000000000000',
+                decimals: 18,
+                symbol: 'ETH',
+                name: 'Ether',
+                logoUri: 'https://example.com/eth.png',
+              },
+              balance: '42',
+              fiatBalance: '',
+              fiatConversion: '',
+            },
+          ],
+          loading: false,
+          error: undefined,
+        },
+      },
+    })
+
+    const handlers = mockUseAppCommunicator.mock.calls.at(-1)?.[3]
+    const balances = await handlers.onGetSafeBalances('usd')
+
+    expect(balances).toEqual({
+      fiatTotal: '0',
+      items: [
+        {
+          tokenInfo: {
+            type: 'NATIVE_TOKEN',
+            address: '0x0000000000000000000000000000000000000000',
+            decimals: 18,
+            symbol: 'ETH',
+            name: 'Ether',
+            logoUri: 'https://example.com/eth.png',
+          },
+          balance: '42',
+          fiatBalance: '0',
+          fiatConversion: '0',
+        },
+      ],
+    })
+  })
+
+  it('returns local transaction details via communicator handler', async () => {
+    render(<AppFrame appUrl="https://example.com" allowedFeaturesList="" safeAppFromManifest={safeAppFromManifest} />, {
+      initialReduxState: {
+        txHistory: {
+          data: {
+            multisig_0x0000000000000000000000000000000000000123_0xabc: {
+              txId: 'multisig_0x0000000000000000000000000000000000000123_0xabc',
+              txHash: '0x1234',
+              safeTxHash: '0xabc',
+              timestamp: 1700000000000,
+              executor: '0x0000000000000000000000000000000000000005',
+            },
+          },
+          loading: false,
+          error: undefined,
+        },
+      },
+    })
+
+    const handlers = mockUseAppCommunicator.mock.calls.at(-1)?.[3]
+    const txDetails = await handlers.onGetTxBySafeTxHash('0xabc')
+
+    expect(txDetails.txInfo.type).toBe('Custom')
+    expect(txDetails.safeAddress).toBe('0x0000000000000000000000000000000000000123')
+  })
+
+  it('throws for off-chain signatures when not in local state', async () => {
+    render(<AppFrame appUrl="https://example.com" allowedFeaturesList="" safeAppFromManifest={safeAppFromManifest} />)
+
+    const handlers = mockUseAppCommunicator.mock.calls.at(-1)?.[3]
+
+    await expect(handlers.onGetOffChainSignature('0xhash')).rejects.toThrow(
+      'Off-chain signatures are not supported yet. See issue #7.',
+    )
   })
 })

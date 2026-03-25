@@ -4,7 +4,6 @@ import { useCallback, useEffect } from 'react'
 import { CircularProgress, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import { getBalances, getTransactionDetails, getSafeMessage } from '@safe-global/safe-gateway-typescript-sdk'
 import type {
   AddressBookItem,
   BaseTransaction,
@@ -46,6 +45,11 @@ import {
 } from '@/store/settingsSlice'
 import { TxModalContext } from '@/components/tx-flow'
 import { SafeAppsTxFlow, SignMessageFlow, SignMessageOnChainFlow } from '@/components/tx-flow/flows'
+import useBalances from '@/hooks/useBalances'
+import { selectAddedTxs } from '@/store/addedTxsSlice'
+import { selectTxHistory } from '@/store/txHistorySlice'
+import { extractTxDetails } from '@/services/tx/extractTxInfo'
+import { enrichTransactionDetailsFromHistory, partiallyDecodedTransaction } from '@/utils/transactions'
 
 type AppFrameProps = {
   appUrl: string
@@ -62,6 +66,9 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
   const [currentRequestId, setCurrentRequestId] = useState<RequestId | undefined>()
   const safeMessages = useAppSelector(selectSafeMessages)
   const { safe, safeLoaded, safeAddress } = useSafeInfo()
+  const { balances } = useBalances()
+  const addedTxs = useAppSelector((state) => selectAddedTxs(state, chainId, safeAddress))
+  const { data: txHistory } = useAppSelector(selectTxHistory)
   const tokenlist = useAppSelector(selectTokenList)
   const onChainSigning = useAppSelector(selectOnChainSigning)
   const useLightSafeAppsBackground = useAppSelector(selectSafeAppsUseLightBackground)
@@ -81,6 +88,34 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
   const { getPermissions, hasPermission, permissionsRequest, setPermissionsRequest, confirmPermissionRequest } =
     useSafePermissions()
   const { setTxFlow } = useContext(TxModalContext)
+
+  const getTxBySafeTxHash = useCallback(
+    async (safeTxHash: string) => {
+      if (!safeAddress) {
+        throw new Error('Safe is not loaded yet')
+      }
+
+      const localTx = addedTxs?.[safeTxHash]
+      const executedTx = Object.values(txHistory || {}).find((tx) => tx.safeTxHash === safeTxHash)
+
+      if (localTx) {
+        const details = await extractTxDetails(safeAddress, localTx, safe)
+
+        if (executedTx) {
+          enrichTransactionDetailsFromHistory(details, executedTx)
+        }
+
+        return details
+      }
+
+      if (executedTx) {
+        return partiallyDecodedTransaction(executedTx, safeAddress).details
+      }
+
+      throw new Error('Transaction not found locally')
+    },
+    [addedTxs, safe, safeAddress, txHistory],
+  )
 
   const onTxFlowClose = () => {
     setCurrentRequestId((prevId) => {
@@ -146,17 +181,29 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
 
       return []
     },
-    onGetTxBySafeTxHash: (safeTxHash) => getTransactionDetails(chainId, safeTxHash),
+    onGetTxBySafeTxHash: getTxBySafeTxHash,
     onGetEnvironmentInfo: () => ({
       origin: document.location.origin,
     }),
     onGetSafeInfo: useGetSafeInfo(),
-    onGetSafeBalances: (currency) => {
+    onGetSafeBalances: async (_currency) => {
       const isDefaultTokenlistSupported = chain && hasFeature(chain, FEATURES.DEFAULT_TOKENLIST)
-      return getBalances(chainId, safeAddress, currency, {
-        exclude_spam: true,
-        trusted: isDefaultTokenlistSupported && TOKEN_LISTS.TRUSTED === tokenlist,
-      })
+      const shouldIncludeOnlyTrustedTokens = isDefaultTokenlistSupported && TOKEN_LISTS.TRUSTED === tokenlist
+
+      return {
+        fiatTotal: '0',
+        items: balances
+          .filter((token) => {
+            if (!shouldIncludeOnlyTrustedTokens) return true
+            return !token.custom
+          })
+          .map((token) => ({
+            tokenInfo: token.tokenInfo,
+            balance: token.balance,
+            fiatBalance: token.fiatBalance || '0',
+            fiatConversion: token.fiatConversion || '0',
+          })),
+      }
     },
     onGetChainInfo: () => {
       if (!chain) return
@@ -190,12 +237,8 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
         return safeMessage.preparedSignature
       }
 
-      try {
-        const { preparedSignature } = await getSafeMessage(chainId, messageHash)
-        return preparedSignature
-      } catch {
-        return ''
-      }
+      // TODO(issue #7): Re-implement off-chain signature lookup once issue #7 is closed.
+      throw new Error('Off-chain signatures are not supported yet. See issue #7.')
     },
   })
 
