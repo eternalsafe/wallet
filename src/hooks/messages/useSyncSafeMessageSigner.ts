@@ -29,7 +29,7 @@ const useSyncSafeMessageSigner = (
     return () => clearTimeout(timeout)
   }, [message, safe.chainId, safeMessageHash, onClose, requestId])
 
-  const onSign = useCallback(async () => {
+  const onSign = useCallback(async (): Promise<SafeMessage | undefined> => {
     // Error is shown when no wallet is connected, this appeases TypeScript
     if (!onboard) {
       return
@@ -55,7 +55,7 @@ const useSyncSafeMessageSigner = (
     } catch (e) {
       setSubmitError(asError(e))
     }
-  }, [onboard, requestId, message, safe, decodedMessage, safeAppId, safeMessageHash, onClose])
+  }, [onboard, requestId, message, safe, decodedMessage, safeAppId, onClose])
 
   return { submitError, onSign }
 }
