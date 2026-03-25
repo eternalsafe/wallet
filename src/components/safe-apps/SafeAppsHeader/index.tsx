@@ -14,7 +14,10 @@ const SafeAppsHeader = (): ReactElement => {
           My custom Safe Apps{chain?.chainName ? ` on ${chain.chainName}` : ''}
         </Typography>
 
-        <Typography className={css.subtitle}>Add and manage custom Safe Apps for your Safe Account.</Typography>
+        <Typography className={css.subtitle}>
+          Add and manage custom Safe Apps for your Safe Account. Note: custom Safe Apps may make calls to external APIs.
+          You use Safe Apps via Eternal Safe at your own risk.
+        </Typography>
       </Box>
     </>
   )
