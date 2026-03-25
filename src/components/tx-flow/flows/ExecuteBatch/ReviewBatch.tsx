@@ -37,6 +37,33 @@ import { useAppSelector } from '@/store'
 import { selectAddedTxs } from '@/store/addedTxsSlice'
 import { extractTxDetails } from '@/services/tx/extractTxInfo'
 import { isEqual } from 'lodash'
+import type { SafeInfo, Transaction } from '@safe-global/safe-gateway-typescript-sdk'
+
+export const getBatchTxDetailsFromLocalStore = async (
+  txs: Transaction[],
+  addedTxs: ReturnType<typeof selectAddedTxs>,
+  safe: SafeInfo,
+) => {
+  if (!addedTxs) {
+    return
+  }
+
+  return Promise.all(
+    txs.map(async (tx) => {
+      const txKey = getTxKeyFromTxId(tx.transaction.id)
+      if (!txKey) {
+        throw new Error(`Invalid transaction id: ${tx.transaction.id}`)
+      }
+
+      const localTx = addedTxs[txKey]
+      if (!localTx) {
+        throw new Error(`Transaction ${tx.transaction.id} is not available locally`)
+      }
+
+      return extractTxDetails(safe.address.value, localTx, safe, tx.transaction.id)
+    }),
+  )
+}
 
 function encodeMetaTransaction(tx: MetaTransactionData): string {
   const data = arrayify(tx.data)
@@ -74,23 +101,7 @@ export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
 
   // First useAsync for txsWithDetails
   const [txsWithDetails, error, loading] = useAsync<TransactionDetails[]>(() => {
-    if (!addedTxs) return
-
-    return Promise.all(
-      params.txs.map(async (tx) => {
-        const txKey = getTxKeyFromTxId(tx.transaction.id)
-        if (!txKey) {
-          throw new Error(`Invalid transaction id: ${tx.transaction.id}`)
-        }
-
-        const localTx = addedTxs[txKey]
-        if (!localTx) {
-          throw new Error(`Transaction ${tx.transaction.id} is not available locally`)
-        }
-
-        return extractTxDetails(safe.address.value, localTx, safe, tx.transaction.id)
-      }),
-    )
+    return getBatchTxDetailsFromLocalStore(params.txs, addedTxs, safe)
   }, [addedTxs, params.txs, safe])
 
   // Add new useAsync for multiSendTxs
