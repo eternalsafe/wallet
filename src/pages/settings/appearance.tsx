@@ -4,7 +4,13 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 
 import { useAppDispatch, useAppSelector } from '@/store'
-import { selectSettings, setCopyShortName, setDarkMode, setShowShortName } from '@/store/settingsSlice'
+import {
+  selectSettings,
+  setCopyShortName,
+  setDarkMode,
+  setSafeAppsUseLightBackground,
+  setShowShortName,
+} from '@/store/settingsSlice'
 import SettingsHeader from '@/components/settings/SettingsHeader'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import ExternalLink from '@/components/common/ExternalLink'
@@ -14,7 +20,13 @@ const Appearance: NextPage = () => {
   const settings = useAppSelector(selectSettings)
   const isDarkMode = useDarkMode()
 
-  const handleToggle = (action: typeof setCopyShortName | typeof setDarkMode | typeof setShowShortName) => {
+  const handleToggle = (
+    action:
+      | typeof setCopyShortName
+      | typeof setDarkMode
+      | typeof setSafeAppsUseLightBackground
+      | typeof setShowShortName,
+  ) => {
     return (_: ChangeEvent<HTMLInputElement>, checked: boolean) => {
       dispatch(action(checked))
     }
@@ -67,6 +79,16 @@ const Appearance: NextPage = () => {
               <FormControlLabel
                 control={<Switch checked={isDarkMode} onChange={handleToggle(setDarkMode)} />}
                 label="Dark mode"
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={settings.theme.safeAppsUseLightBackground ?? true}
+                    onChange={handleToggle(setSafeAppsUseLightBackground)}
+                  />
+                }
+                label="Use light background for Safe Apps"
               />
             </Grid>
           </Grid>

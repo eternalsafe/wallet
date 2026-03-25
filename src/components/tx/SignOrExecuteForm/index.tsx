@@ -35,6 +35,7 @@ export type SignOrExecuteProps = {
   disableSubmit?: boolean
   isCreation?: boolean
   txDetails?: TransactionDetails
+  origin?: string
 }
 
 export const SignOrExecuteForm = ({

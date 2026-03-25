@@ -1,0 +1,51 @@
+.sliderContainer {
+  position: relative;
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sliderInner {
+  position: relative;
+  display: flex;
+  min-width: 100%;
+  min-height: 100%;
+  transform: translateX(0);
+  height: 426px;
+  transition: transform 0.5s ease;
+}
+
+.sliderItem {
+  min-width: 100%;
+  min-height: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.disclaimerContainer p,
+.disclaimerContainer h3 {
+  line-height: 24px;
+}
+
+.disclaimerInner p {
+  text-align: justify;
+}
+
+.domainIcon {
+  position: relative;
+  top: 6px;
+  padding-right: 4px;
+}
+
+.domainText {
+  display: block;
+  font-size: 12px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+  background-color: var(--color-background-light);
+  padding: 0 15px 10px 10px;
+  border-radius: 8px;
+  max-width: 75%;
+}

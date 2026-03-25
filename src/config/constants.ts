@@ -69,3 +69,7 @@ export const DEFAULT_IPFS_GATEWAY = 'https://cloudflare-ipfs.com'
 export const DEFAULT_TOKENLIST_IPNS = 'ipns/tokens.uniswap.org'
 export const CHAINLIST_URL = 'https://chainlist.org/'
 export const OFFICIAL_APP_URL = 'https://app.safe.global'
+
+// Risk mitigation (Redefine)
+export const REDEFINE_SIMULATION_URL = 'https://dashboard.redefine.net/reports/'
+export const REDEFINE_ARTICLE = 'https://safe.mirror.xyz/rInLWZwD_sf7enjoFerj6FIzCYmVMGrrV8Nhg4THdwI'

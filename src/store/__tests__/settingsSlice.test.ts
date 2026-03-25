@@ -1,6 +1,7 @@
 import {
   settingsSlice,
   initialState,
+  selectSafeAppsUseLightBackground,
   selectWalletConnectApiKey,
   selectWalletConnectPairingCode,
 } from '../settingsSlice'
@@ -100,6 +101,22 @@ describe('settingsSlice', () => {
 
       expect(selectWalletConnectApiKey(state)).toBe('my-key')
       expect(selectWalletConnectPairingCode(state)).toBe('wc:pairing')
+    })
+  })
+
+  describe('safe apps appearance settings', () => {
+    it('defaults safe apps background to light', () => {
+      const state = {
+        [settingsSlice.name]: initialState,
+      } as any
+
+      expect(selectSafeAppsUseLightBackground(state)).toBe(true)
+    })
+
+    it('should set safe apps light background preference', () => {
+      const state = settingsSlice.reducer(initialState, settingsSlice.actions.setSafeAppsUseLightBackground(false))
+
+      expect(state.theme.safeAppsUseLightBackground).toBe(false)
     })
   })
 })

@@ -7,7 +7,7 @@ import type {
 } from '@safe-global/safe-gateway-typescript-sdk'
 import { TransactionInfoType } from '@safe-global/safe-gateway-typescript-sdk'
 import { isMultiSendTxInfo } from '../transaction-guards'
-import { getQueuedTransactionCount, getTxOrigin } from '../transactions'
+import { getQueuedTransactionCount, getTxKeyFromTxId, getTxOrigin } from '../transactions'
 
 describe('transactions', () => {
   describe('getQueuedTransactionCount', () => {
@@ -183,6 +183,16 @@ describe('transactions', () => {
           },
         }),
       ).toBe(false)
+    })
+  })
+
+  describe('getTxKeyFromTxId', () => {
+    it('should return the tx hash key for a valid tx id', () => {
+      expect(getTxKeyFromTxId('multisig_0x0000000000000000000000000000000000000123_0xabc')).toBe('0xabc')
+    })
+
+    it('should return undefined for an invalid tx id format', () => {
+      expect(getTxKeyFromTxId('invalid-id')).toBeUndefined()
     })
   })
 })

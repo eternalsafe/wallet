@@ -36,6 +36,7 @@ export type SettingsState = {
   }
   theme: {
     darkMode?: boolean
+    safeAppsUseLightBackground?: boolean
   }
   env: EnvState
   signing: {
@@ -54,7 +55,9 @@ export const initialState: SettingsState = {
     copy: true,
     qr: true,
   },
-  theme: {},
+  theme: {
+    safeAppsUseLightBackground: true,
+  },
   env: {
     rpc: {},
     tenderly: {
@@ -93,6 +96,12 @@ export const settingsSlice = createSlice({
     },
     setDarkMode: (state, { payload }: PayloadAction<SettingsState['theme']['darkMode']>) => {
       state.theme.darkMode = payload
+    },
+    setSafeAppsUseLightBackground: (
+      state,
+      { payload }: PayloadAction<SettingsState['theme']['safeAppsUseLightBackground']>,
+    ) => {
+      state.theme.safeAppsUseLightBackground = payload
     },
     setTokenList: (state, { payload }: PayloadAction<SettingsState['tokenList']>) => {
       state.tokenList = payload
@@ -134,6 +143,7 @@ export const {
   setCopyShortName,
   setQrShortName,
   setDarkMode,
+  setSafeAppsUseLightBackground,
   setTokenList,
   setRpc,
   setIPFS,
@@ -172,3 +182,7 @@ export const selectWalletConnectPairingCode = createSelector(
 )
 
 export const selectOnChainSigning = createSelector(selectSettings, (settings) => settings.signing.onChainSigning)
+
+export const selectSafeAppsUseLightBackground = createSelector(selectSettings, (settings) => {
+  return settings.theme.safeAppsUseLightBackground ?? true
+})
