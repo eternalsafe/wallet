@@ -39,11 +39,11 @@ import { extractTxDetails } from '@/services/tx/extractTxInfo'
 import { isEqual } from 'lodash'
 import type { SafeInfo, Transaction } from '@safe-global/safe-gateway-typescript-sdk'
 
-export const getBatchTxDetailsFromLocalStore = async (
+export const getBatchTxDetailsFromLocalStore = (
   txs: Transaction[],
   addedTxs: ReturnType<typeof selectAddedTxs>,
   safe: SafeInfo,
-) => {
+): Promise<TransactionDetails[]> | undefined => {
   if (!addedTxs) {
     return
   }

@@ -17,9 +17,13 @@ jest.mock('@/services/safe-messages/safeMsgSender', () => ({
 
 const mockedUseSafeInfo = useSafeInfo as jest.MockedFunction<typeof useSafeInfo>
 const mockedUseOnboard = useOnboard as jest.MockedFunction<typeof useOnboard>
-const mockedDispatchPreparedSignature = dispatchPreparedSignature as jest.MockedFunction<typeof dispatchPreparedSignature>
+const mockedDispatchPreparedSignature = dispatchPreparedSignature as jest.MockedFunction<
+  typeof dispatchPreparedSignature
+>
 const mockedDispatchSafeMsgProposal = dispatchSafeMsgProposal as jest.MockedFunction<typeof dispatchSafeMsgProposal>
-const mockedDispatchSafeMsgConfirmation = dispatchSafeMsgConfirmation as jest.MockedFunction<typeof dispatchSafeMsgConfirmation>
+const mockedDispatchSafeMsgConfirmation = dispatchSafeMsgConfirmation as jest.MockedFunction<
+  typeof dispatchSafeMsgConfirmation
+>
 
 describe('useSyncSafeMessageSigner', () => {
   const safe = {
@@ -117,7 +121,9 @@ describe('useSyncSafeMessageSigner', () => {
     const onClose = jest.fn()
     const message = { preparedSignature: '0xsig' } as any
 
-    renderHook(() => useSyncSafeMessageSigner(message, decodedMessage, safeMessageHash, 'request-id', safeAppId, onClose))
+    renderHook(() =>
+      useSyncSafeMessageSigner(message, decodedMessage, safeMessageHash, 'request-id', safeAppId, onClose),
+    )
 
     jest.advanceTimersByTime(3000)
 

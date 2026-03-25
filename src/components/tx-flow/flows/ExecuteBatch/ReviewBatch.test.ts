@@ -20,7 +20,7 @@ describe('getBatchTxDetailsFromLocalStore', () => {
   it('returns undefined when local transactions are not available', async () => {
     const txs = [{ transaction: { id: 'multisig_0x0000000000000000000000000000000000000123_0xabc' } }] as any
 
-    await expect(getBatchTxDetailsFromLocalStore(txs, undefined, safe)).resolves.toBeUndefined()
+    expect(getBatchTxDetailsFromLocalStore(txs, undefined, safe)).toBeUndefined()
   })
 
   it('throws if a transaction id cannot be parsed', async () => {
