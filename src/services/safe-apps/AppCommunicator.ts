@@ -24,20 +24,39 @@ class AppCommunicator {
     window.addEventListener('message', this.handleIncomingMessage)
   }
 
+  private getIframeOrigin = (): string | undefined => {
+    const iframeSrc = this.iframeRef.current?.src
+    if (!iframeSrc) return
+
+    try {
+      return new URL(iframeSrc).origin
+    } catch {
+      return
+    }
+  }
+
   on = (method: Methods, handler: MessageHandler): void => {
     this.handlers.set(method, handler)
   }
 
   private isValidMessage = (msg: SDKMessageEvent): boolean => {
     if (!msg.data) return false
+
+    const sentFromIframe = this.iframeRef.current?.contentWindow === msg.source
+    const iframeOrigin = this.getIframeOrigin()
+    const sentFromExpectedOrigin = !iframeOrigin || msg.origin === iframeOrigin
+
+    if (!sentFromIframe || !sentFromExpectedOrigin) {
+      return false
+    }
+
     if (msg.data.hasOwnProperty('isCookieEnabled')) {
       return true
     }
 
-    const sentFromIframe = this.iframeRef.current?.contentWindow === msg.source
     const knownMethod = Object.values(Methods).includes(msg.data.method)
 
-    return sentFromIframe && knownMethod
+    return knownMethod
   }
 
   private canHandleMessage = (msg: SDKMessageEvent): boolean => {
@@ -51,7 +70,7 @@ class AppCommunicator {
       ? MessageFormatter.makeErrorResponse(requestId, data as string, sdkVersion)
       : MessageFormatter.makeResponse(requestId, data, sdkVersion)
 
-    this.iframeRef.current?.contentWindow?.postMessage(msg, '*')
+    this.iframeRef.current?.contentWindow?.postMessage(msg, this.getIframeOrigin() || '*')
   }
 
   handleIncomingMessage = async (msg: SDKMessageEvent): Promise<void> => {

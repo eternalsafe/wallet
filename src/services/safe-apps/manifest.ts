@@ -20,6 +20,7 @@ export type AppManifest = {
 }
 
 const MIN_ICON_WIDTH = 128
+const CUSTOM_SAFE_APP_ID_BUCKETS = 1_000_000_000
 
 const chooseBestIcon = (icons: AppManifestIcon[]): string => {
   const svgIcon = icons.find((icon) => icon?.sizes?.includes('any') || icon?.type === 'image/svg+xml')
@@ -85,6 +86,21 @@ const isAppManifestValid = (json: unknown): json is AppManifest => {
   )
 }
 
+const createDeterministicCustomAppId = (appUrl: string): number => {
+  // FNV-1a hash to keep IDs deterministic for a given URL while remaining in the custom app ID range (< 1)
+  let hash = 2166136261
+
+  for (const char of appUrl.toLowerCase()) {
+    hash ^= char.charCodeAt(0)
+    hash = Math.imul(hash, 16777619)
+  }
+
+  const positiveHash = hash >>> 0
+  const bucket = (positiveHash % (CUSTOM_SAFE_APP_ID_BUCKETS - 1)) + 1
+
+  return bucket / CUSTOM_SAFE_APP_ID_BUCKETS
+}
+
 const fetchSafeAppFromManifest = async (
   appUrl: string,
   currentChainId: string,
@@ -99,7 +115,7 @@ const fetchSafeAppFromManifest = async (
   const iconUrl = getAppLogoUrl(normalizedAppUrl, appManifest)
 
   return {
-    id: Math.random(),
+    id: createDeterministicCustomAppId(normalizedAppUrl),
     url: normalizedAppUrl,
     name: appManifest.name,
     description: appManifest.description,

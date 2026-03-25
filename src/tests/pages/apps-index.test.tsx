@@ -55,6 +55,7 @@ describe('/apps page', () => {
     const push = jest.fn()
 
     mockUseRouter.mockReturnValue({
+      isReady: true,
       query: {
         safe: 'eth:0x1234567890123456789012345678901234567890',
         appUrl: 'https://tx-builder.safe.global',
@@ -72,6 +73,25 @@ describe('/apps page', () => {
           appUrl: 'https://tx-builder.safe.global',
         },
       })
+    })
+  })
+
+  it('does not redirect before the router is ready', async () => {
+    const push = jest.fn()
+
+    mockUseRouter.mockReturnValue({
+      isReady: false,
+      query: {
+        safe: 'eth:0x1234567890123456789012345678901234567890',
+        appUrl: 'https://tx-builder.safe.global',
+      },
+      push,
+    })
+
+    render(<SafeAppsPage />)
+
+    await waitFor(() => {
+      expect(push).not.toHaveBeenCalled()
     })
   })
 

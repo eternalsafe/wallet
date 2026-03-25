@@ -13,7 +13,9 @@ import { useHasFeature } from '@/hooks/useChains'
 import { FEATURES } from '@/utils/chains'
 
 const SafeApps: NextPage = () => {
-  const router = useRouter()
+  const { query, isReady, push } = useRouter()
+  const appUrl = Array.isArray(query.appUrl) ? query.appUrl[0] : query.appUrl
+  const safe = Array.isArray(query.safe) ? query.safe[0] : query.safe
   const isSafeAppsEnabled = useHasFeature(FEATURES.SAFE_APPS)
   const { customSafeApps, addCustomApp, removeCustomApp } = useSafeApps()
 
@@ -21,11 +23,12 @@ const SafeApps: NextPage = () => {
   const [customSafeAppToRemove, setCustomSafeAppToRemove] = useState<SafeAppData>()
 
   useEffect(() => {
-    const appUrl = router.query.appUrl as string
+    if (!isReady) return
+
     if (appUrl) {
-      router.push({ pathname: AppRoutes.apps.open, query: { safe: router.query.safe, appUrl } })
+      push({ pathname: AppRoutes.apps.open, query: { safe, appUrl } })
     }
-  }, [router])
+  }, [appUrl, isReady, push, safe])
 
   if (!isSafeAppsEnabled) return <></>
 
