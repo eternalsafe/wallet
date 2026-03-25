@@ -9,7 +9,6 @@ export const AppRoutes = {
   apps: {
     open: '/apps/open',
     index: '/apps',
-    custom: '/apps/custom',
     bookmarked: '/apps/bookmarked',
   },
   balances: {

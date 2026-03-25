@@ -3,7 +3,6 @@ import { render, screen, waitFor } from '@/tests/test-utils'
 import SafeAppsPage from '@/pages/apps'
 import { useRouter } from 'next/router'
 import { useSafeApps } from '@/hooks/safe-apps/useSafeApps'
-import useSafeAppsFilters from '@/hooks/safe-apps/useSafeAppsFilters'
 import { useHasFeature } from '@/hooks/useChains'
 import { AppRoutes } from '@/config/routes'
 import { FEATURES } from '@/utils/chains'
@@ -16,18 +15,8 @@ jest.mock('@/hooks/safe-apps/useSafeApps', () => ({
   useSafeApps: jest.fn(),
 }))
 
-jest.mock('@/hooks/safe-apps/useSafeAppsFilters', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}))
-
 jest.mock('@/hooks/useChains', () => ({
   useHasFeature: jest.fn(),
-}))
-
-jest.mock('@/components/safe-apps/SafeAppsSDKLink', () => ({
-  __esModule: true,
-  default: () => <div data-testid="safe-apps-sdk-link" />,
 }))
 
 jest.mock('@/components/safe-apps/SafeAppsHeader', () => ({
@@ -40,14 +29,13 @@ jest.mock('@/components/safe-apps/SafeAppList', () => ({
   default: ({ title }: { title: string }) => <div data-testid="safe-apps-list">{title}</div>,
 }))
 
-jest.mock('@/components/safe-apps/SafeAppsFilters', () => ({
+jest.mock('@/components/safe-apps/RemoveCustomAppModal', () => ({
   __esModule: true,
-  default: () => <div data-testid="safe-apps-filters" />,
+  RemoveCustomAppModal: () => <div data-testid="remove-custom-app-modal" />,
 }))
 
 const mockUseRouter = useRouter as jest.Mock
 const mockUseSafeApps = useSafeApps as jest.Mock
-const mockUseSafeAppsFilters = useSafeAppsFilters as jest.Mock
 const mockUseHasFeature = useHasFeature as jest.Mock
 
 describe('/apps page', () => {
@@ -55,26 +43,9 @@ describe('/apps page', () => {
     jest.clearAllMocks()
 
     mockUseSafeApps.mockReturnValue({
-      remoteSafeApps: [
-        { id: 1, name: 'App 1' },
-        { id: 2, name: 'App 2' },
-      ],
-      remoteSafeAppsLoading: false,
-      pinnedSafeApps: [],
-      pinnedSafeAppIds: new Set<number>(),
-      togglePin: jest.fn(),
-    })
-
-    mockUseSafeAppsFilters.mockReturnValue({
-      filteredApps: [
-        { id: 1, name: 'App 1' },
-        { id: 2, name: 'App 2' },
-      ],
-      query: '',
-      setQuery: jest.fn(),
-      setSelectedCategories: jest.fn(),
-      setOptimizedWithBatchFilter: jest.fn(),
-      selectedCategories: [],
+      customSafeApps: [{ id: 1, name: 'Custom app 1' }],
+      addCustomApp: jest.fn(),
+      removeCustomApp: jest.fn(),
     })
 
     mockUseHasFeature.mockImplementation((feature: FEATURES) => feature === FEATURES.SAFE_APPS)
@@ -104,6 +75,20 @@ describe('/apps page', () => {
     })
   })
 
+  it('shows custom apps view by default', () => {
+    mockUseRouter.mockReturnValue({
+      query: {
+        safe: 'eth:0x1234567890123456789012345678901234567890',
+      },
+      push: jest.fn(),
+    })
+
+    render(<SafeAppsPage />)
+
+    expect(screen.getByTestId('safe-apps-header')).toBeInTheDocument()
+    expect(screen.getByText('My custom apps')).toBeInTheDocument()
+  })
+
   it('renders nothing when SAFE_APPS feature is disabled', () => {
     mockUseHasFeature.mockReturnValue(false)
 
@@ -116,7 +101,7 @@ describe('/apps page', () => {
 
     render(<SafeAppsPage />)
 
-    expect(screen.queryByTestId('safe-apps-sdk-link')).not.toBeInTheDocument()
     expect(screen.queryByTestId('safe-apps-header')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('safe-apps-list')).not.toBeInTheDocument()
   })
 })

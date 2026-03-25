@@ -3,8 +3,6 @@ import Typography from '@mui/material/Typography'
 import type { ReactElement } from 'react'
 import { useCurrentChain } from '@/hooks/useChains'
 
-import NavTabs from '@/components/common/NavTabs'
-import { safeAppsNavItems } from '@/components/sidebar/SidebarNavigation/config'
 import css from './styles.module.css'
 
 const SafeAppsHeader = (): ReactElement => {
@@ -12,20 +10,11 @@ const SafeAppsHeader = (): ReactElement => {
   return (
     <>
       <Box className={css.container}>
-        {/* Safe Apps Title */}
         <Typography className={css.title} variant="h3">
-          Explore the Safe {chain?.chainName} ecosystem
+          My custom Safe Apps{chain?.chainName ? ` on ${chain.chainName}` : ''}
         </Typography>
 
-        {/* Safe Apps Subtitle */}
-        <Typography className={css.subtitle}>
-          Connect to your favourite web3 applications with your Safe Account, securely and efficiently.
-        </Typography>
-      </Box>
-
-      {/* Safe Apps Tabs */}
-      <Box className={css.tabs}>
-        <NavTabs tabs={safeAppsNavItems} />
+        <Typography className={css.subtitle}>Add and manage custom Safe Apps for your Safe Account.</Typography>
       </Box>
     </>
   )

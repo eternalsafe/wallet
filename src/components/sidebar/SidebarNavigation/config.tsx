@@ -109,14 +109,3 @@ export const generalSettingsNavItems = [
     href: AppRoutes.settings.environmentVariables,
   },
 ]
-
-export const safeAppsNavItems = [
-  {
-    label: 'All apps',
-    href: AppRoutes.apps.index,
-  },
-  {
-    label: 'My custom apps',
-    href: AppRoutes.apps.custom,
-  },
-]
