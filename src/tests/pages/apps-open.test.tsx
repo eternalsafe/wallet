@@ -84,8 +84,8 @@ describe('/apps/open page', () => {
 
     mockUseSafeAppUrl.mockReturnValue('https://tx-builder.safe.global')
     mockUseSafeApps.mockReturnValue({
-      remoteSafeApps: [],
-      remoteSafeAppsLoading: false,
+      customSafeApps: [],
+      customSafeAppsLoading: false,
     })
     mockUseSafeAppFromManifest.mockReturnValue({
       safeApp: {

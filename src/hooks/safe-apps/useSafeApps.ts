@@ -1,6 +1,5 @@
 import { useMemo, useCallback } from 'react'
 import type { SafeAppData } from '@safe-global/safe-gateway-typescript-sdk'
-import { useRemoteSafeApps } from '@/hooks/safe-apps/useRemoteSafeApps'
 import { useCustomSafeApps } from '@/hooks/safe-apps/useCustomSafeApps'
 import { usePinnedSafeApps } from '@/hooks/safe-apps/usePinnedSafeApps'
 import { useBrowserPermissions, useSafePermissions } from './permissions'
@@ -10,32 +9,25 @@ type ReturnType = {
   allSafeApps: SafeAppData[]
   pinnedSafeApps: SafeAppData[]
   pinnedSafeAppIds: Set<number>
-  remoteSafeApps: SafeAppData[]
   customSafeApps: SafeAppData[]
   rankedSafeApps: SafeAppData[]
-  remoteSafeAppsLoading: boolean
   customSafeAppsLoading: boolean
-  remoteSafeAppsError?: Error
   addCustomApp: (app: SafeAppData) => void
   togglePin: (appId: number) => void
   removeCustomApp: (appId: number) => void
 }
 
 const useSafeApps = (): ReturnType => {
-  const [remoteSafeApps = [], remoteSafeAppsError, remoteSafeAppsLoading] = useRemoteSafeApps()
   const { customSafeApps, loading: customSafeAppsLoading, updateCustomSafeApps } = useCustomSafeApps()
   const { pinnedSafeAppIds, updatePinnedSafeApps } = usePinnedSafeApps()
   const { removePermissions: removeSafePermissions } = useSafePermissions()
   const { removePermissions: removeBrowserPermissions } = useBrowserPermissions()
 
-  const allSafeApps = useMemo(
-    () => remoteSafeApps.concat(customSafeApps).sort((a, b) => a.name.localeCompare(b.name)),
-    [remoteSafeApps, customSafeApps],
-  )
+  const allSafeApps = useMemo(() => [...customSafeApps].sort((a, b) => a.name.localeCompare(b.name)), [customSafeApps])
 
   const pinnedSafeApps = useMemo(
-    () => remoteSafeApps.filter((app) => pinnedSafeAppIds.has(app.id)),
-    [remoteSafeApps, pinnedSafeAppIds],
+    () => allSafeApps.filter((app) => pinnedSafeAppIds.has(app.id)),
+    [allSafeApps, pinnedSafeAppIds],
   )
 
   const rankedSafeApps = useRankedSafeApps(allSafeApps, pinnedSafeApps)
@@ -75,10 +67,6 @@ const useSafeApps = (): ReturnType => {
   return {
     allSafeApps,
     rankedSafeApps,
-
-    remoteSafeApps,
-    remoteSafeAppsLoading: remoteSafeAppsLoading || !(remoteSafeApps || remoteSafeAppsError),
-    remoteSafeAppsError,
 
     pinnedSafeApps,
     pinnedSafeAppIds,

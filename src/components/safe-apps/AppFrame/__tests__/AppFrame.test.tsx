@@ -15,10 +15,6 @@ jest.mock('@/hooks/useSafeInfo', () =>
 
 jest.mock('@/hooks/useAddressBook', () => jest.fn(() => ({})))
 
-jest.mock('@/hooks/safe-apps/useSafeAppFromBackend', () => ({
-  useSafeAppFromBackend: jest.fn(() => [undefined, undefined, false]),
-}))
-
 jest.mock('@/hooks/safe-apps/permissions', () => ({
   useSafePermissions: jest.fn(() => ({
     getPermissions: jest.fn(() => []),

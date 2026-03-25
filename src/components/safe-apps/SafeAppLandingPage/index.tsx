@@ -1,6 +1,5 @@
 import { Box, CircularProgress, Paper } from '@mui/material'
 import Grid from '@mui/material/Unstable_Grid2'
-import { useSafeAppFromBackend } from '@/hooks/safe-apps/useSafeAppFromBackend'
 import { useSafeAppFromManifest } from '@/hooks/safe-apps/useSafeAppFromManifest'
 import { SafeAppDetails } from '@/components/safe-apps/SafeAppLandingPage/SafeAppDetails'
 import { AppActions } from '@/components/safe-apps/SafeAppLandingPage/AppActions'
@@ -18,11 +17,9 @@ const CHAIN_ID_WITH_A_DEMO = '1'
 
 const SafeAppLanding = ({ appUrl, chain }: Props) => {
   const { safeApp, isLoading } = useSafeAppFromManifest(appUrl, chain.chainId)
-  const [backendApp, , backendAppLoading] = useSafeAppFromBackend(appUrl, chain.chainId)
   const wallet = useWallet()
   const onboard = useOnboard()
-  // show demo if the app was shared for mainnet or we can find the mainnet chain id on the backend
-  const showDemo = chain.chainId === CHAIN_ID_WITH_A_DEMO || !!backendApp?.chainIds.includes(CHAIN_ID_WITH_A_DEMO)
+  const showDemo = chain.chainId === CHAIN_ID_WITH_A_DEMO
 
   const handleConnectWallet = async () => {
     if (!onboard) return
@@ -30,7 +27,7 @@ const SafeAppLanding = ({ appUrl, chain }: Props) => {
     onboard.connectWallet().catch((e) => logError(Errors._302, e))
   }
 
-  if (isLoading || backendAppLoading) {
+  if (isLoading) {
     return (
       <Box py={4} textAlign="center">
         <CircularProgress size={40} />
@@ -46,7 +43,7 @@ const SafeAppLanding = ({ appUrl, chain }: Props) => {
     <Grid container>
       <Grid sm={12} md={12} lg={8} lgOffset={2} xl={6} xlOffset={3}>
         <Paper sx={{ p: 6 }}>
-          <SafeAppDetails app={backendApp || safeApp} showDefaultListWarning={!backendApp} />
+          <SafeAppDetails app={safeApp} showDefaultListWarning />
           <Grid container sx={{ mt: 4 }} rowSpacing={{ xs: 2, sm: 2 }}>
             <Grid xs={12} sm={12} md={showDemo ? 6 : 12}>
               <AppActions
@@ -54,7 +51,7 @@ const SafeAppLanding = ({ appUrl, chain }: Props) => {
                 wallet={wallet}
                 onConnectWallet={handleConnectWallet}
                 chain={chain}
-                app={backendApp || safeApp}
+                app={safeApp}
               />
             </Grid>
           </Grid>

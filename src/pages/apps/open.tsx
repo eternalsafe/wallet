@@ -29,7 +29,7 @@ const SafeApps: NextPage = () => {
   const isSafeAppsEnabled = useHasFeature(FEATURES.SAFE_APPS)
   const isWalletConnectEnabled = useHasFeature(FEATURES.NATIVE_WALLETCONNECT)
 
-  const { remoteSafeApps, remoteSafeAppsLoading } = useSafeApps()
+  const { customSafeApps, customSafeAppsLoading } = useSafeApps()
 
   const { addPermissions, getPermissions, getAllowedFeaturesList } = useBrowserPermissions()
   const origin = getOrigin(appUrl)
@@ -42,11 +42,11 @@ const SafeApps: NextPage = () => {
     onComplete,
   } = useSafeAppsInfoModal({
     url: origin,
-    safeApp: remoteSafeApps.find((app) => app.url === appUrl),
+    safeApp: customSafeApps.find((app) => app.url === appUrl),
     permissions: safeApp?.safeAppsPermissions || [],
     addPermissions,
     getPermissions,
-    remoteSafeAppsLoading,
+    safeAppsLoading: customSafeAppsLoading,
   })
 
   const goToList = useCallback(() => {

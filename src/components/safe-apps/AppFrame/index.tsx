@@ -1,6 +1,5 @@
 import { useContext, useState } from 'react'
 import type { ReactElement } from 'react'
-import { useMemo } from 'react'
 import { useCallback, useEffect } from 'react'
 import { CircularProgress, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
@@ -19,7 +18,6 @@ import { Methods } from '@safe-global/safe-apps-sdk'
 import { trackSafeAppOpenCount } from '@/services/safe-apps/track-app-usage-count'
 import { TxEvent, txSubscribe } from '@/services/tx/txEvents'
 import useSafeInfo from '@/hooks/useSafeInfo'
-import { useSafeAppFromBackend } from '@/hooks/safe-apps/useSafeAppFromBackend'
 import useChainId from '@/hooks/useChainId'
 import useAddressBook from '@/hooks/useAddressBook'
 import { useSafePermissions } from '@/hooks/safe-apps/permissions'
@@ -49,8 +47,6 @@ import {
 } from '@/store/settingsSlice'
 import { TxModalContext } from '@/components/tx-flow'
 import { SafeAppsTxFlow, SignMessageFlow, SignMessageOnChainFlow } from '@/components/tx-flow/flows'
-
-const UNKNOWN_APP_NAME = 'Unknown Safe App'
 
 type AppFrameProps = {
   appUrl: string
@@ -82,11 +78,9 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
     transactions,
   } = useTransactionQueueBarState()
   const queueBarVisible = transactions.results.length > 0 && !queueBarDismissed
-  const [remoteApp, , isBackendAppsLoading] = useSafeAppFromBackend(appUrl, safe.chainId)
   const { iframeRef, appIsLoading, isLoadingSlow, setAppIsLoading } = useAppIsLoading()
   const { getPermissions, hasPermission, permissionsRequest, setPermissionsRequest, confirmPermissionRequest } =
     useSafePermissions()
-  const appName = useMemo(() => (remoteApp ? remoteApp.name : appUrl), [appUrl, remoteApp])
   const { setTxFlow } = useContext(TxModalContext)
 
   const onTxFlowClose = () => {
@@ -98,11 +92,10 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
     })
   }
 
-  const communicator = useAppCommunicator(iframeRef, remoteApp || safeAppFromManifest, chain, {
+  const communicator = useAppCommunicator(iframeRef, safeAppFromManifest, chain, {
     onConfirmTransactions: (txs: BaseTransaction[], requestId: RequestId, params?: SendTransactionRequestParams) => {
       const data = {
         app: safeAppFromManifest,
-        appId: remoteApp ? String(remoteApp.id) : undefined,
         requestId: requestId,
         txs: txs,
         params: params,
@@ -128,7 +121,6 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
             logoUri={safeAppFromManifest?.iconUrl || ''}
             name={safeAppFromManifest?.name || ''}
             message={message}
-            safeAppId={remoteApp?.id}
             requestId={requestId}
           />,
           onTxFlowClose,
@@ -223,10 +215,8 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
   }
 
   useEffect(() => {
-    if (!remoteApp) return
-
-    trackSafeAppOpenCount(remoteApp.id)
-  }, [remoteApp])
+    trackSafeAppOpenCount(safeAppFromManifest.id)
+  }, [safeAppFromManifest.id])
 
   const onIframeLoad = useCallback(() => {
     const iframe = iframeRef.current
@@ -245,7 +235,7 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
     })
 
     return unsubscribe
-  }, [appName, chainId, communicator, currentRequestId])
+  }, [chainId, communicator, currentRequestId])
 
   useEffect(() => {
     const unsubscribe = safeMsgSubscribe(SafeMsgEvent.SIGNATURE_PREPARED, ({ messageHash, requestId, signature }) => {
@@ -264,7 +254,7 @@ const AppFrame = ({ appUrl, allowedFeaturesList, safeAppFromManifest }: AppFrame
   return (
     <>
       <Head>
-        <title>{`Safe Apps - Viewer - ${remoteApp ? remoteApp.name : UNKNOWN_APP_NAME}`}</title>
+        <title>{`Safe Apps - Viewer - ${safeAppFromManifest.name}`}</title>
       </Head>
 
       <div className={css.wrapper} style={{ backgroundColor: useLightSafeAppsBackground ? '#fff' : undefined }}>
