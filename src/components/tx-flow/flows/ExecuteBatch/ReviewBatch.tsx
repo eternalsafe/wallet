@@ -21,7 +21,7 @@ import useOnboard from '@/hooks/wallets/useOnboard'
 import { logError, Errors } from '@/services/exceptions'
 import { dispatchBatchExecution /*, dispatchBatchExecutionRelay */ } from '@/services/tx/tx-sender'
 // import { hasRemainingRelays } from '@/utils/relaying'
-import { getTxsWithDetails, getMultiSendTxs } from '@/utils/transactions'
+import { getMultiSendTxs, getTxKeyFromTxId } from '@/utils/transactions'
 import TxCard from '../../common/TxCard'
 import CheckWallet from '@/components/common/CheckWallet'
 import type { ExecuteBatchFlowProps } from '.'
@@ -33,6 +33,10 @@ import { TxModalContext } from '@/components/tx-flow'
 import useGasPrice from '@/hooks/useGasPrice'
 import { hasFeature } from '@/utils/chains'
 import type { PayableOverrides } from 'ethers'
+import { useAppSelector } from '@/store'
+import { selectAddedTxs } from '@/store/addedTxsSlice'
+import { extractTxDetails } from '@/services/tx/extractTxInfo'
+import { isEqual } from 'lodash'
 
 function encodeMetaTransaction(tx: MetaTransactionData): string {
   const data = arrayify(tx.data)
@@ -53,6 +57,7 @@ export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
   // const [executionMethod, setExecutionMethod] = useState(ExecutionMethod.RELAY)
   const chain = useCurrentChain()
   const { safe } = useSafeInfo()
+  const addedTxs = useAppSelector((state) => selectAddedTxs(state, safe.chainId, safe.address.value), isEqual)
   // const [relays] = useRelaysBySafe()
   const { setTxFlow } = useContext(TxModalContext)
   const [gasPrice] = useGasPrice()
@@ -69,9 +74,24 @@ export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
 
   // First useAsync for txsWithDetails
   const [txsWithDetails, error, loading] = useAsync<TransactionDetails[]>(() => {
-    if (!chain?.chainId) return
-    return getTxsWithDetails(params.txs, chain.chainId)
-  }, [params.txs, chain?.chainId])
+    if (!addedTxs) return
+
+    return Promise.all(
+      params.txs.map(async (tx) => {
+        const txKey = getTxKeyFromTxId(tx.transaction.id)
+        if (!txKey) {
+          throw new Error(`Invalid transaction id: ${tx.transaction.id}`)
+        }
+
+        const localTx = addedTxs[txKey]
+        if (!localTx) {
+          throw new Error(`Transaction ${tx.transaction.id} is not available locally`)
+        }
+
+        return extractTxDetails(safe.address.value, localTx, safe, tx.transaction.id)
+      }),
+    )
+  }, [addedTxs, params.txs, safe])
 
   // Add new useAsync for multiSendTxs
   const [multiSendTxs, multiSendError, multiSendLoading] = useAsync(async () => {
