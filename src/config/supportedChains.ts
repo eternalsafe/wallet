@@ -47,7 +47,7 @@ const SUPPORTED_CHAINS = [
     gasPrice: [],
     publicRpcUri: {
       authentication: 'NO_AUTHENTICATION',
-      value: 'https://cloudflare-eth.com',
+      value: 'https://ethereum-rpc.publicnode.com',
     },
     rpcUri: {
       authentication: 'API_KEY_PATH',
