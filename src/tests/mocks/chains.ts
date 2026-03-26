@@ -11,7 +11,10 @@ const CONFIG_SERVICE_CHAINS: ChainInfo[] = [
     description: 'The main Ethereum network',
     rpcUri: { authentication: RPC_AUTHENTICATION.API_KEY_PATH, value: 'https://mainnet.infura.io/v3/' },
     safeAppsRpcUri: { authentication: RPC_AUTHENTICATION.API_KEY_PATH, value: 'https://mainnet.infura.io/v3/' },
-    publicRpcUri: { authentication: RPC_AUTHENTICATION.NO_AUTHENTICATION, value: 'https://ethereum-rpc.publicnode.com' },
+    publicRpcUri: {
+      authentication: RPC_AUTHENTICATION.NO_AUTHENTICATION,
+      value: 'https://ethereum-rpc.publicnode.com',
+    },
     blockExplorerUriTemplate: {
       address: 'https://etherscan.io/address/{{address}}',
       txHash: 'https://etherscan.io/tx/{{txHash}}',
