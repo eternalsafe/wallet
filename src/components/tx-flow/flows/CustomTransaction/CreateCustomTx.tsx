@@ -64,7 +64,9 @@ const CreateCustomTx = ({
         )}
         className={commonCss.form}
       >
-        <Typography variant="body2">Interact with any contract by providing the target address and calldata.</Typography>
+        <Typography variant="body2">
+          Interact with any contract by providing the target address and calldata.
+        </Typography>
 
         <FormControl fullWidth sx={{ mt: 2 }}>
           <TextField
@@ -87,7 +89,9 @@ const CreateCustomTx = ({
             helperText={
               errors.value?.message ||
               (nativeToken
-                ? `Balance: ${safeFormatUnits(nativeToken.balance, nativeToken.tokenInfo.decimals)} ${nativeToken.tokenInfo.symbol}`
+                ? `Balance: ${safeFormatUnits(nativeToken.balance, nativeToken.tokenInfo.decimals)} ${
+                    nativeToken.tokenInfo.symbol
+                  }`
                 : undefined)
             }
             InputProps={{
