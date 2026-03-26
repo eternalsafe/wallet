@@ -189,7 +189,7 @@ const EnvironmentVariables = () => {
                 <Tooltip
                   placement="top"
                   arrow
-                  title="By default Eternal Safe uses the Cloudflare IPFS gateway. This IPFS gateway is only used to load the Uniswap Token List."
+                  title="By default Eternal Safe uses the dweb.link IPFS gateway. This IPFS gateway is only used to load the Uniswap Token List."
                 >
                   <span>
                     <SvgIcon
