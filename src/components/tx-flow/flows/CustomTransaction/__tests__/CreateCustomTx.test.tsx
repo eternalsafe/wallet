@@ -1,6 +1,8 @@
-import { render, screen } from '@/tests/test-utils'
+import type { ReactElement } from 'react'
+import { render, screen, waitFor } from '@/tests/test-utils'
 import userEvent from '@testing-library/user-event'
 import CreateCustomTx from '@/components/tx-flow/flows/CustomTransaction/CreateCustomTx'
+import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 
 jest.mock('@/hooks/useChains', () => ({
   useCurrentChain: () => ({ nativeCurrency: { symbol: 'ETH', decimals: 18 } }),
@@ -20,6 +22,77 @@ jest.mock('@/hooks/useBalances', () => ({
 }))
 
 describe('CreateCustomTx', () => {
+  const renderWithSafeTxContext = (ui: ReactElement, { setNonce = jest.fn() }: { setNonce?: jest.Mock } = {}) => {
+    return {
+      setNonce,
+      ...render(
+        <SafeTxContext.Provider
+          value={{
+            safeTx: undefined,
+            setSafeTx: jest.fn(),
+            safeMessage: undefined,
+            setSafeMessage: jest.fn(),
+            safeTxError: undefined,
+            setSafeTxError: jest.fn(),
+            nonce: undefined,
+            setNonce,
+            nonceNeeded: true,
+            setNonceNeeded: jest.fn(),
+            safeTxGas: undefined,
+            setSafeTxGas: jest.fn(),
+            recommendedNonce: undefined,
+          }}
+        >
+          {ui}
+        </SafeTxContext.Provider>,
+      ),
+    }
+  }
+
+  it('normalizes calldata before submit', async () => {
+    const user = userEvent.setup()
+    const onSubmit = jest.fn()
+
+    renderWithSafeTxContext(
+      <CreateCustomTx
+        params={{
+          contractAddress: '',
+          value: '0',
+          calldata: '0x',
+        }}
+        onSubmit={onSubmit}
+      />,
+    )
+
+    await user.type(screen.getByLabelText('Contract address'), '0x1234567890123456789012345678901234567890')
+    await user.clear(screen.getByLabelText('Calldata'))
+    await user.type(screen.getByLabelText('Calldata'), '  0x1234  ')
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      contractAddress: '0x1234567890123456789012345678901234567890',
+      value: '0',
+      calldata: '0x1234',
+    })
+  })
+
+  it('sets provided tx nonce in context', async () => {
+    const onSubmit = jest.fn()
+    const { setNonce } = renderWithSafeTxContext(
+      <CreateCustomTx
+        params={{
+          contractAddress: '',
+          value: '0',
+          calldata: '0x',
+        }}
+        onSubmit={onSubmit}
+        txNonce={42}
+      />,
+    )
+
+    await waitFor(() => expect(setNonce).toHaveBeenCalledWith(42))
+  })
+
   it('prevents submit with odd-length calldata', async () => {
     const user = userEvent.setup()
     const onSubmit = jest.fn()

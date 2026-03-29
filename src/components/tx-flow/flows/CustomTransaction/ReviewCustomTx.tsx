@@ -21,6 +21,7 @@ const ReviewCustomTx = ({
 }) => {
   const { setSafeTx, setSafeTxError, setNonce } = useContext(SafeTxContext)
   const chain = useCurrentChain()
+  const calldata = (params.calldata || '').trim() || '0x'
 
   useEffect(() => {
     if (txNonce !== undefined) {
@@ -36,7 +37,7 @@ const ReviewCustomTx = ({
         {
           to: params.contractAddress,
           value,
-          data: params.calldata || '0x',
+          data: calldata,
         },
         txNonce,
       )
@@ -45,7 +46,7 @@ const ReviewCustomTx = ({
     } catch (error) {
       setSafeTxError(error as Error)
     }
-  }, [chain, params, setNonce, setSafeTx, setSafeTxError, txNonce])
+  }, [calldata, chain, params, setNonce, setSafeTx, setSafeTxError, txNonce])
 
   const hasValue = !!params.value && parseFloat(params.value) > 0
   const displayValue = `${params.value} ${chain?.nativeCurrency.symbol || 'ETH'}`
@@ -61,7 +62,7 @@ const ReviewCustomTx = ({
       )}
 
       <FieldsGrid title="Calldata">
-        <HexEncodedData hexData={params.calldata || '0x'} />
+        <HexEncodedData hexData={calldata} />
       </FieldsGrid>
     </SignOrExecuteForm>
   )

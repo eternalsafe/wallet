@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react'
+import { type ReactElement, useContext, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Button, CardActions, Divider, FormControl, InputAdornment, TextField, Typography } from '@mui/material'
 import TxCard from '@/components/tx-flow/common/TxCard'
@@ -8,16 +8,19 @@ import useBalances from '@/hooks/useBalances'
 import { safeFormatUnits } from '@/utils/formatters'
 import { parseUnits } from 'ethers/lib/utils'
 import { useCurrentChain } from '@/hooks/useChains'
+import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import type { CustomTransactionParams } from '.'
 
 const CreateCustomTx = ({
   params,
   onSubmit,
+  txNonce,
 }: {
   params: CustomTransactionParams
   onSubmit: (data: CustomTransactionParams) => void
   txNonce?: number
 }): ReactElement => {
+  const { setNonce } = useContext(SafeTxContext)
   const chain = useCurrentChain()
   const { balances } = useBalances()
   const nativeToken = balances.find((item) => item.tokenInfo.type === 'NATIVE_TOKEN')
@@ -52,14 +55,20 @@ const CreateCustomTx = ({
     }
   }
 
+  useEffect(() => {
+    if (txNonce !== undefined) {
+      setNonce(txNonce)
+    }
+  }, [setNonce, txNonce])
+
   return (
     <TxCard>
       <form
         onSubmit={handleSubmit((data) =>
           onSubmit({
             ...data,
-            value: data.value || '0',
-            calldata: data.calldata || '0x',
+            value: data.value.trim() || '0',
+            calldata: data.calldata.trim() || '0x',
           }),
         )}
         className={commonCss.form}
