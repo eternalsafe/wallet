@@ -24,10 +24,13 @@ export enum TOKEN_LISTS {
   ALL = 'ALL',
 }
 
+export type TokenListSelection = TOKEN_LISTS | string
+
 export type SettingsState = {
   currency: string
 
-  tokenList: TOKEN_LISTS
+  tokenList: TokenListSelection
+  customTokenLists: string[]
 
   shortName: {
     show: boolean
@@ -49,6 +52,7 @@ export const initialState: SettingsState = {
   currency: 'usd',
 
   tokenList: TOKEN_LISTS.TRUSTED,
+  customTokenLists: [],
 
   shortName: {
     show: true,
@@ -106,6 +110,19 @@ export const settingsSlice = createSlice({
     setTokenList: (state, { payload }: PayloadAction<SettingsState['tokenList']>) => {
       state.tokenList = payload
     },
+    addCustomTokenList: (state, { payload }: PayloadAction<string>) => {
+      const tokenList = payload.trim()
+      if (!tokenList) return
+      if (state.customTokenLists.includes(tokenList)) return
+
+      state.customTokenLists.push(tokenList)
+    },
+    removeCustomTokenList: (state, { payload }: PayloadAction<string>) => {
+      state.customTokenLists = state.customTokenLists.filter((item) => item !== payload)
+      if (state.tokenList === payload) {
+        state.tokenList = TOKEN_LISTS.TRUSTED
+      }
+    },
     setRpc: (state, { payload }: PayloadAction<{ chainId: string; rpc?: string }>) => {
       const { chainId, rpc } = payload
       if (rpc) {
@@ -145,6 +162,8 @@ export const {
   setDarkMode,
   setSafeAppsUseLightBackground,
   setTokenList,
+  addCustomTokenList,
+  removeCustomTokenList,
   setRpc,
   setIPFS,
   setTenderly,
@@ -163,6 +182,11 @@ export const selectCurrency = (state: RootState): SettingsState['currency'] => {
 export const selectTokenList = (state: RootState): SettingsState['tokenList'] => {
   return state[settingsSlice.name].tokenList || initialState.tokenList
 }
+
+export const selectCustomTokenLists = createSelector(
+  selectSettings,
+  (settings): SettingsState['customTokenLists'] => settings.customTokenLists || [],
+)
 
 export const selectRpc = createSelector(selectSettings, (settings) => settings.env.rpc)
 

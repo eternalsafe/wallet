@@ -64,4 +64,34 @@ describe('useTokens', () => {
 
     expect(mockUseTokenList).toHaveBeenCalledWith('https://my.gateway.example/ipns/tokens.uniswap.org', true)
   })
+
+  test('uses custom token lists selected by URL', () => {
+    jest.spyOn(store, 'useAppSelector').mockImplementation((selector) =>
+      selector({
+        settings: {
+          tokenList: 'ipns://tokens.custom.eth',
+          env: { ipfs: '' },
+        },
+      } as store.RootState),
+    )
+
+    renderHook(() => useTokens())
+
+    expect(mockUseTokenList).toHaveBeenCalledWith('https://dweb.link/ipns/tokens.custom.eth', true)
+  })
+
+  test('does not load invalid custom token list URLs', () => {
+    jest.spyOn(store, 'useAppSelector').mockImplementation((selector) =>
+      selector({
+        settings: {
+          tokenList: 'not-a-url',
+          env: { ipfs: '' },
+        },
+      } as store.RootState),
+    )
+
+    renderHook(() => useTokens())
+
+    expect(mockUseTokenList).toHaveBeenCalledWith(undefined, false)
+  })
 })

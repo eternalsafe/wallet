@@ -20,38 +20,41 @@ describe('useTokenList', () => {
       chainId: '1',
     } as any)
 
-    jest.spyOn(window, 'fetch').mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({
-          tokens: [
-            {
-              chainId: 101,
-              address: '5mbK36SZ7J19An8jFochhQS4of8g6BwUjbeCSxBSoWdp',
-              name: 'Wrapped SOL',
-              symbol: 'wSOL',
-              decimals: 9,
-              logoURI: '',
-            },
-            {
-              chainId: 1,
-              address: 'invalid-address',
-              name: 'Broken token',
-              symbol: 'BROKEN',
-              decimals: 18,
-              logoURI: '',
-            },
-            {
-              chainId: 1,
-              address: hexZeroPad('0x111', 20),
-              name: 'Valid token',
-              symbol: 'VALID',
-              decimals: 18,
-              logoURI: '',
-            },
-          ],
-        }),
-    } as any)
+    Object.defineProperty(global, 'fetch', {
+      writable: true,
+      value: jest.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            tokens: [
+              {
+                chainId: 101,
+                address: '5mbK36SZ7J19An8jFochhQS4of8g6BwUjbeCSxBSoWdp',
+                name: 'Wrapped SOL',
+                symbol: 'wSOL',
+                decimals: 9,
+                logoURI: '',
+              },
+              {
+                chainId: 1,
+                address: 'invalid-address',
+                name: 'Broken token',
+                symbol: 'BROKEN',
+                decimals: 18,
+                logoURI: '',
+              },
+              {
+                chainId: 1,
+                address: hexZeroPad('0x111', 20),
+                name: 'Valid token',
+                symbol: 'VALID',
+                decimals: 18,
+                logoURI: '',
+              },
+            ],
+          }),
+      }),
+    })
 
     mockLogError = jest
       .spyOn(exceptions, 'logError')

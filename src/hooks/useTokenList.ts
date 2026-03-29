@@ -15,13 +15,16 @@ const safeToken = {
 }
 const safeTokenAddress = getAddress(safeToken.address)
 
-export function useTokenList(tokenListURI: string, isTokenListEnabled: boolean): Array<TokenInfo> | undefined {
+export function useTokenList(
+  tokenListURI: string | undefined,
+  isTokenListEnabled: boolean,
+): Array<TokenInfo> | undefined {
   const chain = useCurrentChain()
 
   const [tokenList, setTokenList] = useState<Array<TokenInfo>>()
 
   useEffect(() => {
-    if (!chain || !isTokenListEnabled) {
+    if (!chain || !isTokenListEnabled || !tokenListURI) {
       setTokenList(undefined)
       return
     }
