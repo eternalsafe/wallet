@@ -4,6 +4,7 @@ import {
   validateAmount,
   validatePrefixedAddress,
   validateDecimalLength,
+  validateHexData,
   isValidAddress,
   isValidURL,
 } from '@/utils/validation'
@@ -146,6 +147,17 @@ describe('validation', () => {
 
       const result2 = isValidURL('http://example.com')
       expect(result2).toBe(false)
+    })
+  })
+
+  describe('Hex data validation', () => {
+    it('returns an error for malformed hex calldata', () => {
+      expect(validateHexData('1234')).toBe('Invalid hex data format')
+      expect(validateHexData('0x12gh')).toBe('Invalid hex data format')
+    })
+
+    it('returns an error for odd-length calldata', () => {
+      expect(validateHexData('0x123')).toBe('Hex data must have even number of characters')
     })
   })
 })

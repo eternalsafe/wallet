@@ -13,6 +13,24 @@ export const validateAddress = (address: string) => {
   }
 }
 
+export const validateHexData = (data: string) => {
+  const trimmedData = data.trim()
+
+  if (trimmedData === '' || trimmedData === '0x') {
+    return
+  }
+
+  const HEX_RE = /^0x[0-9a-f]*$/i
+
+  if (!HEX_RE.test(trimmedData)) {
+    return 'Invalid hex data format'
+  }
+
+  if ((trimmedData.length - 2) % 2 !== 0) {
+    return 'Hex data must have even number of characters'
+  }
+}
+
 export const isValidAddress = (address: string): boolean => validateAddress(address) === undefined
 
 export const validatePrefixedAddress =

@@ -1,4 +1,5 @@
 // Archived from https://safe-client.safe.global/v1/chains on 2024-02-18
+// NOTE (2026-03-26): publicRpcUri defaults were re-validated with `cast chain-id` and updated to working endpoints.
 
 import { type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 
@@ -46,7 +47,7 @@ const SUPPORTED_CHAINS = [
     gasPrice: [],
     publicRpcUri: {
       authentication: 'NO_AUTHENTICATION',
-      value: 'https://cloudflare-eth.com',
+      value: 'https://ethereum-rpc.publicnode.com',
     },
     rpcUri: {
       authentication: 'API_KEY_PATH',
@@ -180,7 +181,7 @@ const SUPPORTED_CHAINS = [
     gasPrice: [],
     publicRpcUri: {
       authentication: 'NO_AUTHENTICATION',
-      value: 'https://polygon-rpc.com',
+      value: 'https://polygon-bor-rpc.publicnode.com',
     },
     rpcUri: {
       authentication: 'API_KEY_PATH',
@@ -894,7 +895,7 @@ const SUPPORTED_CHAINS = [
     gasPrice: [],
     publicRpcUri: {
       authentication: 'NO_AUTHENTICATION',
-      value: 'https://rpc.sepolia.org',
+      value: 'https://ethereum-sepolia-rpc.publicnode.com',
     },
     rpcUri: {
       authentication: 'API_KEY_PATH',

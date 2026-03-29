@@ -1,9 +1,11 @@
 import { useCallback, useContext } from 'react'
-import { SendNFTsButton, SendTokensButton } from '@/components/tx-flow/common/TxButton'
+import { SendNFTsButton, SendTokensButton, CustomTransactionButton } from '@/components/tx-flow/common/TxButton'
 import { Container, Grid, Paper, SvgIcon, Typography } from '@mui/material'
 import { TxModalContext } from '../../'
 import TokenTransferFlow from '../TokenTransfer'
+import CustomTransactionFlow from '../CustomTransaction'
 import AssetsIcon from '@/public/images/sidebar/assets.svg'
+import SettingsIcon from '@/public/images/sidebar/settings.svg'
 import { ProgressBar } from '@/components/common/ProgressBar'
 import ChainIndicator from '@/components/common/ChainIndicator'
 import NewTxIcon from '@/public/images/transactions/new-tx.svg'
@@ -15,6 +17,10 @@ const NewTxFlow = () => {
 
   const onTokensClick = useCallback(() => {
     setTxFlow(<TokenTransferFlow />)
+  }, [setTxFlow])
+
+  const onCustomClick = useCallback(() => {
+    setTxFlow(<CustomTransactionFlow />)
   }, [setTxFlow])
 
   const progress = 10
@@ -49,6 +55,13 @@ const NewTxFlow = () => {
               <SendTokensButton onClick={onTokensClick} />
 
               <SendNFTsButton />
+
+              <Typography variant="h4" className={css.type} sx={{ mt: 3 }}>
+                <SvgIcon component={SettingsIcon} inheritViewBox color="secondary" />
+                Contract interaction
+              </Typography>
+
+              <CustomTransactionButton onClick={onCustomClick} />
             </Grid>
           </Grid>
         </Grid>
