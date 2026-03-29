@@ -1,4 +1,4 @@
-const HTTPS_URL_REGEX = /^https?:\/\//i
+const HTTPS_URL_REGEX = /^https:\/\//i
 const IPFS_PROTOCOL_REGEX = /^ipfs:\/\//i
 const IPNS_PROTOCOL_REGEX = /^ipns:\/\//i
 const IPFS_PATH_REGEX = /^\/?ipfs\//i
@@ -13,6 +13,13 @@ const trimProtocolPathPrefix = (path: string, prefix: 'ipfs' | 'ipns'): string =
   const normalizedPath = normalizePath(path)
   const prefixedRegex = new RegExp(`^${prefix}\\/`, 'i')
   return normalizedPath.replace(prefixedRegex, '')
+}
+
+export const isSupportedCustomTokenListUrl = (tokenListUrl: string): boolean => {
+  const value = tokenListUrl.trim()
+  if (!value) return false
+
+  return HTTPS_URL_REGEX.test(value) || IPFS_PROTOCOL_REGEX.test(value)
 }
 
 export const resolveTokenListUrl = (tokenListUrl: string, ipfsGateway: string): string | undefined => {

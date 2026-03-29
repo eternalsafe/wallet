@@ -30,7 +30,7 @@ import { useHasFeature } from '@/hooks/useChains'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { useMemo, useState } from 'react'
 import { DEFAULT_IPFS_GATEWAY } from '@/config/constants'
-import { resolveTokenListUrl } from '@/utils/tokenListUrl'
+import { isSupportedCustomTokenListUrl, resolveTokenListUrl } from '@/utils/tokenListUrl'
 
 const LS_TOKENLIST_ONBOARDING = 'tokenlist_onboarding'
 const MANAGE_TOKEN_LISTS_OPTION = '__MANAGE_TOKEN_LISTS__'
@@ -70,8 +70,8 @@ const TokenListSelect = () => {
 
   const handleAddCustomTokenList = () => {
     const tokenList = customTokenList.trim()
-    if (!resolveTokenListUrl(tokenList, ipfsGateway)) {
-      setCustomTokenListError('Enter a valid HTTP(S), ipfs://, ipns://, /ipfs/, or /ipns/ URL')
+    if (!isSupportedCustomTokenListUrl(tokenList) || !resolveTokenListUrl(tokenList, ipfsGateway)) {
+      setCustomTokenListError('Enter a valid https:// or ipfs:// URL')
       return
     }
 
@@ -145,7 +145,7 @@ const TokenListSelect = () => {
 
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Add HTTP(S) or IPFS token-list URLs. IPFS URLs use your configured IPFS gateway or the default fallback.
+            Add https:// or ipfs:// token-list URLs. IPFS URLs use your configured IPFS gateway or the default fallback.
           </Typography>
 
           <Box display="flex" gap={1} alignItems="flex-start" mb={2}>
