@@ -18,16 +18,7 @@ export type TokenItem = {
   custom?: boolean
 }
 
-type TokenBalance = {
-  token: TokenInfo
-  balance: Awaited<ReturnType<typeof getERC20Balance>>
-}
-
 const isTokenItem = (item: TokenItem | undefined): item is TokenItem => {
-  return !!item
-}
-
-const isTokenBalance = (item: TokenBalance | undefined): item is TokenBalance => {
   return !!item
 }
 
@@ -57,8 +48,10 @@ export const useLoadBalances = (): AsyncResult<Array<TokenItem>> => {
       )
 
       return balances
-        .filter(isTokenBalance)
-        .map(({ token, balance }) => {
+        .map((entry) => {
+          if (!entry) return
+          const { token, balance } = entry
+
           if (token.address !== constants.AddressZero && !token.extensions?.custom && balance.isZero()) {
             return
           }
