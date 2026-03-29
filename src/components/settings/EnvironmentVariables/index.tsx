@@ -11,6 +11,7 @@ import InfoIcon from '@/public/images/notifications/info.svg'
 import ExternalLink from '@/components/common/ExternalLink'
 import ErrorMessage from '@/components/tx/ErrorMessage'
 import { useEffect, useState } from 'react'
+import { isValidTokenListSourceUrl } from '@/hooks/tokenListUrl'
 
 export enum EnvVariablesField {
   rpc = 'rpc',
@@ -80,10 +81,11 @@ const EnvironmentVariables = () => {
     )
 
     // strip ending slash if present
-    if (data[EnvVariablesField.ipfs].endsWith('/')) {
-      data[EnvVariablesField.ipfs] = data[EnvVariablesField.ipfs].slice(0, -1)
+    let ipfsUrl = data[EnvVariablesField.ipfs].trim()
+    if (ipfsUrl.endsWith('/')) {
+      ipfsUrl = ipfsUrl.slice(0, -1)
     }
-    dispatch(setIPFS(data[EnvVariablesField.ipfs]))
+    dispatch(setIPFS(ipfsUrl))
 
     dispatch(
       setTenderly({
@@ -204,9 +206,14 @@ const EnvironmentVariables = () => {
               </Typography>
 
               <TextField
-                {...register(EnvVariablesField.ipfs)}
+                {...register(EnvVariablesField.ipfs, {
+                  validate: (value) =>
+                    !value || isValidTokenListSourceUrl(value) || 'Only ipfs:// or https:// URLs are allowed',
+                })}
                 variant="outlined"
                 type="url"
+                error={!!formState.errors[EnvVariablesField.ipfs]}
+                helperText={formState.errors[EnvVariablesField.ipfs]?.message}
                 InputProps={{
                   endAdornment: ipfs ? (
                     <InputAdornment position="end">

@@ -6,7 +6,7 @@ import { useCustomTokens } from '@/hooks/useCustomTokens'
 import { selectIPFS, selectSettings, TOKEN_LISTS } from '@/store/settingsSlice'
 import { useCurrentChain } from '@/hooks/useChains'
 import { FEATURES, hasFeature } from '@/utils/chains'
-import { DEFAULT_IPFS_GATEWAY, DEFAULT_TOKENLIST_IPNS } from '@/config/constants'
+import { resolveTokenListUrl } from '@/hooks/tokenListUrl'
 
 const useTokenListSetting = (): boolean | undefined => {
   const chain = useCurrentChain()
@@ -24,10 +24,7 @@ export function useTokens(): Array<TokenInfo> | undefined {
   const isTokenListEnabled = useTokenListSetting()
   const customIPFS = useAppSelector(selectIPFS)
 
-  const listTokens = useTokenList(
-    `${customIPFS || DEFAULT_IPFS_GATEWAY}/${DEFAULT_TOKENLIST_IPNS}`,
-    isTokenListEnabled ?? false,
-  )
+  const listTokens = useTokenList(resolveTokenListUrl(customIPFS), isTokenListEnabled ?? false)
   const customTokens = useCustomTokens()
 
   const tokens = useMemo(() => {
