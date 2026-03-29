@@ -6,7 +6,7 @@
 import '@testing-library/jest-dom/extend-expect'
 import { TextEncoder, TextDecoder } from 'util'
 
-jest.mock('@web3-onboard/coinbase', () => jest.fn())
+jest.mock('@web3-onboard/coinbase', () => jest.fn(), { virtual: true })
 jest.mock('@web3-onboard/injected-wallets', () => ({ ProviderLabel: { MetaMask: 'MetaMask' } }))
 jest.mock('@web3-onboard/keystone/dist/index', () => jest.fn())
 jest.mock('@web3-onboard/ledger/dist/index', () => jest.fn())
