@@ -1,38 +1,16 @@
-import { TREZOR_APP_URL, TREZOR_EMAIL, WC_PROJECT_ID } from '@/config/constants'
+import { TREZOR_APP_URL, TREZOR_EMAIL } from '@/config/constants'
 import type { RecommendedInjectedWallets, WalletInit } from '@web3-onboard/common/dist/types.d'
 import type { ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 
-import coinbaseModule from '@web3-onboard/coinbase'
 import injectedWalletModule, { ProviderLabel } from '@web3-onboard/injected-wallets'
 import keystoneModule from '@web3-onboard/keystone/dist/index'
 import ledgerModule from '@web3-onboard/ledger/dist/index'
 import trezorModule from '@web3-onboard/trezor'
-import walletConnect from '@web3-onboard/walletconnect'
 
 import { CGW_NAMES, WALLET_KEYS } from './consts'
 
-const prefersDarkMode = (): boolean => {
-  return window?.matchMedia('(prefers-color-scheme: dark)')?.matches
-}
-
-const walletConnectV2 = (chain: ChainInfo): WalletInit => {
-  // WalletConnect v2 requires a project ID
-  if (!WC_PROJECT_ID) {
-    return () => null
-  }
-
-  return walletConnect({
-    version: 2,
-    projectId: WC_PROJECT_ID,
-    qrModalOptions: {
-      themeVariables: {
-        '--wcm-z-index': '1302',
-      },
-      themeMode: prefersDarkMode() ? 'dark' : 'light',
-    },
-    requiredChains: [parseInt(chain.chainId)],
-    dappUrl: location.origin,
-  })
+const walletConnectV2 = (_chain: ChainInfo): WalletInit => {
+  return () => null
 }
 
 const ledger = (): WalletInit => {
@@ -42,7 +20,6 @@ const ledger = (): WalletInit => {
 const WALLET_MODULES: { [key in WALLET_KEYS]: (chain: ChainInfo) => WalletInit } = {
   [WALLET_KEYS.INJECTED]: () => injectedWalletModule(),
   [WALLET_KEYS.WALLETCONNECT_V2]: (chain) => walletConnectV2(chain),
-  [WALLET_KEYS.COINBASE]: () => coinbaseModule({ darkMode: prefersDarkMode() }),
   [WALLET_KEYS.LEDGER]: () => ledger(),
   [WALLET_KEYS.TREZOR]: () => trezorModule({ appUrl: TREZOR_APP_URL, email: TREZOR_EMAIL }),
   [WALLET_KEYS.KEYSTONE]: () => keystoneModule(),
