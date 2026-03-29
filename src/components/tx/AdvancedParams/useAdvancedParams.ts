@@ -14,8 +14,8 @@ export const useAdvancedParams = (
     () => ({
       userNonce: manualParams?.userNonce ?? userNonce,
       gasLimit: manualParams?.gasLimit ?? gasLimit,
-      maxFeePerGas: manualParams?.maxFeePerGas ?? gasPrice?.maxFeePerGas,
-      maxPriorityFeePerGas: manualParams?.maxPriorityFeePerGas ?? gasPrice?.maxPriorityFeePerGas,
+      maxFeePerGas: manualParams?.maxFeePerGas ?? gasPrice?.maxFeePerGas ?? undefined,
+      maxPriorityFeePerGas: manualParams?.maxPriorityFeePerGas ?? gasPrice?.maxPriorityFeePerGas ?? undefined,
     }),
     [manualParams, userNonce, gasLimit, gasPrice?.maxFeePerGas, gasPrice?.maxPriorityFeePerGas],
   )

@@ -1,3 +1,5 @@
+import type { BigNumber } from 'ethers'
+
 export enum AdvancedField {
   nonce = 'nonce',
   userNonce = 'userNonce',
