@@ -1,4 +1,4 @@
-import { TREZOR_APP_URL, TREZOR_EMAIL } from '@/config/constants'
+import { TREZOR_APP_URL, TREZOR_EMAIL, WC_PROJECT_ID } from '@/config/constants'
 import type { RecommendedInjectedWallets, WalletInit } from '@web3-onboard/common/dist/types.d'
 import type { ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 
@@ -6,11 +6,31 @@ import injectedWalletModule, { ProviderLabel } from '@web3-onboard/injected-wall
 import keystoneModule from '@web3-onboard/keystone/dist/index'
 import ledgerModule from '@web3-onboard/ledger/dist/index'
 import trezorModule from '@web3-onboard/trezor'
+import walletConnect from '@web3-onboard/walletconnect'
 
 import { CGW_NAMES, WALLET_KEYS } from './consts'
 
-const walletConnectV2 = (_chain: ChainInfo): WalletInit => {
-  return () => null
+const prefersDarkMode = (): boolean => {
+  return window?.matchMedia('(prefers-color-scheme: dark)')?.matches
+}
+
+const walletConnectV2 = (chain: ChainInfo): WalletInit => {
+  if (!WC_PROJECT_ID) {
+    return () => null
+  }
+
+  return walletConnect({
+    version: 2,
+    projectId: WC_PROJECT_ID,
+    qrModalOptions: {
+      themeVariables: {
+        '--wcm-z-index': '1302',
+      },
+      themeMode: prefersDarkMode() ? 'dark' : 'light',
+    },
+    requiredChains: [parseInt(chain.chainId)],
+    dappUrl: location.origin,
+  })
 }
 
 const ledger = (): WalletInit => {

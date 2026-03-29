@@ -87,6 +87,7 @@
     "@web3-onboard/keystone": "2.3.11",
     "@web3-onboard/ledger": "2.7.1",
     "@web3-onboard/trezor": "2.4.7",
+    "@web3-onboard/walletconnect": "2.6.3",
     "blo": "^1.1.1",
     "bn.js": "^5.2.1",
     "classnames": "^2.3.1",
