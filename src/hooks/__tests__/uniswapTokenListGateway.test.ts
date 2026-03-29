@@ -1,4 +1,5 @@
 import https from 'https'
+import { resolveTokenListUrl } from '@/utils/tokenListUrl'
 
 const fetchJsonWithRedirects = (
   url: string,
@@ -55,4 +56,26 @@ describe('Uniswap token list gateway', () => {
     expect(Array.isArray(tokens)).toBe(true)
     expect(tokens.length).toBeGreaterThan(0)
   }, 30_000)
+})
+
+describe('Custom token list gateway', () => {
+  test('resolves and fetches the real custom token list from ipfs://', async () => {
+    const customTokenListUrl = 'ipfs://bafybeibfuyyvx5es7eribsgd2u5m2775nhdt53dwnj6sep7ucqjo46rb6q'
+    const resolvedUrl = resolveTokenListUrl(customTokenListUrl, 'https://dweb.link')
+
+    expect(resolvedUrl).toBe('https://dweb.link/ipfs/bafybeibfuyyvx5es7eribsgd2u5m2775nhdt53dwnj6sep7ucqjo46rb6q')
+    try {
+      const body = await fetchJsonWithRedirects(resolvedUrl!, 20_000)
+      const tokens = (body.tokens ?? []) as unknown[]
+
+      expect(typeof body.name).toBe('string')
+      expect(Array.isArray(tokens)).toBe(true)
+      expect(tokens.length).toBeGreaterThan(0)
+    } catch (error) {
+      // This CID can be intermittently unavailable on dweb.link.
+      expect((error as Error).message).toMatch(
+        /Unexpected status code 5\d\d while fetching|Timed out after \d+ms while fetching/,
+      )
+    }
+  }, 45_000)
 })

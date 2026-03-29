@@ -18,7 +18,16 @@ export type TokenItem = {
   custom?: boolean
 }
 
+type TokenBalance = {
+  token: TokenInfo
+  balance: Awaited<ReturnType<typeof getERC20Balance>>
+}
+
 const isTokenItem = (item: TokenItem | undefined): item is TokenItem => {
+  return !!item
+}
+
+const isTokenBalance = (item: TokenBalance | undefined): item is TokenBalance => {
   return !!item
 }
 
@@ -35,15 +44,20 @@ export const useLoadBalances = (): AsyncResult<Array<TokenItem>> => {
 
       const balances = await Promise.all(
         tokens.map(async (token) => {
-          let balance = await getERC20Balance(web3ReadOnly, token.address, safeAddress)
-          return {
-            token,
-            balance,
+          try {
+            let balance = await getERC20Balance(web3ReadOnly, token.address, safeAddress)
+            return {
+              token,
+              balance,
+            }
+          } catch (_error) {
+            return
           }
         }),
       )
 
       return balances
+        .filter(isTokenBalance)
         .map(({ token, balance }) => {
           if (token.address !== constants.AddressZero && !token.extensions?.custom && balance.isZero()) {
             return
