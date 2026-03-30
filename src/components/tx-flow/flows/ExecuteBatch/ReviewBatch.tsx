@@ -15,6 +15,7 @@ import ErrorMessage from '@/components/tx/ErrorMessage'
 // import { ExecutionMethod, ExecutionMethodSelector } from '@/components/tx/ExecutionMethodSelector'
 import DecodedTxs from '@/components/tx-flow/flows/ExecuteBatch/DecodedTxs'
 import { TxSimulation } from '@/components/tx/security/tenderly'
+import SafeUtilsLink from '@/components/tx/security/safe-utils'
 import { WrongChainWarning } from '@/components/tx/WrongChainWarning'
 // import { useRelaysBySafe } from '@/hooks/useRemainingRelays'
 import useOnboard from '@/hooks/wallets/useOnboard'
@@ -206,6 +207,7 @@ export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
         <TxCard>
           <Typography variant="h5">Transaction checks</Typography>
 
+          <SafeUtilsLink />
           <TxSimulation transactions={multiSendTxs} disabled={submitDisabled} />
         </TxCard>
       )}

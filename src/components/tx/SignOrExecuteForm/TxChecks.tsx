@@ -1,5 +1,6 @@
 import { type ReactElement, useContext } from 'react'
 import { TxSimulation, TxSimulationMessage } from '@/components/tx/security/tenderly'
+import SafeUtilsLink from '@/components/tx/security/safe-utils'
 import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import { Box, Typography } from '@mui/material'
 
@@ -12,6 +13,7 @@ const TxChecks = ({ executionOwner }: { executionOwner?: string }): ReactElement
     <>
       <Typography variant="h5">Transaction checks</Typography>
 
+      <SafeUtilsLink />
       <TxSimulation disabled={false} transactions={safeTx} executionOwner={executionOwner} />
 
       <Box className={css.mobileTxCheckMessages}>
