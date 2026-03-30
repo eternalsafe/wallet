@@ -64,4 +64,39 @@ describe('useTokens', () => {
 
     expect(mockUseTokenList).toHaveBeenCalledWith('https://my.gateway.example/ipns/tokens.uniswap.org', true)
   })
+
+  test('uses a real custom token list from ipfs://', () => {
+    const customTokenList = 'ipfs://bafybeibfuyyvx5es7eribsgd2u5m2775nhdt53dwnj6sep7ucqjo46rb6q'
+
+    jest.spyOn(store, 'useAppSelector').mockImplementation((selector) =>
+      selector({
+        settings: {
+          tokenList: customTokenList,
+          env: { ipfs: '' },
+        },
+      } as store.RootState),
+    )
+
+    renderHook(() => useTokens())
+
+    expect(mockUseTokenList).toHaveBeenCalledWith(
+      'https://dweb.link/ipfs/bafybeibfuyyvx5es7eribsgd2u5m2775nhdt53dwnj6sep7ucqjo46rb6q',
+      true,
+    )
+  })
+
+  test('does not load invalid custom token list URLs', () => {
+    jest.spyOn(store, 'useAppSelector').mockImplementation((selector) =>
+      selector({
+        settings: {
+          tokenList: 'not-a-url',
+          env: { ipfs: '' },
+        },
+      } as store.RootState),
+    )
+
+    renderHook(() => useTokens())
+
+    expect(mockUseTokenList).toHaveBeenCalledWith(undefined, false)
+  })
 })

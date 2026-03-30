@@ -3,7 +3,7 @@ import { type TokenInfo } from '@uniswap/token-lists'
 import { SAFE_TOKEN_ADDRESSES } from '@/config/constants'
 import { useCurrentChain } from '@/hooks/useChains'
 import { Errors, logError } from '@/services/exceptions'
-import { getAddress } from 'ethers/lib/utils'
+import { getAddress, isAddress } from 'ethers/lib/utils'
 
 const safeToken = {
   chainId: 1,
@@ -13,14 +13,18 @@ const safeToken = {
   decimals: 18,
   logoURI: `https://safe-transaction-assets.safe.global/tokens/logos/${SAFE_TOKEN_ADDRESSES['1']}.png`,
 }
+const safeTokenAddress = getAddress(safeToken.address)
 
-export function useTokenList(tokenListURI: string, isTokenListEnabled: boolean): Array<TokenInfo> | undefined {
+export function useTokenList(
+  tokenListURI: string | undefined,
+  isTokenListEnabled: boolean,
+): Array<TokenInfo> | undefined {
   const chain = useCurrentChain()
 
   const [tokenList, setTokenList] = useState<Array<TokenInfo>>()
 
   useEffect(() => {
-    if (!chain || !isTokenListEnabled) {
+    if (!chain || !isTokenListEnabled || !tokenListURI) {
       setTokenList(undefined)
       return
     }
@@ -34,9 +38,10 @@ export function useTokenList(tokenListURI: string, isTokenListEnabled: boolean):
 
           const tokenList = tokens
             .filter((token) => {
-              const sameChainId = token.chainId === chainId
-              const isSafeToken = getAddress(token.address) === getAddress(safeToken.address)
-              return sameChainId && !isSafeToken
+              if (token.chainId !== chainId) return false
+              if (!isAddress(token.address)) return false
+
+              return getAddress(token.address) !== safeTokenAddress
             })
             .map((token) => {
               return {

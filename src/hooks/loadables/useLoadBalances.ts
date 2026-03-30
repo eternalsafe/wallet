@@ -35,16 +35,23 @@ export const useLoadBalances = (): AsyncResult<Array<TokenItem>> => {
 
       const balances = await Promise.all(
         tokens.map(async (token) => {
-          let balance = await getERC20Balance(web3ReadOnly, token.address, safeAddress)
-          return {
-            token,
-            balance,
+          try {
+            let balance = await getERC20Balance(web3ReadOnly, token.address, safeAddress)
+            return {
+              token,
+              balance,
+            }
+          } catch (_error) {
+            return
           }
         }),
       )
 
       return balances
-        .map(({ token, balance }) => {
+        .map((entry) => {
+          if (!entry) return
+          const { token, balance } = entry
+
           if (token.address !== constants.AddressZero && !token.extensions?.custom && balance.isZero()) {
             return
           }
