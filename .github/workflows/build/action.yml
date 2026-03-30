@@ -17,6 +17,7 @@ runs:
       shell: bash
       run: yarn build
       env:
+        NODE_OPTIONS: --max-old-space-size=2048
         NEXT_PUBLIC_IS_PRODUCTION: ${{ inputs.prod }}
         NEXT_PUBLIC_SAFE_VERSION: ${{ fromJSON(inputs.secrets).NEXT_PUBLIC_SAFE_VERSION }}
         NEXT_PUBLIC_WC_PROJECT_ID: ${{ fromJSON(inputs.secrets).NEXT_PUBLIC_WC_PROJECT_ID }}
