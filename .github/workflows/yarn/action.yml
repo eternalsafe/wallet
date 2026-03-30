@@ -14,10 +14,6 @@ runs:
     - name: Yarn install
       shell: bash
       run: yarn install --frozen-lockfile
-      env:
-        NODE_OPTIONS: --max-old-space-size=2048
     - name: Yarn after install
       shell: bash
       run: yarn after-install
-      env:
-        NODE_OPTIONS: --max-old-space-size=2048

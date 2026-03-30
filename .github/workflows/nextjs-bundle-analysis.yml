@@ -14,9 +14,6 @@ permissions:
   actions: read # for fetching base branch bundle stats
   pull-requests: write # for comments
 
-env:
-  NODE_OPTIONS: --max-old-space-size=2048
-
 jobs:
   analyze:
     runs-on: ubuntu-latest

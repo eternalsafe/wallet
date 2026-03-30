@@ -4,9 +4,6 @@ on:
     tags:
       - 'v\d+'
 
-env:
-  NODE_OPTIONS: --max-old-space-size=2048
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
