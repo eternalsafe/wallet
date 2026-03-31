@@ -105,6 +105,9 @@ WalletConnect API key resolution order:
 
 ### Running the app locally
 
+This project must be built and developed with **Yarn classic (1.x)**.  
+Using Yarn 2+/Berry, npm, or pnpm is not supported.
+
 Install the dependencies:
 
 ```bash
