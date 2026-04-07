@@ -28,7 +28,7 @@ export const clampHistoricalRpcLogBatchSize = (value: number): number => {
 export const clampHistoricalRpcLogMaxConcurrentRequests = (value: number): number => {
   const parsedValue = Number(value)
   if (!Number.isFinite(parsedValue)) {
-    return 3
+    return 5
   }
 
   return Math.max(
@@ -43,7 +43,7 @@ export const HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE = clampHistoricalRpcLogBatchSiz
   getPositiveIntFromEnv(process.env.NEXT_PUBLIC_HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE, 10_000),
 )
 export const HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS = clampHistoricalRpcLogMaxConcurrentRequests(
-  getPositiveIntFromEnv(process.env.NEXT_PUBLIC_HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS, 3),
+  getPositiveIntFromEnv(process.env.NEXT_PUBLIC_HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS, 5),
 )
 export const BASE_TX_GAS = 21_000
 export const LS_NAMESPACE = 'ETERNALSAFE__'

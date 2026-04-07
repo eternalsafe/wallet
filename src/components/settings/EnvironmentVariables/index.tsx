@@ -57,17 +57,23 @@ const EnvironmentVariables = () => {
   const chain = useCurrentChain()
   const settings = useAppSelector(selectSettings)
   const dispatch = useAppDispatch()
+  const historicalRpcLogBatchSizeValue = settings.env?.historicalRpcLogBatchSize
+  const historicalRpcLogMaxConcurrentRequestsValue = settings.env?.historicalRpcLogMaxConcurrentRequests
 
   const formMethods = useForm<EnvVariablesFormData>({
     mode: 'onChange',
     values: {
       [EnvVariablesField.rpc]: settings.env?.rpc[chainId] ?? '',
-      [EnvVariablesField.historicalRpcLogBatchSize]: `${
-        settings.env?.historicalRpcLogBatchSize ?? HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE
-      }`,
-      [EnvVariablesField.historicalRpcLogMaxConcurrentRequests]: `${
-        settings.env?.historicalRpcLogMaxConcurrentRequests ?? HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS
-      }`,
+      [EnvVariablesField.historicalRpcLogBatchSize]:
+        historicalRpcLogBatchSizeValue === undefined ||
+        historicalRpcLogBatchSizeValue === HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE
+          ? ''
+          : `${historicalRpcLogBatchSizeValue}`,
+      [EnvVariablesField.historicalRpcLogMaxConcurrentRequests]:
+        historicalRpcLogMaxConcurrentRequestsValue === undefined ||
+        historicalRpcLogMaxConcurrentRequestsValue === HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS
+          ? ''
+          : `${historicalRpcLogMaxConcurrentRequestsValue}`,
       [EnvVariablesField.ipfs]: settings.env?.ipfs ?? '',
       [EnvVariablesField.tenderlyOrgName]: settings.env?.tenderly.orgName ?? '',
       [EnvVariablesField.tenderlyProjectName]: settings.env?.tenderly.projectName ?? '',
@@ -225,14 +231,24 @@ const EnvironmentVariables = () => {
                 fullWidth
               />
 
-              <Typography fontWeight={700} mb={2} mt={3}>
-                Historical RPC block range
+              <Typography fontWeight={700} mt={3}>
+                Chain Queries
                 <Tooltip
                   placement="top"
                   arrow
-                  title="Maximum number of blocks per batched historical eth_getLogs request. Lower values reduce request size but increase request count."
+                  title={
+                    <Box alignItems="center" gap={1} padding={1}>
+                      <span>Configure historical chain-query batching behavior used for backfills.</span>
+                      <br />
+                      <br />
+                      <span>
+                        Default block range: {HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE.toLocaleString()}. Default max
+                        concurrent requests: {HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS.toLocaleString()}.
+                      </span>
+                    </Box>
+                  }
                 >
-                  <span>
+                  <span aria-label="Chain Queries info">
                     <SvgIcon
                       component={InfoIcon}
                       inheritViewBox
@@ -244,126 +260,117 @@ const EnvironmentVariables = () => {
                 </Tooltip>
               </Typography>
 
-              <TextField
-                {...register(EnvVariablesField.historicalRpcLogBatchSize, {
-                  required: true,
-                  min: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN,
-                  max: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX,
-                  validate: (value) => {
-                    const parsed = Number(value)
-                    return (
-                      Number.isInteger(parsed) &&
-                      parsed >= HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN &&
-                      parsed <= HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX
-                    )
-                  },
-                })}
-                variant="outlined"
-                type="number"
-                InputProps={{
-                  endAdornment: historicalRpcLogBatchSize ? (
-                    <InputAdornment position="end">
-                      <Tooltip title="Reset to default value">
-                        <IconButton
-                          onClick={() =>
-                            setValue(
-                              EnvVariablesField.historicalRpcLogBatchSize,
-                              `${HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE}`,
-                              { shouldValidate: true },
-                            )
-                          }
-                          size="small"
-                          color="primary"
-                        >
-                          <RotateLeftIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </InputAdornment>
-                  ) : null,
-                }}
-                inputProps={{
-                  min: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN,
-                  max: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX,
-                  step: 1,
-                }}
-                fullWidth
-                error={!!formState.errors[EnvVariablesField.historicalRpcLogBatchSize]}
-                helperText={
-                  formState.errors[EnvVariablesField.historicalRpcLogBatchSize]
-                    ? `Please enter an integer from ${HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN} to ${HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX}.`
-                    : undefined
-                }
-              />
+              <Grid mt={2} container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    {...register(EnvVariablesField.historicalRpcLogBatchSize, {
+                      validate: (value) => {
+                        if (value.trim() === '') {
+                          return true
+                        }
 
-              <Typography fontWeight={700} mb={2} mt={3}>
-                Historical RPC max concurrent requests
-                <Tooltip
-                  placement="top"
-                  arrow
-                  title="Maximum number of historical log-range batch requests in flight at once."
-                >
-                  <span>
-                    <SvgIcon
-                      component={InfoIcon}
-                      inheritViewBox
-                      fontSize="small"
-                      color="border"
-                      sx={{ verticalAlign: 'middle', ml: 0.5 }}
-                    />
-                  </span>
-                </Tooltip>
-              </Typography>
+                        const parsed = Number(value)
+                        return (
+                          Number.isInteger(parsed) &&
+                          parsed >= HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN &&
+                          parsed <= HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX
+                        )
+                      },
+                    })}
+                    variant="outlined"
+                    type="number"
+                    label="Block range"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    InputProps={{
+                      endAdornment: historicalRpcLogBatchSize ? (
+                        <InputAdornment position="end">
+                          <Tooltip title="Reset to default value">
+                            <IconButton
+                              onClick={() =>
+                                setValue(EnvVariablesField.historicalRpcLogBatchSize, '', { shouldValidate: true })
+                              }
+                              size="small"
+                              color="primary"
+                            >
+                              <RotateLeftIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      ) : null,
+                    }}
+                    inputProps={{
+                      min: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN,
+                      max: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX,
+                      step: 1,
+                    }}
+                    fullWidth
+                    error={!!formState.errors[EnvVariablesField.historicalRpcLogBatchSize]}
+                    helperText={
+                      formState.errors[EnvVariablesField.historicalRpcLogBatchSize]
+                        ? `Please enter an integer from ${HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN} to ${HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX}.`
+                        : undefined
+                    }
+                  />
+                </Grid>
 
-              <TextField
-                {...register(EnvVariablesField.historicalRpcLogMaxConcurrentRequests, {
-                  required: true,
-                  min: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN,
-                  max: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX,
-                  validate: (value) => {
-                    const parsed = Number(value)
-                    return (
-                      Number.isInteger(parsed) &&
-                      parsed >= HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN &&
-                      parsed <= HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX
-                    )
-                  },
-                })}
-                variant="outlined"
-                type="number"
-                InputProps={{
-                  endAdornment: historicalRpcLogMaxConcurrentRequests ? (
-                    <InputAdornment position="end">
-                      <Tooltip title="Reset to default value">
-                        <IconButton
-                          onClick={() =>
-                            setValue(
-                              EnvVariablesField.historicalRpcLogMaxConcurrentRequests,
-                              `${HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS}`,
-                              { shouldValidate: true },
-                            )
-                          }
-                          size="small"
-                          color="primary"
-                        >
-                          <RotateLeftIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </InputAdornment>
-                  ) : null,
-                }}
-                inputProps={{
-                  min: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN,
-                  max: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX,
-                  step: 1,
-                }}
-                fullWidth
-                error={!!formState.errors[EnvVariablesField.historicalRpcLogMaxConcurrentRequests]}
-                helperText={
-                  formState.errors[EnvVariablesField.historicalRpcLogMaxConcurrentRequests]
-                    ? `Please enter an integer from ${HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN} to ${HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX}.`
-                    : undefined
-                }
-              />
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    {...register(EnvVariablesField.historicalRpcLogMaxConcurrentRequests, {
+                      validate: (value) => {
+                        if (value.trim() === '') {
+                          return true
+                        }
+
+                        const parsed = Number(value)
+                        return (
+                          Number.isInteger(parsed) &&
+                          parsed >= HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN &&
+                          parsed <= HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX
+                        )
+                      },
+                    })}
+                    variant="outlined"
+                    type="number"
+                    label="Max Concurrent Requests"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    InputProps={{
+                      endAdornment: historicalRpcLogMaxConcurrentRequests ? (
+                        <InputAdornment position="end">
+                          <Tooltip title="Reset to default value">
+                            <IconButton
+                              onClick={() =>
+                                setValue(EnvVariablesField.historicalRpcLogMaxConcurrentRequests, '', {
+                                  shouldValidate: true,
+                                })
+                              }
+                              size="small"
+                              color="primary"
+                            >
+                              <RotateLeftIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      ) : null,
+                    }}
+                    inputProps={{
+                      min: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN,
+                      max: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX,
+                      step: 1,
+                    }}
+                    fullWidth
+                    error={!!formState.errors[EnvVariablesField.historicalRpcLogMaxConcurrentRequests]}
+                    helperText={
+                      formState.errors[EnvVariablesField.historicalRpcLogMaxConcurrentRequests]
+                        ? `Please enter an integer from ${HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN} to ${HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX}.`
+                        : undefined
+                    }
+                  />
+                </Grid>
+              </Grid>
 
               <Typography fontWeight={700} mb={2} mt={3}>
                 IPFS URL
