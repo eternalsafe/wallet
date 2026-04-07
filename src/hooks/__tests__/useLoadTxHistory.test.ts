@@ -246,7 +246,9 @@ describe('useLoadTxHistory', () => {
 
   it('parses tx hash from positional log args when named txHash is unavailable', async () => {
     const provider = new JsonRpcProvider(mainnetPublicRpcUri)
-    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest.fn().mockResolvedValue(1_000_000)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(1_000_000)
     ;(provider as JsonRpcProvider & { getBlock: jest.Mock }).getBlock = jest.fn().mockResolvedValue({ timestamp: 123 })
     ;(provider as JsonRpcProvider & { getTransaction: jest.Mock }).getTransaction = jest.fn().mockResolvedValue({
       from: '0x1111111111111111111111111111111111111111',
@@ -310,7 +312,9 @@ describe('useLoadTxHistory', () => {
     mockUseIntervalCounter.mockImplementation(() => [pollCount, resetPollingMock])
 
     const provider = new JsonRpcProvider(mainnetPublicRpcUri)
-    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest.fn().mockResolvedValue(1_000_000)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(1_000_000)
     ;(provider as JsonRpcProvider & { getBlock: jest.Mock }).getBlock = jest.fn().mockResolvedValue({ timestamp: 123 })
     ;(provider as JsonRpcProvider & { getTransaction: jest.Mock }).getTransaction = jest.fn().mockResolvedValue({
       from: '0x1111111111111111111111111111111111111111',
