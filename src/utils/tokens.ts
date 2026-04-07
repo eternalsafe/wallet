@@ -5,7 +5,6 @@ import { queryFilterBackwards } from '@/utils/queryFilterBackfill'
 import { type TokenInfo, TokenType } from '@safe-global/safe-gateway-typescript-sdk'
 import { constants, BigNumber } from 'ethers'
 import type { Provider } from '@ethersproject/abstract-provider'
-import { isString } from 'lodash'
 
 export const UNLIMITED_APPROVAL_AMOUNT = BigNumber.from(2).pow(256).sub(1)
 
@@ -111,13 +110,85 @@ export const getERC721TokenIds = async (
   batchSize = HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
   maxConcurrentRequests = HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
 ): Promise<Array<string>> => {
+  const { tokenIds } = await syncERC721TokenIds(
+    web3,
+    token,
+    address,
+    [],
+    -1,
+    undefined,
+    batchSize,
+    maxConcurrentRequests,
+  )
+  return tokenIds
+}
+
+const sortTransferLogsByBlock = <TLog extends { blockNumber: number; logIndex: number }>(logs: TLog[]): TLog[] => {
+  return [...logs].sort((a, b) => {
+    if (a.blockNumber !== b.blockNumber) {
+      return a.blockNumber - b.blockNumber
+    }
+    return a.logIndex - b.logIndex
+  })
+}
+
+const applyTransferLogsToOwnership = (
+  ownerAddress: string,
+  initialTokenIds: string[],
+  logs: Array<{ args: { from?: string; to?: string; tokenId: BigNumber }; blockNumber: number; logIndex: number }>,
+): string[] => {
+  const normalizedOwner = ownerAddress.toLowerCase()
+  const ownedTokenIds = new Set(initialTokenIds)
+
+  sortTransferLogsByBlock(logs).forEach((event) => {
+    const tokenId = event.args.tokenId?.toString()
+    if (!tokenId) {
+      return
+    }
+
+    const to = event.args.to?.toLowerCase()
+    const from = event.args.from?.toLowerCase()
+    if (to === normalizedOwner) {
+      ownedTokenIds.add(tokenId)
+    } else if (from === normalizedOwner) {
+      ownedTokenIds.delete(tokenId)
+    }
+  })
+
+  return [...ownedTokenIds]
+}
+
+export const syncERC721TokenIds = async (
+  web3: Provider,
+  token: string,
+  address: string,
+  currentTokenIds: string[] = [],
+  fromBlockExclusive = -1,
+  toBlockInclusive?: number,
+  batchSize = HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+  maxConcurrentRequests = HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
+  scheduleRequest: <T>(request: () => Promise<T>) => Promise<T> = async <T>(request: () => Promise<T>) => request(),
+): Promise<{ tokenIds: string[]; latestProcessedBlock: number }> => {
   const erc721 = ERC721__factory.connect(token, web3)
-  const latestBlock = await web3.getBlockNumber()
+  const latestBlock =
+    toBlockInclusive !== undefined ? Math.floor(toBlockInclusive) : await scheduleRequest(() => web3.getBlockNumber())
+  const normalizedFromBlockExclusive = Math.floor(fromBlockExclusive)
+
+  if (latestBlock <= normalizedFromBlockExclusive) {
+    return {
+      tokenIds: [...currentTokenIds],
+      latestProcessedBlock: latestBlock,
+    }
+  }
+
+  const stopAtBlock = Math.max(0, normalizedFromBlockExclusive + 1)
 
   const fromLogs = await queryFilterBackwards({
     latestBlock,
+    stopAtBlock,
     batchSize,
     maxConcurrentRequests,
+    scheduleRequest,
     queryRange: ({ fromBlock, toBlock }) =>
       erc721.queryFilter(
         erc721.filters['Transfer(address,address,uint256)'](address, undefined, undefined),
@@ -127,8 +198,10 @@ export const getERC721TokenIds = async (
   })
   const toLogs = await queryFilterBackwards({
     latestBlock,
+    stopAtBlock,
     batchSize,
     maxConcurrentRequests,
+    scheduleRequest,
     queryRange: ({ fromBlock, toBlock }) =>
       erc721.queryFilter(
         erc721.filters['Transfer(address,address,uint256)'](undefined, address, undefined),
@@ -137,30 +210,19 @@ export const getERC721TokenIds = async (
       ),
   })
 
-  const combinedLogs = fromLogs.concat(toLogs).sort((a, b) => a.blockNumber - b.blockNumber)
+  const combinedLogs = fromLogs.concat(toLogs)
+  const tokenIds = applyTransferLogsToOwnership(
+    address,
+    currentTokenIds,
+    combinedLogs as Array<{
+      args: { from?: string; to?: string; tokenId: BigNumber }
+      blockNumber: number
+      logIndex: number
+    }>,
+  )
 
-  const ownedTokenIds = combinedLogs
-    .map((event) => {
-      if (event.args.to === address) {
-        return event.args.tokenId
-      }
-      if (event.args.from === address) {
-        return event.args.tokenId.mul(-1) // Negative token ID indicates removal
-      }
-    })
-    .map((id) => id?.toString())
-    .filter(isString)
-
-  // Use reduce to consolidate the list of token IDs
-  return ownedTokenIds.reduce((acc: string[], tokenId: string) => {
-    if (tokenId.startsWith('-')) {
-      let tokenIdStr = tokenId.slice(1)
-      if (acc.includes(tokenIdStr)) {
-        acc.splice(acc.indexOf(tokenIdStr), 1)
-      }
-    } else if (!acc.includes(tokenId)) {
-      acc.push(tokenId)
-    }
-    return acc
-  }, [])
+  return {
+    tokenIds,
+    latestProcessedBlock: latestBlock,
+  }
 }

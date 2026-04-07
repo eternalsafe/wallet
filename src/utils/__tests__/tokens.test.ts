@@ -1,7 +1,8 @@
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { ERC721__factory } from '@/types/contracts'
 import { CONFIG_SERVICE_CHAINS } from '@/tests/mocks/chains'
-import { getERC721TokenIds } from '@/utils/tokens'
+import { getERC721TokenIds, syncERC721TokenIds } from '@/utils/tokens'
+import { BigNumber } from 'ethers'
 
 describe('getERC721TokenIds', () => {
   const mainnetPublicRpcUri = CONFIG_SERVICE_CHAINS.find((chain) => chain.chainId === '1')?.publicRpcUri.value
@@ -119,6 +120,69 @@ describe('getERC721TokenIds', () => {
       [toTransferFilter, 600_001, 1_000_000],
       [toTransferFilter, 200_001, 600_000],
       [toTransferFilter, 0, 200_000],
+    ])
+  })
+
+  it('syncs ERC721 ownership incrementally from last synced block', async () => {
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    const fromTransferFilter = { id: 'fromTransfer' }
+    const toTransferFilter = { id: 'toTransfer' }
+
+    const queryFilterMock = jest.fn(async (filter: unknown) => {
+      if (filter === fromTransferFilter) {
+        return [
+          {
+            blockNumber: 1_000_000,
+            logIndex: 1,
+            args: {
+              from: '0x0000000000000000000000000000000000000000',
+              to: '0x2222222222222222222222222222222222222222',
+              tokenId: BigNumber.from(3),
+            },
+          },
+        ]
+      }
+
+      return [
+        {
+          blockNumber: 999_999,
+          logIndex: 0,
+          args: {
+            from: '0x2222222222222222222222222222222222222222',
+            to: '0x1111111111111111111111111111111111111111',
+            tokenId: BigNumber.from(1),
+          },
+        },
+      ]
+    })
+
+    jest.spyOn(ERC721__factory, 'connect').mockReturnValue({
+      filters: {
+        'Transfer(address,address,uint256)': jest.fn((from) => {
+          return from ? fromTransferFilter : toTransferFilter
+        }),
+      },
+      queryFilter: queryFilterMock,
+    } as any)
+
+    const result = await syncERC721TokenIds(
+      provider,
+      '0x1111111111111111111111111111111111111111',
+      '0x2222222222222222222222222222222222222222',
+      ['1', '2'],
+      999_998,
+      1_000_000,
+      10_000,
+      2,
+    )
+
+    expect(result).toEqual({
+      latestProcessedBlock: 1_000_000,
+      tokenIds: ['2', '3'],
+    })
+    expect(queryFilterMock.mock.calls).toEqual([
+      [fromTransferFilter, 999_999, 1_000_000],
+      [toTransferFilter, 999_999, 1_000_000],
     ])
   })
 })

@@ -8,15 +8,42 @@ const getPositiveIntFromEnv = (value: string | undefined, fallback: number): num
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback
 }
 
+export const HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN = 500
+export const HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX = 50_000
+export const HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN = 1
+export const HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX = 5
+
+export const clampHistoricalRpcLogBatchSize = (value: number): number => {
+  const parsedValue = Number(value)
+  if (!Number.isFinite(parsedValue)) {
+    return 10_000
+  }
+
+  return Math.max(
+    HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN,
+    Math.min(HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX, Math.floor(parsedValue)),
+  )
+}
+
+export const clampHistoricalRpcLogMaxConcurrentRequests = (value: number): number => {
+  const parsedValue = Number(value)
+  if (!Number.isFinite(parsedValue)) {
+    return 3
+  }
+
+  return Math.max(
+    HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN,
+    Math.min(HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX, Math.floor(parsedValue)),
+  )
+}
+
 // Magic numbers
 export const POLLING_INTERVAL = 15_000
-export const HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE = getPositiveIntFromEnv(
-  process.env.NEXT_PUBLIC_HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
-  10_000,
+export const HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE = clampHistoricalRpcLogBatchSize(
+  getPositiveIntFromEnv(process.env.NEXT_PUBLIC_HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE, 10_000),
 )
-export const HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS = getPositiveIntFromEnv(
-  process.env.NEXT_PUBLIC_HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
-  3,
+export const HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS = clampHistoricalRpcLogMaxConcurrentRequests(
+  getPositiveIntFromEnv(process.env.NEXT_PUBLIC_HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS, 3),
 )
 export const BASE_TX_GAS = 21_000
 export const LS_NAMESPACE = 'ETERNALSAFE__'

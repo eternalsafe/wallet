@@ -85,7 +85,7 @@ describe('settingsSlice', () => {
       expect(state.env.historicalRpcLogBatchSize).toBe(12_345)
     })
 
-    it('should select historical RPC log batch size', () => {
+    it('should clamp selected historical RPC log batch size', () => {
       const state = {
         [settingsSlice.name]: {
           ...initialState,
@@ -96,22 +96,27 @@ describe('settingsSlice', () => {
         },
       } as any
 
-      expect(selectHistoricalRpcLogBatchSize(state)).toBe(55_555)
+      expect(selectHistoricalRpcLogBatchSize(state)).toBe(50_000)
     })
 
-    it('should set and select max concurrent historical RPC requests', () => {
+    it('should clamp and select max concurrent historical RPC requests', () => {
       const reduced = settingsSlice.reducer(
         initialState,
         settingsSlice.actions.setHistoricalRpcLogMaxConcurrentRequests(7),
       )
 
-      expect(reduced.env.historicalRpcLogMaxConcurrentRequests).toBe(7)
+      expect(reduced.env.historicalRpcLogMaxConcurrentRequests).toBe(5)
 
       const state = {
         [settingsSlice.name]: reduced,
       } as any
 
-      expect(selectHistoricalRpcLogMaxConcurrentRequests(state)).toBe(7)
+      expect(selectHistoricalRpcLogMaxConcurrentRequests(state)).toBe(5)
+    })
+
+    it('should clamp batch size below minimum', () => {
+      const reduced = settingsSlice.reducer(initialState, settingsSlice.actions.setHistoricalRpcLogBatchSize(1))
+      expect(reduced.env.historicalRpcLogBatchSize).toBe(500)
     })
   })
 

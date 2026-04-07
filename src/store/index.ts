@@ -33,6 +33,7 @@ import { customTokensSlice } from './customTokensSlice'
 import { customCollectiblesSlice } from '@/store/customCollectiblesSlice'
 import { addedTxsSlice } from './addedTxsSlice'
 import { collectiblesBalanceSlice } from '@/store/collectiblesBalancesSlice'
+import { historicalRpcSyncSlice } from './historicalRpcSyncSlice'
 
 const rootReducer = combineReducers({
   [chainsSlice.name]: chainsSlice.reducer,
@@ -57,6 +58,7 @@ const rootReducer = combineReducers({
   [customTokensSlice.name]: customTokensSlice.reducer,
   [customCollectiblesSlice.name]: customCollectiblesSlice.reducer,
   [addedTxsSlice.name]: addedTxsSlice.reducer,
+  [historicalRpcSyncSlice.name]: historicalRpcSyncSlice.reducer,
 })
 
 const persistedSlices: (keyof PreloadedState<RootState>)[] = [
@@ -72,6 +74,7 @@ const persistedSlices: (keyof PreloadedState<RootState>)[] = [
   customTokensSlice.name,
   customCollectiblesSlice.name,
   addedTxsSlice.name,
+  historicalRpcSyncSlice.name,
 ]
 
 export const getPersistedState = () => {

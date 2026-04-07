@@ -9,6 +9,13 @@ describe('queryFilterBackfill', () => {
     ])
   })
 
+  it('builds backward block ranges down to a stop block', () => {
+    expect(getBackwardBlockRanges(25, 10, 6)).toEqual([
+      { fromBlock: 16, toBlock: 25 },
+      { fromBlock: 6, toBlock: 15 },
+    ])
+  })
+
   it('limits in-flight requests with maxConcurrentRequests', async () => {
     let inFlightRequests = 0
     let peakInFlightRequests = 0
@@ -30,5 +37,50 @@ describe('queryFilterBackfill', () => {
 
     expect(queryRange).toHaveBeenCalledTimes(10)
     expect(peakInFlightRequests).toBeLessThanOrEqual(3)
+  })
+
+  it('limits processed batches with maxBatches', async () => {
+    const queryRange = jest.fn(async () => [] as string[])
+
+    await queryFilterBackwards({
+      latestBlock: 100,
+      batchSize: 10,
+      maxConcurrentRequests: 1,
+      maxBatches: 2,
+      queryRange,
+    })
+
+    expect(queryRange).toHaveBeenCalledTimes(2)
+  })
+
+  it('retries on rate-limited errors', async () => {
+    const queryRange = jest
+      .fn()
+      .mockRejectedValueOnce({ code: 429, message: 'Too many requests' })
+      .mockRejectedValueOnce({ code: 'TIMEOUT', message: 'timed out' })
+      .mockResolvedValueOnce([])
+
+    await queryFilterBackwards({
+      latestBlock: 9,
+      batchSize: 10,
+      maxConcurrentRequests: 1,
+      maxRetryAttempts: 3,
+      retryBaseDelayMs: 1,
+      retryMaxDelayMs: 2,
+      queryRange,
+    })
+
+    expect(queryRange).toHaveBeenCalledTimes(3)
+  })
+
+  it('does not retain logs when collectLogs is false', async () => {
+    const result = await queryFilterBackwards({
+      latestBlock: 9,
+      batchSize: 10,
+      collectLogs: false,
+      queryRange: async () => ['a'],
+    })
+
+    expect(result).toEqual([])
   })
 })

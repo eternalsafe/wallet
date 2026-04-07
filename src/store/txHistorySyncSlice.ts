@@ -18,9 +18,15 @@ export const txHistorySyncSlice = createSlice({
   initialState,
   reducers: {
     setTxHistorySync: (state, { payload }: PayloadAction<Partial<TxHistorySyncState>>) => {
-      state.syncedToBlock = payload.syncedToBlock
-      state.latestBlock = payload.latestBlock
-      state.loading = payload.loading ?? state.loading
+      if ('syncedToBlock' in payload) {
+        state.syncedToBlock = payload.syncedToBlock
+      }
+      if ('latestBlock' in payload) {
+        state.latestBlock = payload.latestBlock
+      }
+      if ('loading' in payload) {
+        state.loading = payload.loading ?? state.loading
+      }
     },
     resetTxHistorySync: () => initialState,
   },
