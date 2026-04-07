@@ -38,7 +38,7 @@ describe('useLoadTxHistory', () => {
     localStorage.clear()
   })
 
-  it('backfills one historical batch per poll from latest backwards', async () => {
+  it('backfills historical batches from latest backwards using configured batch window', async () => {
     const provider = new JsonRpcProvider(mainnetPublicRpcUri)
     const getBlockNumberMock = jest.fn().mockResolvedValue(1_000_000)
     ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = getBlockNumberMock
@@ -86,12 +86,12 @@ describe('useLoadTxHistory', () => {
     expect(queryFilterMock).not.toHaveBeenCalledWith(executionSuccessFilter, 0, 'latest')
 
     expect(queryFilterMock.mock.calls).toEqual([
-      [executionSuccessFilter, 950_001, 1_000_000],
-      [executionSuccessFilter, 900_001, 950_000],
+      [executionSuccessFilter, 600_001, 1_000_000],
+      [executionSuccessFilter, 200_001, 600_000],
     ])
   })
 
-  it('uses cursor state to only fetch new head blocks and one additional backfill batch', async () => {
+  it('uses cursor state to only fetch new head blocks and backfills within the configured window', async () => {
     const provider = new JsonRpcProvider(mainnetPublicRpcUri)
     ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
       .fn()
@@ -148,10 +148,9 @@ describe('useLoadTxHistory', () => {
     })
 
     expect(queryFilterMock.mock.calls).toEqual([
-      [executionSuccessFilter, 950_001, 1_000_000],
-      [executionSuccessFilter, 900_001, 950_000],
-      [executionSuccessFilter, 450_001, 500_000],
-      [executionSuccessFilter, 400_001, 450_000],
+      [executionSuccessFilter, 900_001, 1_000_000],
+      [executionSuccessFilter, 400_001, 500_000],
+      [executionSuccessFilter, 300_001, 400_000],
     ])
   })
 
@@ -227,8 +226,8 @@ describe('useLoadTxHistory', () => {
     })
 
     expect(syncedBlocks).toContain(500_000)
-    expect(syncedBlocks).toContain(450_001)
     expect(syncedBlocks).toContain(400_001)
+    expect(syncedBlocks).toContain(300_001)
     expect(syncedBlocks).not.toContain(950_001)
     expect(syncedBlocks).not.toContain(900_001)
   })
