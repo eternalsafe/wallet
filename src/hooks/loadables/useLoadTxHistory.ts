@@ -106,7 +106,8 @@ const parseExecutionSuccessLog = async ({
   txDataCache: Map<string, Promise<{ executor: string; decodedTxData?: Result }>>
   scheduleRequest: <T>(request: () => Promise<T>) => Promise<T>
 }): Promise<ParsedExecutionLog | undefined> => {
-  const safeTxHash = (log.args as { txHash?: string } | undefined)?.txHash
+  const logArgs = log.args as ({ txHash?: string } & { [key: number]: unknown }) | undefined
+  const safeTxHash = logArgs?.txHash ?? (typeof logArgs?.[0] === 'string' ? (logArgs[0] as string) : undefined)
   if (!safeTxHash || !log.transactionHash) {
     return
   }
@@ -213,6 +214,9 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   const [loading, setLoading] = useState<boolean>(false)
   const txHistoryCursorRef = useRef<TxHistoryBackfillCursor>()
   const dataRef = useRef<TxHistory>({})
+  const loadRef = useRef<(() => Promise<void>) | undefined>()
+  const isLoadInFlightRef = useRef(false)
+  const hasQueuedLoadRef = useRef(false)
   const hasInitializedDataRef = useRef(false)
   const blockTimestampCacheRef = useRef(new Map<number, Promise<number>>())
   const txDataCacheRef = useRef(new Map<string, Promise<{ executor: string; decodedTxData?: Result }>>())
@@ -229,7 +233,15 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
     let isCurrent = true
 
     const load = async () => {
+      if (isLoadInFlightRef.current) {
+        hasQueuedLoadRef.current = true
+        return
+      }
+
+      isLoadInFlightRef.current = true
+
       if (typeof document !== 'undefined' && document.hidden) {
+        isLoadInFlightRef.current = false
         return
       }
 
@@ -238,6 +250,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         setError(undefined)
         setLoading(false)
         dispatch(resetTxHistorySync())
+        isLoadInFlightRef.current = false
         return
       }
 
@@ -247,6 +260,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         setError(undefined)
         setLoading(false)
         dispatch(resetTxHistorySync())
+        isLoadInFlightRef.current = false
         return
       }
 
@@ -383,24 +397,45 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         if (isCurrent) {
           setLoading(false)
         }
+        isLoadInFlightRef.current = false
+        if (isCurrent && hasQueuedLoadRef.current) {
+          hasQueuedLoadRef.current = false
+          void load()
+        }
       }
     }
 
+    loadRef.current = load
     void load()
 
     return () => {
       isCurrent = false
+      hasQueuedLoadRef.current = false
+      isLoadInFlightRef.current = false
+      loadRef.current = undefined
     }
   }, [
     dispatch,
     txHistorySyncKey,
     historicalRpcLogBatchSize,
     historicalRpcLogMaxConcurrentRequests,
-    pollCount,
     provider,
     safe.version,
     safeAddress,
   ])
+
+  useEffect(() => {
+    if (!pollCount) {
+      return
+    }
+
+    const runLoad = loadRef.current
+    if (!runLoad) {
+      return
+    }
+
+    void runLoad()
+  }, [pollCount])
 
   // Log errors
   useEffect(() => {

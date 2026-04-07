@@ -38,6 +38,18 @@ describe('useLoadTxHistory', () => {
     localStorage.clear()
   })
 
+  const createDeferred = <T>() => {
+    let resolve: (value: T) => void = () => undefined
+    let reject: (reason?: unknown) => void = () => undefined
+
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res
+      reject = rej
+    })
+
+    return { promise, resolve, reject }
+  }
+
   it('backfills historical batches from latest backwards using configured batch window', async () => {
     const provider = new JsonRpcProvider(mainnetPublicRpcUri)
     const getBlockNumberMock = jest.fn().mockResolvedValue(1_000_000)
@@ -230,6 +242,142 @@ describe('useLoadTxHistory', () => {
     expect(syncedBlocks).toContain(300_001)
     expect(syncedBlocks).not.toContain(950_001)
     expect(syncedBlocks).not.toContain(900_001)
+  })
+
+  it('parses tx hash from positional log args when named txHash is unavailable', async () => {
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest.fn().mockResolvedValue(1_000_000)
+    ;(provider as JsonRpcProvider & { getBlock: jest.Mock }).getBlock = jest.fn().mockResolvedValue({ timestamp: 123 })
+    ;(provider as JsonRpcProvider & { getTransaction: jest.Mock }).getTransaction = jest.fn().mockResolvedValue({
+      from: '0x1111111111111111111111111111111111111111',
+      data: '0x',
+    })
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const queryFilterMock = jest.fn().mockResolvedValue([
+      {
+        blockNumber: 1_000_000,
+        logIndex: 0,
+        transactionHash: `0x${'a'.repeat(64)}`,
+        args: [`0x${'b'.repeat(64)}`],
+      },
+    ])
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress: '0x1234567890123456789012345678901234567890',
+      safe: {
+        chainId: '1',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const { result } = renderHook(() => useLoadTxHistory(), {
+      initialReduxState: {
+        settings: {
+          ...initialSettingsState,
+          env: {
+            ...initialSettingsState.env,
+            historicalRpcLogBatchSize: 1_000_000,
+            historicalRpcLogMaxConcurrentRequests: 1,
+          },
+        },
+      } as any,
+    })
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    const history = result.current[0] || {}
+    expect(Object.values(history)).toHaveLength(1)
+    expect(Object.values(history)[0]?.safeTxHash).toEqual(`0x${'b'.repeat(64)}`)
+  })
+
+  it('does not cancel in-flight history loads when poll count changes', async () => {
+    let pollCount = 0
+    const resetPollingMock = jest.fn()
+    mockUseIntervalCounter.mockImplementation(() => [pollCount, resetPollingMock])
+
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest.fn().mockResolvedValue(1_000_000)
+    ;(provider as JsonRpcProvider & { getBlock: jest.Mock }).getBlock = jest.fn().mockResolvedValue({ timestamp: 123 })
+    ;(provider as JsonRpcProvider & { getTransaction: jest.Mock }).getTransaction = jest.fn().mockResolvedValue({
+      from: '0x1111111111111111111111111111111111111111',
+      data: '0x',
+    })
+
+    const firstBatch = createDeferred<any[]>()
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const queryFilterMock = jest.fn().mockImplementation(() => firstBatch.promise)
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress: '0x1234567890123456789012345678901234567890',
+      safe: {
+        chainId: '1',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const { result, rerender } = renderHook(() => useLoadTxHistory(), {
+      initialReduxState: {
+        settings: {
+          ...initialSettingsState,
+          env: {
+            ...initialSettingsState.env,
+            historicalRpcLogBatchSize: 1_000_000,
+            historicalRpcLogMaxConcurrentRequests: 1,
+          },
+        },
+      } as any,
+    })
+
+    await waitFor(() => {
+      expect(queryFilterMock).toHaveBeenCalledTimes(1)
+    })
+
+    pollCount = 1
+    rerender()
+
+    await waitFor(() => {
+      expect(queryFilterMock).toHaveBeenCalledTimes(1)
+    })
+
+    firstBatch.resolve([
+      {
+        blockNumber: 1_000_000,
+        logIndex: 0,
+        transactionHash: `0x${'a'.repeat(64)}`,
+        args: { txHash: `0x${'b'.repeat(64)}` },
+      },
+    ])
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    const history = result.current[0] || {}
+    expect(Object.values(history)).toHaveLength(1)
   })
 
   it('loads boundary history blocks for safe 0x577A0D87f4e6fbdd55d51Ac4a4344EC042C04bb2 in a single covering batch', async () => {
