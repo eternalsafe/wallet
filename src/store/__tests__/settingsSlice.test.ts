@@ -124,7 +124,7 @@ describe('settingsSlice', () => {
         initialState,
         settingsSlice.actions.setHistoricalRpcLogMaxConcurrentRequests(0),
       )
-      expect(reduced.env.historicalRpcLogMaxConcurrentRequests).toBe(5)
+      expect(reduced.env.historicalRpcLogMaxConcurrentRequests).toBe(10)
     })
   })
 
