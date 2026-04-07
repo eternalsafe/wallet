@@ -16,6 +16,7 @@ import { safeInfoSlice } from './safeInfoSlice'
 import { balancesSlice } from './balancesSlice'
 import { sessionSlice } from './sessionSlice'
 import { txHistoryListener, txHistorySlice } from './txHistorySlice'
+import { txHistorySyncSlice } from './txHistorySyncSlice'
 import { txQueueSlice } from './txQueueSlice'
 import { addressBookSlice } from './addressBookSlice'
 import { notificationsSlice } from './notificationsSlice'
@@ -41,6 +42,7 @@ const rootReducer = combineReducers({
   [collectiblesBalanceSlice.name]: collectiblesBalanceSlice.reducer,
   [sessionSlice.name]: sessionSlice.reducer,
   [txHistorySlice.name]: txHistorySlice.reducer,
+  [txHistorySyncSlice.name]: txHistorySyncSlice.reducer,
   [txQueueSlice.name]: txQueueSlice.reducer,
   [addressBookSlice.name]: addressBookSlice.reducer,
   [notificationsSlice.name]: notificationsSlice.reducer,

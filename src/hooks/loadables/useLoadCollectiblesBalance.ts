@@ -6,7 +6,7 @@ import useSafeInfo from '../useSafeInfo'
 import { getERC721Balance, getERC721TokenIds } from '@/utils/tokens'
 import { useAppSelector } from '@/store'
 import { selectCustomCollectiblesByChain } from '@/store/customCollectiblesSlice'
-import { selectHistoricalRpcLogBatchSize } from '@/store/settingsSlice'
+import { selectHistoricalRpcLogBatchSize, selectHistoricalRpcLogMaxConcurrentRequests } from '@/store/settingsSlice'
 import useChainId from '@/hooks/useChainId'
 import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import useIntervalCounter from '@/hooks/useIntervalCounter'
@@ -22,6 +22,7 @@ export const useLoadCollectiblesBalances = (): AsyncResult<Array<SafeCollectible
   const chainId = useChainId()
   const web3ReadOnly = useMultiWeb3ReadOnly()
   const historicalRpcLogBatchSize = useAppSelector(selectHistoricalRpcLogBatchSize)
+  const historicalRpcLogMaxConcurrentRequests = useAppSelector(selectHistoricalRpcLogMaxConcurrentRequests)
 
   const collectibles = useAppSelector((state) => selectCustomCollectiblesByChain(state, chainId))
 
@@ -33,7 +34,13 @@ export const useLoadCollectiblesBalances = (): AsyncResult<Array<SafeCollectible
         collectibles.map(async (token) => {
           let balance = await getERC721Balance(web3ReadOnly, token.address, safeAddress)
           if (balance.gt(0)) {
-            let ids = await getERC721TokenIds(web3ReadOnly, token.address, safeAddress, historicalRpcLogBatchSize)
+            let ids = await getERC721TokenIds(
+              web3ReadOnly,
+              token.address,
+              safeAddress,
+              historicalRpcLogBatchSize,
+              historicalRpcLogMaxConcurrentRequests,
+            )
             return ids.map((id) => {
               return {
                 address: token.address,
@@ -54,7 +61,14 @@ export const useLoadCollectiblesBalances = (): AsyncResult<Array<SafeCollectible
       return balances.flat().filter(isSafeCollectibleResponse)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pollCount, safeAddress, collectibles, historicalRpcLogBatchSize, web3ReadOnly],
+    [
+      pollCount,
+      safeAddress,
+      collectibles,
+      historicalRpcLogBatchSize,
+      historicalRpcLogMaxConcurrentRequests,
+      web3ReadOnly,
+    ],
     false,
   )
   useEffect(() => {

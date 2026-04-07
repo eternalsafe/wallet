@@ -71,4 +71,54 @@ describe('getERC721TokenIds', () => {
     assertBackfillRanges(fromRangeCalls as Array<[unknown, number, number]>)
     assertBackfillRanges(toRangeCalls as Array<[unknown, number, number]>)
   })
+
+  it('uses caller-provided batch size and max concurrent requests', async () => {
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(1_000_000)
+
+    const fromTransferFilter = { id: 'fromTransfer' }
+    const toTransferFilter = { id: 'toTransfer' }
+
+    let inFlightRequests = 0
+    let peakInFlightRequests = 0
+
+    const queryFilterMock = jest.fn(
+      async (_filter: unknown, _fromBlock: number, _toBlock: number): Promise<unknown[]> => {
+        inFlightRequests += 1
+        peakInFlightRequests = Math.max(peakInFlightRequests, inFlightRequests)
+        await new Promise((resolve) => setTimeout(resolve, 10))
+        inFlightRequests -= 1
+        return []
+      },
+    )
+
+    jest.spyOn(ERC721__factory, 'connect').mockReturnValue({
+      filters: {
+        'Transfer(address,address,uint256)': jest.fn((from) => {
+          return from ? fromTransferFilter : toTransferFilter
+        }),
+      },
+      queryFilter: queryFilterMock,
+    } as any)
+
+    await getERC721TokenIds(
+      provider,
+      '0x1111111111111111111111111111111111111111',
+      '0x2222222222222222222222222222222222222222',
+      400_000,
+      2,
+    )
+
+    expect(peakInFlightRequests).toBeLessThanOrEqual(2)
+    expect(queryFilterMock.mock.calls).toEqual([
+      [fromTransferFilter, 600_001, 1_000_000],
+      [fromTransferFilter, 200_001, 600_000],
+      [fromTransferFilter, 0, 200_000],
+      [toTransferFilter, 600_001, 1_000_000],
+      [toTransferFilter, 200_001, 600_000],
+      [toTransferFilter, 0, 200_000],
+    ])
+  })
 })

@@ -2,6 +2,7 @@ import {
   settingsSlice,
   initialState,
   selectHistoricalRpcLogBatchSize,
+  selectHistoricalRpcLogMaxConcurrentRequests,
   selectSafeAppsUseLightBackground,
   selectWalletConnectApiKey,
   selectWalletConnectPairingCode,
@@ -96,6 +97,21 @@ describe('settingsSlice', () => {
       } as any
 
       expect(selectHistoricalRpcLogBatchSize(state)).toBe(55_555)
+    })
+
+    it('should set and select max concurrent historical RPC requests', () => {
+      const reduced = settingsSlice.reducer(
+        initialState,
+        settingsSlice.actions.setHistoricalRpcLogMaxConcurrentRequests(7),
+      )
+
+      expect(reduced.env.historicalRpcLogMaxConcurrentRequests).toBe(7)
+
+      const state = {
+        [settingsSlice.name]: reduced,
+      } as any
+
+      expect(selectHistoricalRpcLogMaxConcurrentRequests(state)).toBe(7)
     })
   })
 

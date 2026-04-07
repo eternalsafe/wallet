@@ -1,6 +1,6 @@
 import { getMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { ERC20__factory, ERC721__factory } from '@/types/contracts'
-import { HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE } from '@/config/constants'
+import { HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE, HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS } from '@/config/constants'
 import { queryFilterBackwards } from '@/utils/queryFilterBackfill'
 import { type TokenInfo, TokenType } from '@safe-global/safe-gateway-typescript-sdk'
 import { constants, BigNumber } from 'ethers'
@@ -109,32 +109,33 @@ export const getERC721TokenIds = async (
   token: string,
   address: string,
   batchSize = HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+  maxConcurrentRequests = HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
 ): Promise<Array<string>> => {
   const erc721 = ERC721__factory.connect(token, web3)
   const latestBlock = await web3.getBlockNumber()
 
-  const [fromLogs, toLogs] = await Promise.all([
-    queryFilterBackwards({
-      latestBlock,
-      batchSize,
-      queryRange: ({ fromBlock, toBlock }) =>
-        erc721.queryFilter(
-          erc721.filters['Transfer(address,address,uint256)'](address, undefined, undefined),
-          fromBlock,
-          toBlock,
-        ),
-    }),
-    queryFilterBackwards({
-      latestBlock,
-      batchSize,
-      queryRange: ({ fromBlock, toBlock }) =>
-        erc721.queryFilter(
-          erc721.filters['Transfer(address,address,uint256)'](undefined, address, undefined),
-          fromBlock,
-          toBlock,
-        ),
-    }),
-  ])
+  const fromLogs = await queryFilterBackwards({
+    latestBlock,
+    batchSize,
+    maxConcurrentRequests,
+    queryRange: ({ fromBlock, toBlock }) =>
+      erc721.queryFilter(
+        erc721.filters['Transfer(address,address,uint256)'](address, undefined, undefined),
+        fromBlock,
+        toBlock,
+      ),
+  })
+  const toLogs = await queryFilterBackwards({
+    latestBlock,
+    batchSize,
+    maxConcurrentRequests,
+    queryRange: ({ fromBlock, toBlock }) =>
+      erc721.queryFilter(
+        erc721.filters['Transfer(address,address,uint256)'](undefined, address, undefined),
+        fromBlock,
+        toBlock,
+      ),
+  })
 
   const combinedLogs = fromLogs.concat(toLogs).sort((a, b) => a.blockNumber - b.blockNumber)
 

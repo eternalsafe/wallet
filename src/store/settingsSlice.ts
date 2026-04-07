@@ -3,7 +3,11 @@ import { createSelector, createSlice } from '@reduxjs/toolkit'
 import merge from 'lodash/merge'
 
 import type { RootState } from '@/store'
-import { HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE, WC_PROJECT_ID } from '@/config/constants'
+import {
+  HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+  HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
+  WC_PROJECT_ID,
+} from '@/config/constants'
 
 export type EnvState = {
   tenderly: {
@@ -16,6 +20,7 @@ export type EnvState = {
   }
   ipfs: string
   historicalRpcLogBatchSize: number
+  historicalRpcLogMaxConcurrentRequests: number
   walletConnectApiKey: string
   walletConnectPairingCode: string
 }
@@ -72,6 +77,7 @@ export const initialState: SettingsState = {
     },
     ipfs: '',
     historicalRpcLogBatchSize: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+    historicalRpcLogMaxConcurrentRequests: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
     walletConnectApiKey: '',
     walletConnectPairingCode: '',
   },
@@ -139,6 +145,12 @@ export const settingsSlice = createSlice({
     setHistoricalRpcLogBatchSize: (state, { payload }: PayloadAction<EnvState['historicalRpcLogBatchSize']>) => {
       state.env.historicalRpcLogBatchSize = payload
     },
+    setHistoricalRpcLogMaxConcurrentRequests: (
+      state,
+      { payload }: PayloadAction<EnvState['historicalRpcLogMaxConcurrentRequests']>,
+    ) => {
+      state.env.historicalRpcLogMaxConcurrentRequests = payload
+    },
     setTenderly: (state, { payload }: PayloadAction<EnvState['tenderly']>) => {
       state.env.tenderly = merge({}, state.env.tenderly, payload)
     },
@@ -172,6 +184,7 @@ export const {
   setRpc,
   setIPFS,
   setHistoricalRpcLogBatchSize,
+  setHistoricalRpcLogMaxConcurrentRequests,
   setTenderly,
   setWalletConnectApiKey,
   setWalletConnectPairingCode,
@@ -201,6 +214,11 @@ export const selectIPFS = createSelector(selectSettings, (settings) => settings.
 export const selectHistoricalRpcLogBatchSize = createSelector(
   selectSettings,
   (settings) => settings.env.historicalRpcLogBatchSize || HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+)
+
+export const selectHistoricalRpcLogMaxConcurrentRequests = createSelector(
+  selectSettings,
+  (settings) => settings.env.historicalRpcLogMaxConcurrentRequests || HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
 )
 
 export const selectTenderly = createSelector(selectSettings, (settings) => settings.env.tenderly)

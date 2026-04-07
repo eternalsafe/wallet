@@ -3,6 +3,7 @@ import useIntervalCounter from '@/hooks/useIntervalCounter'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import useLoadTxHistory from '@/hooks/loadables/useLoadTxHistory'
+import { initialState as initialSettingsState } from '@/store/settingsSlice'
 import { CONFIG_SERVICE_CHAINS } from '@/tests/mocks/chains'
 import { renderHook, waitFor } from '@/tests/test-utils'
 import { getSafeContract } from '@/utils/safe-versions'
@@ -30,6 +31,7 @@ describe('useLoadTxHistory', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    localStorage.clear()
   })
 
   it('batches ExecutionSuccess log queries from latest block backwards to block 0', async () => {
@@ -88,5 +90,57 @@ describe('useLoadTxHistory', () => {
     for (let i = 1; i < normalizedRanges.length; i++) {
       expect(normalizedRanges[i]?.toBlock).toBe((normalizedRanges[i - 1]?.fromBlock as number) - 1)
     }
+  })
+
+  it('uses the user-configured historical RPC batch size', async () => {
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(1_000_000)
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const queryFilterMock = jest.fn().mockResolvedValue([])
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress: '0x1234567890123456789012345678901234567890',
+      safe: {
+        chainId: '1',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const { result } = renderHook(() => useLoadTxHistory(), {
+      initialReduxState: {
+        settings: {
+          ...initialSettingsState,
+          env: {
+            ...initialSettingsState.env,
+            historicalRpcLogBatchSize: 400_000,
+            historicalRpcLogMaxConcurrentRequests: 2,
+          },
+        },
+      } as any,
+    })
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    expect(queryFilterMock.mock.calls).toEqual([
+      [executionSuccessFilter, 600_001, 1_000_000],
+      [executionSuccessFilter, 200_001, 600_000],
+      [executionSuccessFilter, 0, 200_000],
+    ])
   })
 })

@@ -8,7 +8,8 @@ import { Errors, logError } from '@/services/exceptions'
 import { asError } from '@/services/exceptions/utils'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { showNotification } from '@/store/notificationsSlice'
-import { selectHistoricalRpcLogBatchSize } from '@/store/settingsSlice'
+import { selectHistoricalRpcLogBatchSize, selectHistoricalRpcLogMaxConcurrentRequests } from '@/store/settingsSlice'
+import { resetTxHistorySync, setTxHistorySync } from '@/store/txHistorySyncSlice'
 import { getSafeContract } from '@/utils/safe-versions'
 import { buildMultisigTxId } from '@/utils/tx-id'
 import { queryFilterBackwards } from '@/utils/queryFilterBackfill'
@@ -171,6 +172,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   const provider = useMultiWeb3ReadOnly()
   const { safe, safeAddress } = useSafeInfo()
   const historicalRpcLogBatchSize = useAppSelector(selectHistoricalRpcLogBatchSize)
+  const historicalRpcLogMaxConcurrentRequests = useAppSelector(selectHistoricalRpcLogMaxConcurrentRequests)
   const { chainId } = safe
   const [pollCount, resetPolling] = useIntervalCounter(POLLING_INTERVAL)
 
@@ -186,6 +188,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         setData(undefined)
         setError(undefined)
         setLoading(false)
+        dispatch(resetTxHistorySync())
         return
       }
 
@@ -194,16 +197,19 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         setData(undefined)
         setError(undefined)
         setLoading(false)
+        dispatch(resetTxHistorySync())
         return
       }
 
       setData(undefined)
       setError(undefined)
       setLoading(true)
+      dispatch(setTxHistorySync({ loading: true, latestBlock: undefined, syncedToBlock: undefined }))
 
       try {
         const executionFilter = safeContract.filters.ExecutionSuccess()
         const latestBlock = await provider.getBlockNumber()
+        dispatch(setTxHistorySync({ loading: true, latestBlock, syncedToBlock: latestBlock }))
 
         const blockTimestampCache = new Map<number, Promise<number>>()
         const txDataCache = new Map<string, Promise<{ executor: string; decodedTxData?: Result }>>()
@@ -212,22 +218,28 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         await queryFilterBackwards<Event>({
           latestBlock,
           batchSize: historicalRpcLogBatchSize,
+          maxConcurrentRequests: historicalRpcLogMaxConcurrentRequests,
           shouldContinue: () => isCurrent,
           queryRange: ({ fromBlock, toBlock }) => safeContract.queryFilter(executionFilter, fromBlock, toBlock),
-          onBatch: async (batchLogs) => {
-            if (!isCurrent || !batchLogs.length) {
+          onBatch: async (batchLogs, range) => {
+            if (!isCurrent) {
               return
             }
 
-            const parsedBatch = await mapWithConcurrencyLimit(batchLogs, HISTORY_PARSE_CONCURRENCY, (log) =>
-              parseExecutionSuccessLog({
-                log,
-                provider,
-                safeContract,
-                blockTimestampCache,
-                txDataCache,
-              }),
-            )
+            dispatch(setTxHistorySync({ loading: true, latestBlock, syncedToBlock: range.fromBlock }))
+
+            let parsedBatch: Array<ParsedExecutionLog | undefined> = []
+            if (batchLogs.length) {
+              parsedBatch = await mapWithConcurrencyLimit(batchLogs, HISTORY_PARSE_CONCURRENCY, (log) =>
+                parseExecutionSuccessLog({
+                  log,
+                  provider,
+                  safeContract,
+                  blockTimestampCache,
+                  txDataCache,
+                }),
+              )
+            }
 
             if (!isCurrent) {
               return
@@ -240,11 +252,13 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
 
         if (isCurrent) {
           setData(buildTxHistory(safeAddress, parsedLogs))
+          dispatch(setTxHistorySync({ loading: false, latestBlock, syncedToBlock: 0 }))
         }
       } catch (err) {
         if (isCurrent) {
           setData(undefined)
           setError(asError(err))
+          dispatch(setTxHistorySync({ loading: false }))
         }
       } finally {
         if (isCurrent) {
@@ -258,7 +272,15 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
     return () => {
       isCurrent = false
     }
-  }, [historicalRpcLogBatchSize, pollCount, provider, safe.version, safeAddress])
+  }, [
+    dispatch,
+    historicalRpcLogBatchSize,
+    historicalRpcLogMaxConcurrentRequests,
+    pollCount,
+    provider,
+    safe.version,
+    safeAddress,
+  ])
 
   // Log errors
   useEffect(() => {

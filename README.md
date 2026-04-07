@@ -89,12 +89,13 @@ Create a `.env` file with environment variables. You can use the `.env.example` 
 
 Here's the list of all the environment variables:
 
-| Env variable                | Description                                                                   |
-| --------------------------- | ----------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_IS_PRODUCTION` | Set to `true` to build a minified production app                              |
-| `NEXT_PUBLIC_SAFE_VERSION`  | The latest version of the Safe contract, defaults to 1.4.1                    |
-| `NEXT_PUBLIC_WC_PROJECT_ID` | [WalletConnect v2](https://docs.walletconnect.com/2.0/cloud/relay) project ID |
-| `NEXT_PUBLIC_HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE` | Historical `eth_getLogs` batch block range size, defaults to `10000` |
+| Env variable                                             | Description                                                                   |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_IS_PRODUCTION`                              | Set to `true` to build a minified production app                              |
+| `NEXT_PUBLIC_SAFE_VERSION`                               | The latest version of the Safe contract, defaults to 1.4.1                    |
+| `NEXT_PUBLIC_WC_PROJECT_ID`                              | [WalletConnect v2](https://docs.walletconnect.com/2.0/cloud/relay) project ID |
+| `NEXT_PUBLIC_HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE`        | Historical `eth_getLogs` batch block range size, defaults to `10000`          |
+| `NEXT_PUBLIC_HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS` | Max concurrent historical `eth_getLogs` batch requests, defaults to `3`       |
 
 If you don't provide some of the variables, the corresponding features will be disabled in the UI.
 

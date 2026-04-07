@@ -1,14 +1,16 @@
 import { type ReactElement, useEffect, useState } from 'react'
-import { Box } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import TxList from '@/components/transactions/TxList'
 import ErrorMessage from '@/components/tx/ErrorMessage'
-import type useTxHistory from '@/hooks/useTxHistory'
+import useTxHistory from '@/hooks/useTxHistory'
 import useTxQueue from '@/hooks/useTxQueue'
 import PagePlaceholder from '../PagePlaceholder'
 import SkeletonTxList from './SkeletonTxList'
 import NoTransactionsIcon from '@/public/images/transactions/no-transactions.svg'
 import { useHasPendingTxs } from '@/hooks/usePendingTxs'
 import useSafeInfo from '@/hooks/useSafeInfo'
+import { useAppSelector } from '@/store'
+import { selectTxHistorySync } from '@/store/txHistorySyncSlice'
 
 const NoQueuedTxns = () => {
   return <PagePlaceholder img={<NoTransactionsIcon />} text="Queued transactions will appear here" />
@@ -41,6 +43,8 @@ const TxPage = ({
 const PaginatedTxns = ({ useTxns }: { useTxns: typeof useTxHistory | typeof useTxQueue }): ReactElement => {
   const [pages, setPages] = useState<string[]>([''])
   const { safeAddress, safe } = useSafeInfo()
+  const { syncedToBlock, latestBlock, loading: syncLoading } = useAppSelector(selectTxHistorySync)
+  const isHistory = useTxns === useTxHistory
 
   // Reset the pages when the Safe Account or filter changes
   useEffect(() => {
@@ -49,6 +53,13 @@ const PaginatedTxns = ({ useTxns }: { useTxns: typeof useTxHistory | typeof useT
 
   return (
     <Box position="relative">
+      {isHistory && latestBlock !== undefined && syncedToBlock !== undefined && (
+        <Typography color="text.secondary" variant="caption" display="block" mb={2}>
+          {syncLoading
+            ? `Syncing history from block ${latestBlock} down to block ${syncedToBlock}...`
+            : `History synced through block ${syncedToBlock}.`}
+        </Typography>
+      )}
       {pages.map((pageUrl, index) => (
         <TxPage key={pageUrl} useTxns={useTxns} />
       ))}
