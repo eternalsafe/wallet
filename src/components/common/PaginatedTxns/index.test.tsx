@@ -33,6 +33,6 @@ describe('PaginatedTxns', () => {
       } as any,
     })
 
-    expect(screen.getByText('Syncing history from block 1000000 down to block 950000...')).toBeInTheDocument()
+    expect(screen.getByText('Scanning history... At Block: 950000 - Latest Block: 1000000')).toBeInTheDocument()
   })
 })

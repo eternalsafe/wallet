@@ -82,7 +82,10 @@ describe('useLoadTxHistory', () => {
     expect(getBlockNumberMock).toHaveBeenCalled()
     expect(queryFilterMock).not.toHaveBeenCalledWith(executionSuccessFilter, 0, 'latest')
 
-    expect(queryFilterMock.mock.calls).toEqual([[executionSuccessFilter, 950_001, 1_000_000]])
+    expect(queryFilterMock.mock.calls).toEqual([
+      [executionSuccessFilter, 950_001, 1_000_000],
+      [executionSuccessFilter, 900_001, 950_000],
+    ])
   })
 
   it('uses cursor state to only fetch new head blocks and one additional backfill batch', async () => {
@@ -145,6 +148,7 @@ describe('useLoadTxHistory', () => {
       [executionSuccessFilter, 950_001, 1_000_000],
       [executionSuccessFilter, 900_001, 950_000],
       [executionSuccessFilter, 450_001, 500_000],
+      [executionSuccessFilter, 400_001, 450_000],
     ])
   })
 })

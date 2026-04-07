@@ -12,6 +12,7 @@ import {
 } from '@/utils/transactions'
 import { type DetailedTransaction, isDetailedTransactionListItem } from '@/utils/transaction-guards'
 import { selectTxHistory } from '@/store/txHistorySlice'
+import { selectTxHistorySync } from '@/store/txHistorySyncSlice'
 
 const useTxHistory = (): {
   data: Array<DetailedTransaction>
@@ -26,6 +27,7 @@ const useTxHistory = (): {
     (state) => selectTxHistory(state),
     isEqual,
   )
+  const { loading: syncLoading } = useAppSelector((state) => selectTxHistorySync(state), isEqual)
 
   const [data, error, loading] = useAsync<Array<DetailedTransaction>>(
     async () => {
@@ -68,7 +70,7 @@ const useTxHistory = (): {
   return {
     data: data ?? [],
     error: error?.message,
-    loading: loading || executedTransactionsLoading,
+    loading: loading || syncLoading || (executedTransactionsLoading && !executedTransactions),
   }
 }
 

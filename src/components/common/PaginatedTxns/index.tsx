@@ -53,16 +53,14 @@ const PaginatedTxns = ({ useTxns }: { useTxns: typeof useTxHistory | typeof useT
 
   return (
     <Box position="relative">
-      {isHistory && latestBlock !== undefined && syncedToBlock !== undefined && (
-        <Typography color="text.secondary" variant="caption" display="block" mb={2}>
-          {syncLoading
-            ? `Syncing history from block ${latestBlock} down to block ${syncedToBlock}...`
-            : `History synced through block ${syncedToBlock}.`}
-        </Typography>
-      )}
-      {pages.map((pageUrl, index) => (
+      {pages.map((pageUrl) => (
         <TxPage key={pageUrl} useTxns={useTxns} />
       ))}
+      {isHistory && syncLoading && latestBlock !== undefined && syncedToBlock !== undefined && (
+        <Typography color="text.secondary" variant="caption" display="block" mt={2}>
+          {`Scanning history... At Block: ${syncedToBlock} - Latest Block: ${latestBlock}`}
+        </Typography>
+      )}
     </Box>
   )
 }

@@ -213,6 +213,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   const [loading, setLoading] = useState<boolean>(false)
   const txHistoryCursorRef = useRef<TxHistoryBackfillCursor>()
   const dataRef = useRef<TxHistory>({})
+  const hasInitializedDataRef = useRef(false)
   const blockTimestampCacheRef = useRef(new Map<number, Promise<number>>())
   const txDataCacheRef = useRef(new Map<string, Promise<{ executor: string; decodedTxData?: Result }>>())
 
@@ -252,6 +253,12 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
       setError(undefined)
       setLoading(true)
       setRpcSchedulerMaxConcurrency(historicalRpcLogMaxConcurrentRequests)
+      if (!hasInitializedDataRef.current) {
+        const emptyHistory: TxHistory = {}
+        dataRef.current = emptyHistory
+        setData(emptyHistory)
+        hasInitializedDataRef.current = true
+      }
 
       try {
         const executionFilter = safeContract.filters.ExecutionSuccess()
@@ -331,13 +338,14 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         }
 
         if (!nextCursor.backfillComplete) {
-          const backfillStopAtBlock = Math.max(0, nextCursor.backfillCursor - historicalRpcLogBatchSize + 1)
+          const backfillWindowSize = historicalRpcLogBatchSize * historicalRpcLogMaxConcurrentRequests
+          const backfillStopAtBlock = Math.max(0, nextCursor.backfillCursor - backfillWindowSize + 1)
           await queryFilterBackwards<Event>({
             latestBlock: nextCursor.backfillCursor,
             stopAtBlock: backfillStopAtBlock,
             batchSize: historicalRpcLogBatchSize,
-            maxConcurrentRequests: 1,
-            maxBatches: 1,
+            maxConcurrentRequests: historicalRpcLogMaxConcurrentRequests,
+            maxBatches: historicalRpcLogMaxConcurrentRequests,
             collectLogs: false,
             shouldContinue: () => isCurrent,
             scheduleRequest: scheduleRpcRequest,
@@ -358,7 +366,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
           dispatch(setTxHistoryCursor({ key: txHistorySyncKey, value: nextCursor }))
           dispatch(
             setTxHistorySync({
-              loading: false,
+              loading: !nextCursor.backfillComplete,
               latestBlock,
               syncedToBlock: nextCursor.backfillComplete ? 0 : Math.max(0, nextCursor.backfillCursor + 1),
             }),
@@ -411,6 +419,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   useEffect(() => {
     resetPolling()
     dataRef.current = {}
+    hasInitializedDataRef.current = false
     blockTimestampCacheRef.current.clear()
     txDataCacheRef.current.clear()
     setData(undefined)
