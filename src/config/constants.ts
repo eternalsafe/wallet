@@ -8,11 +8,6 @@ const getPositiveIntFromEnv = (value: string | undefined, fallback: number): num
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback
 }
 
-export const HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN = 500
-export const HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX = 50_000
-export const HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN = 1
-export const HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX = 5
-
 export const clampHistoricalRpcLogBatchSize = (value: number): number => {
   const parsedValue = Number(value)
   if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
