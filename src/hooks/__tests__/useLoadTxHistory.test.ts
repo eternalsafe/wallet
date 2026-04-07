@@ -231,4 +231,92 @@ describe('useLoadTxHistory', () => {
     expect(syncedBlocks).not.toContain(950_001)
     expect(syncedBlocks).not.toContain(900_001)
   })
+
+  it('loads boundary history blocks for safe 0x577A0D87f4e6fbdd55d51Ac4a4344EC042C04bb2 in a single covering batch', async () => {
+    const safeAddress = '0x577A0D87f4e6fbdd55d51Ac4a4344EC042C04bb2'
+    const upperBoundaryBlock = 5_698_792
+    const lowerBoundaryBlock = 5_475_050
+    const coveringBatchSize = upperBoundaryBlock - lowerBoundaryBlock + 1
+    const gnosisPublicRpcUri = CONFIG_SERVICE_CHAINS.find((chain) => chain.chainId === '100')?.publicRpcUri.value
+
+    if (!gnosisPublicRpcUri) {
+      throw new Error('Expected a hardcoded gnosis publicRpcUri in test mocks')
+    }
+
+    const provider = new JsonRpcProvider(gnosisPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(upperBoundaryBlock)
+    ;(provider as JsonRpcProvider & { getBlock: jest.Mock }).getBlock = jest
+      .fn()
+      .mockImplementation(async (blockNumber: number) => ({ timestamp: blockNumber }))
+    ;(provider as JsonRpcProvider & { getTransaction: jest.Mock }).getTransaction = jest.fn().mockResolvedValue({
+      from: '0x1111111111111111111111111111111111111111',
+      data: '0x',
+    })
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const boundaryLogs = [
+      {
+        blockNumber: lowerBoundaryBlock,
+        logIndex: 0,
+        transactionHash: `0x${'a'.repeat(64)}`,
+        args: { txHash: `0x${'b'.repeat(64)}` },
+      },
+      {
+        blockNumber: upperBoundaryBlock,
+        logIndex: 1,
+        transactionHash: `0x${'c'.repeat(64)}`,
+        args: { txHash: `0x${'d'.repeat(64)}` },
+      },
+    ]
+    const queryFilterMock = jest
+      .fn()
+      .mockImplementation(async (_filter: unknown, fromBlock: number, toBlock: number) =>
+        fromBlock === lowerBoundaryBlock && toBlock === upperBoundaryBlock ? boundaryLogs : [],
+      )
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress,
+      safe: {
+        chainId: '100',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const { result } = renderHook(() => useLoadTxHistory(), {
+      initialReduxState: {
+        settings: {
+          ...initialSettingsState,
+          env: {
+            ...initialSettingsState.env,
+            historicalRpcLogBatchSize: coveringBatchSize,
+            historicalRpcLogMaxConcurrentRequests: 1,
+          },
+        },
+      } as any,
+    })
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    expect(queryFilterMock).toHaveBeenCalledWith(executionSuccessFilter, lowerBoundaryBlock, upperBoundaryBlock)
+
+    const history = result.current[0] || {}
+    const historyItems = Object.values(history)
+    expect(historyItems).toHaveLength(2)
+    expect(historyItems.map((item) => item.txHash).sort()).toEqual([`0x${'a'.repeat(64)}`, `0x${'c'.repeat(64)}`])
+  })
 })
