@@ -6,10 +6,12 @@ import * as useSafeAddress from '@/hooks/useSafeAddress'
 import * as useChainId from '@/hooks/useChainId'
 import * as useChains from '@/hooks/useChains'
 import * as coreSDK from '@/hooks/coreSDK/safeCoreSDK'
+import * as notificationsSlice from '@/store/notificationsSlice'
 import { waitFor } from '@testing-library/react'
 import type Safe from '@safe-global/protocol-kit'
 import { ethers } from 'ethers'
 import type { MulticallProvider } from 'ethers-multicall-provider'
+import { AppRoutes } from '@/config/routes'
 
 describe('useInitSafeCoreSDK hook', () => {
   const mockSafeAddress = '0x0000000000000000000000000000000000005AFE'
@@ -133,5 +135,27 @@ describe('useInitSafeCoreSDK hook', () => {
         multisendCallOnlyAddress: '0x2222222222222222222222222222222222222222',
       }),
     )
+  })
+
+  it('shows an RPC settings notification when Safe initialization fails', async () => {
+    const showNotificationMock = jest.spyOn(notificationsSlice, 'showNotification')
+
+    ;(mockProvider.getCode as jest.Mock).mockResolvedValue('0x')
+
+    renderHook(() => useInitSafeCoreSDK())
+
+    await waitFor(() => {
+      expect(showNotificationMock).toHaveBeenCalledWith({
+        message:
+          'Please try connecting your Safe again. Ensure the address, chain and RPC URL are correct. If you see this error often, try configuring your RPC settings.',
+        groupKey: 'core-sdk-init-error',
+        variant: 'error',
+        detailedMessage: `No Safe found at address ${mockSafeAddress} on chain with ID ${mockChainId}.`,
+        link: {
+          href: AppRoutes.settings.environmentVariables,
+          title: 'RPC settings',
+        },
+      })
+    })
   })
 })

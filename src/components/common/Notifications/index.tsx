@@ -16,9 +16,11 @@ const toastStyle = { position: 'static', margin: 1 }
 export const NotificationLink = ({
   link,
   onClick,
+  inline,
 }: {
   link: Notification['link']
   onClick: (_: Event | SyntheticEvent) => void
+  inline?: boolean
 }): ReactElement | null => {
   if (!link) {
     return null
@@ -30,7 +32,7 @@ export const NotificationLink = ({
   return (
     <NextLink href={link.href} passHref legacyBehavior>
       <Link
-        className={css.link}
+        className={inline ? `${css.link} ${css.inlineLink}` : css.link}
         onClick={onClick}
         {...(isExternal && { target: '_blank', rel: 'noopener noreferrer' })}
       >
@@ -78,13 +80,17 @@ const Toast = ({
 
         {message}
 
-        {detailedMessage && (
-          <details>
-            <Link component="summary">Details</Link>
-            <pre>{detailedMessage}</pre>
-          </details>
+        {detailedMessage ? (
+          <div className={css.detailsRow}>
+            <details>
+              <Link component="summary">Details</Link>
+              <pre>{detailedMessage}</pre>
+            </details>
+            <NotificationLink link={link} onClick={handleClose} inline />
+          </div>
+        ) : (
+          <NotificationLink link={link} onClick={handleClose} />
         )}
-        <NotificationLink link={link} onClick={handleClose} />
       </Alert>
     </Snackbar>
   )

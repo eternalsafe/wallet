@@ -20,10 +20,29 @@
   margin-top: 0.3em;
 }
 
+.detailsRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.detailsRow details {
+  flex: 1;
+}
+
+.inlineLink {
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
 .container details {
   margin-bottom: var(--space-1);
   max-height: 200px;
   overflow: auto;
+}
+
+.detailsRow details {
+  margin-bottom: 0;
 }
 
 .container pre {

@@ -320,7 +320,7 @@ const EnvironmentVariables = () => {
                     })}
                     variant="outlined"
                     type="number"
-                    label="Max Concurrent Requests"
+                    label="Max concurrent requests"
                     InputLabelProps={{
                       shrink: true,
                     }}

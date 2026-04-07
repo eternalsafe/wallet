@@ -36,7 +36,7 @@ describe('EnvironmentVariables', () => {
     expect(screen.queryByText('Historical RPC max concurrent requests')).not.toBeInTheDocument()
 
     const blockRangeInput = screen.getByLabelText('Block range') as HTMLInputElement
-    const maxConcurrentInput = screen.getByLabelText('Max Concurrent Requests') as HTMLInputElement
+    const maxConcurrentInput = screen.getByLabelText('Max concurrent requests') as HTMLInputElement
 
     expect(blockRangeInput.value).toBe('')
     expect(maxConcurrentInput.value).toBe('')
@@ -81,7 +81,7 @@ describe('EnvironmentVariables', () => {
     render(<EnvironmentVariables />)
 
     const blockRangeInput = screen.getByLabelText('Block range') as HTMLInputElement
-    const maxConcurrentInput = screen.getByLabelText('Max Concurrent Requests') as HTMLInputElement
+    const maxConcurrentInput = screen.getByLabelText('Max concurrent requests') as HTMLInputElement
 
     return waitFor(() => {
       expect(blockRangeInput.value).toBe(`${nonDefaultBatchSize}`)
