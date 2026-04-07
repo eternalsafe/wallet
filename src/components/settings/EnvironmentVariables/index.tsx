@@ -3,8 +3,15 @@ import { Paper, Grid, Typography, TextField, Button, Tooltip, IconButton, SvgIco
 import InputAdornment from '@mui/material/InputAdornment'
 import RotateLeftIcon from '@mui/icons-material/RotateLeft'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { selectSettings, setIPFS, setRpc, setTenderly, setWalletConnectApiKey } from '@/store/settingsSlice'
-import { CHAINLIST_URL } from '@/config/constants'
+import {
+  selectSettings,
+  setHistoricalRpcLogBatchSize,
+  setIPFS,
+  setRpc,
+  setTenderly,
+  setWalletConnectApiKey,
+} from '@/store/settingsSlice'
+import { CHAINLIST_URL, HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE } from '@/config/constants'
 import useChainId from '@/hooks/useChainId'
 import { useCurrentChain } from '@/hooks/useChains'
 import InfoIcon from '@/public/images/notifications/info.svg'
@@ -14,6 +21,7 @@ import { useEffect, useState } from 'react'
 
 export enum EnvVariablesField {
   rpc = 'rpc',
+  historicalRpcLogBatchSize = 'historicalRpcLogBatchSize',
   ipfs = 'ipfs',
   tenderlyOrgName = 'tenderlyOrgName',
   tenderlyProjectName = 'tenderlyProjectName',
@@ -23,6 +31,7 @@ export enum EnvVariablesField {
 
 export type EnvVariablesFormData = {
   [EnvVariablesField.rpc]: string
+  [EnvVariablesField.historicalRpcLogBatchSize]: string
   [EnvVariablesField.ipfs]: string
   [EnvVariablesField.tenderlyOrgName]: string
   [EnvVariablesField.tenderlyProjectName]: string
@@ -40,6 +49,7 @@ const EnvironmentVariables = () => {
     mode: 'onChange',
     values: {
       [EnvVariablesField.rpc]: settings.env?.rpc[chainId] ?? '',
+      [EnvVariablesField.historicalRpcLogBatchSize]: `${settings.env?.historicalRpcLogBatchSize ?? HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE}`,
       [EnvVariablesField.ipfs]: settings.env?.ipfs ?? '',
       [EnvVariablesField.tenderlyOrgName]: settings.env?.tenderly.orgName ?? '',
       [EnvVariablesField.tenderlyProjectName]: settings.env?.tenderly.projectName ?? '',
@@ -51,6 +61,7 @@ const EnvironmentVariables = () => {
   const { register, handleSubmit, formState, setValue, watch } = formMethods
 
   const rpc = watch(EnvVariablesField.rpc)
+  const historicalRpcLogBatchSize = watch(EnvVariablesField.historicalRpcLogBatchSize)
   const ipfs = watch(EnvVariablesField.ipfs)
   const tenderlyOrgName = watch(EnvVariablesField.tenderlyOrgName)
   const tenderlyProjectName = watch(EnvVariablesField.tenderlyProjectName)
@@ -77,6 +88,15 @@ const EnvironmentVariables = () => {
         chainId,
         rpc: rpcValue,
       }),
+    )
+
+    const parsedBatchSize = Number.parseInt(data[EnvVariablesField.historicalRpcLogBatchSize], 10)
+    dispatch(
+      setHistoricalRpcLogBatchSize(
+        Number.isFinite(parsedBatchSize) && parsedBatchSize > 0
+          ? Math.floor(parsedBatchSize)
+          : HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+      ),
     )
 
     // strip ending slash if present
@@ -182,6 +202,67 @@ const EnvironmentVariables = () => {
                   ),
                 }}
                 fullWidth
+              />
+
+              <Typography fontWeight={700} mb={2} mt={3}>
+                Historical RPC block range
+                <Tooltip
+                  placement="top"
+                  arrow
+                  title="Maximum number of blocks per batched historical eth_getLogs request. Lower values reduce request size but increase request count."
+                >
+                  <span>
+                    <SvgIcon
+                      component={InfoIcon}
+                      inheritViewBox
+                      fontSize="small"
+                      color="border"
+                      sx={{ verticalAlign: 'middle', ml: 0.5 }}
+                    />
+                  </span>
+                </Tooltip>
+              </Typography>
+
+              <TextField
+                {...register(EnvVariablesField.historicalRpcLogBatchSize, {
+                  required: true,
+                  min: 1,
+                  validate: (value) => Number.isInteger(Number(value)) && Number(value) > 0,
+                })}
+                variant="outlined"
+                type="number"
+                InputProps={{
+                  endAdornment: historicalRpcLogBatchSize ? (
+                    <InputAdornment position="end">
+                      <Tooltip title="Reset to default value">
+                        <IconButton
+                          onClick={() =>
+                            setValue(
+                              EnvVariablesField.historicalRpcLogBatchSize,
+                              `${HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE}`,
+                              { shouldValidate: true },
+                            )
+                          }
+                          size="small"
+                          color="primary"
+                        >
+                          <RotateLeftIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </InputAdornment>
+                  ) : null,
+                }}
+                inputProps={{
+                  min: 1,
+                  step: 1,
+                }}
+                fullWidth
+                error={!!formState.errors[EnvVariablesField.historicalRpcLogBatchSize]}
+                helperText={
+                  formState.errors[EnvVariablesField.historicalRpcLogBatchSize]
+                    ? 'Please enter a positive integer.'
+                    : undefined
+                }
               />
 
               <Typography fontWeight={700} mb={2} mt={3}>

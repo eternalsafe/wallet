@@ -1,6 +1,7 @@
 import {
   settingsSlice,
   initialState,
+  selectHistoricalRpcLogBatchSize,
   selectSafeAppsUseLightBackground,
   selectWalletConnectApiKey,
   selectWalletConnectPairingCode,
@@ -73,6 +74,28 @@ describe('settingsSlice', () => {
         projectName: '',
         accessToken: '',
       })
+    })
+  })
+
+  describe('historical RPC batching settings', () => {
+    it('should set the historical RPC log batch size', () => {
+      const state = settingsSlice.reducer(initialState, settingsSlice.actions.setHistoricalRpcLogBatchSize(12_345))
+
+      expect(state.env.historicalRpcLogBatchSize).toBe(12_345)
+    })
+
+    it('should select historical RPC log batch size', () => {
+      const state = {
+        [settingsSlice.name]: {
+          ...initialState,
+          env: {
+            ...initialState.env,
+            historicalRpcLogBatchSize: 55_555,
+          },
+        },
+      } as any
+
+      expect(selectHistoricalRpcLogBatchSize(state)).toBe(55_555)
     })
   })
 

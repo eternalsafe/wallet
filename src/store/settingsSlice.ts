@@ -3,7 +3,7 @@ import { createSelector, createSlice } from '@reduxjs/toolkit'
 import merge from 'lodash/merge'
 
 import type { RootState } from '@/store'
-import { WC_PROJECT_ID } from '@/config/constants'
+import { HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE, WC_PROJECT_ID } from '@/config/constants'
 
 export type EnvState = {
   tenderly: {
@@ -15,6 +15,7 @@ export type EnvState = {
     [chainId: string]: string
   }
   ipfs: string
+  historicalRpcLogBatchSize: number
   walletConnectApiKey: string
   walletConnectPairingCode: string
 }
@@ -70,6 +71,7 @@ export const initialState: SettingsState = {
       accessToken: '',
     },
     ipfs: '',
+    historicalRpcLogBatchSize: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
     walletConnectApiKey: '',
     walletConnectPairingCode: '',
   },
@@ -134,6 +136,9 @@ export const settingsSlice = createSlice({
     setIPFS: (state, { payload }: PayloadAction<EnvState['ipfs']>) => {
       state.env.ipfs = payload
     },
+    setHistoricalRpcLogBatchSize: (state, { payload }: PayloadAction<EnvState['historicalRpcLogBatchSize']>) => {
+      state.env.historicalRpcLogBatchSize = payload
+    },
     setTenderly: (state, { payload }: PayloadAction<EnvState['tenderly']>) => {
       state.env.tenderly = merge({}, state.env.tenderly, payload)
     },
@@ -166,6 +171,7 @@ export const {
   removeCustomTokenList,
   setRpc,
   setIPFS,
+  setHistoricalRpcLogBatchSize,
   setTenderly,
   setWalletConnectApiKey,
   setWalletConnectPairingCode,
@@ -191,6 +197,11 @@ export const selectCustomTokenLists = createSelector(
 export const selectRpc = createSelector(selectSettings, (settings) => settings.env.rpc)
 
 export const selectIPFS = createSelector(selectSettings, (settings) => settings.env.ipfs)
+
+export const selectHistoricalRpcLogBatchSize = createSelector(
+  selectSettings,
+  (settings) => settings.env.historicalRpcLogBatchSize || HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+)
 
 export const selectTenderly = createSelector(selectSettings, (settings) => settings.env.tenderly)
 

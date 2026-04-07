@@ -13,7 +13,9 @@ type QueryFilterBackfillParams<TLog> = {
 
 export const getBackwardBlockRanges = (latestBlock: number, batchSize: number): BlockRange[] => {
   const normalizedLatestBlock = Math.max(0, Math.floor(latestBlock))
-  const normalizedBatchSize = Math.max(1, Math.floor(batchSize))
+  const parsedBatchSize = Number(batchSize)
+  const normalizedBatchSize =
+    Number.isFinite(parsedBatchSize) && parsedBatchSize > 0 ? Math.floor(parsedBatchSize) : 1
 
   const ranges: BlockRange[] = []
   let toBlock = normalizedLatestBlock

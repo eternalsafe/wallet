@@ -104,14 +104,19 @@ export const getERC721Balance = async (web3: Provider, token: string, address: s
  * @param token address of erc20 token
  * @param address address to check balance of
  */
-export const getERC721TokenIds = async (web3: Provider, token: string, address: string): Promise<Array<string>> => {
+export const getERC721TokenIds = async (
+  web3: Provider,
+  token: string,
+  address: string,
+  batchSize = HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+): Promise<Array<string>> => {
   const erc721 = ERC721__factory.connect(token, web3)
   const latestBlock = await web3.getBlockNumber()
 
   const [fromLogs, toLogs] = await Promise.all([
     queryFilterBackwards({
       latestBlock,
-      batchSize: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+      batchSize,
       queryRange: ({ fromBlock, toBlock }) =>
         erc721.queryFilter(
           erc721.filters['Transfer(address,address,uint256)'](address, undefined, undefined),
@@ -121,7 +126,7 @@ export const getERC721TokenIds = async (web3: Provider, token: string, address: 
     }),
     queryFilterBackwards({
       latestBlock,
-      batchSize: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+      batchSize,
       queryRange: ({ fromBlock, toBlock }) =>
         erc721.queryFilter(
           erc721.filters['Transfer(address,address,uint256)'](undefined, address, undefined),

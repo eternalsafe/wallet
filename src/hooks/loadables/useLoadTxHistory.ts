@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { type AsyncResult } from '../useAsync'
-import { HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE, POLLING_INTERVAL } from '@/config/constants'
+import { POLLING_INTERVAL } from '@/config/constants'
 import useIntervalCounter from '@/hooks/useIntervalCounter'
 import useSafeInfo from '../useSafeInfo'
 import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { Errors, logError } from '@/services/exceptions'
 import { asError } from '@/services/exceptions/utils'
-import { useAppDispatch } from '@/store'
+import { useAppDispatch, useAppSelector } from '@/store'
 import { showNotification } from '@/store/notificationsSlice'
+import { selectHistoricalRpcLogBatchSize } from '@/store/settingsSlice'
 import { getSafeContract } from '@/utils/safe-versions'
 import { buildMultisigTxId } from '@/utils/tx-id'
 import { queryFilterBackwards } from '@/utils/queryFilterBackfill'
@@ -169,6 +170,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   const dispatch = useAppDispatch()
   const provider = useMultiWeb3ReadOnly()
   const { safe, safeAddress } = useSafeInfo()
+  const historicalRpcLogBatchSize = useAppSelector(selectHistoricalRpcLogBatchSize)
   const { chainId } = safe
   const [pollCount, resetPolling] = useIntervalCounter(POLLING_INTERVAL)
 
@@ -209,7 +211,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
 
         await queryFilterBackwards<Event>({
           latestBlock,
-          batchSize: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+          batchSize: historicalRpcLogBatchSize,
           shouldContinue: () => isCurrent,
           queryRange: ({ fromBlock, toBlock }) => safeContract.queryFilter(executionFilter, fromBlock, toBlock),
           onBatch: async (batchLogs) => {
@@ -256,7 +258,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
     return () => {
       isCurrent = false
     }
-  }, [pollCount, provider, safe.version, safeAddress])
+  }, [historicalRpcLogBatchSize, pollCount, provider, safe.version, safeAddress])
 
   // Log errors
   useEffect(() => {
