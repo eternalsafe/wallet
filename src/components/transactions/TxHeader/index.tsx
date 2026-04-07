@@ -10,7 +10,7 @@ const TxHeader = ({ children }: { children?: ReactNode }): ReactElement => {
       title="Transactions"
       action={
         <div className={css.pageHeader}>
-          <div className={css.navWrapper}>
+          <div className={css.navWrapper} style={{ width: '100%' }}>
             <TxNavigation />
           </div>
           {children && <div className={css.actionsWrapper}>{children}</div>}

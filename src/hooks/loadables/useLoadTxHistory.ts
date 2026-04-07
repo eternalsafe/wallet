@@ -287,7 +287,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
           ...dataRef.current,
         }
 
-        const applyBatchLogs = async (batchLogs: Event[], range: { fromBlock: number }) => {
+        const applyBatchLogs = async (batchLogs: Event[], range: { fromBlock: number }, updateProgress = true) => {
           if (!isCurrent) {
             return
           }
@@ -316,7 +316,9 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
             dataRef.current = workingHistory
             setData(workingHistory)
           }
-          dispatch(setTxHistorySync({ loading: true, latestBlock, syncedToBlock: range.fromBlock }))
+          if (updateProgress) {
+            dispatch(setTxHistorySync({ loading: true, latestBlock, syncedToBlock: range.fromBlock }))
+          }
         }
 
         if (latestBlock > nextCursor.latestSyncedBlock) {
@@ -329,7 +331,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
             shouldContinue: () => isCurrent,
             scheduleRequest: scheduleRpcRequest,
             queryRange: ({ fromBlock, toBlock }) => safeContract.queryFilter(executionFilter, fromBlock, toBlock),
-            onBatch: applyBatchLogs,
+            onBatch: async (batchLogs, range) => applyBatchLogs(batchLogs, range, false),
           })
           nextCursor = {
             ...nextCursor,

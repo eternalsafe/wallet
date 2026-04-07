@@ -1,10 +1,13 @@
+import { useEffect } from 'react'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import useIntervalCounter from '@/hooks/useIntervalCounter'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import useLoadTxHistory from '@/hooks/loadables/useLoadTxHistory'
 import { buildTxHistorySyncKey, initialState as initialHistoricalRpcSyncState } from '@/store/historicalRpcSyncSlice'
+import { useAppSelector } from '@/store'
 import { initialState as initialSettingsState } from '@/store/settingsSlice'
+import { selectTxHistorySync } from '@/store/txHistorySyncSlice'
 import { CONFIG_SERVICE_CHAINS } from '@/tests/mocks/chains'
 import { renderHook, waitFor } from '@/tests/test-utils'
 import { getSafeContract } from '@/utils/safe-versions'
@@ -150,5 +153,83 @@ describe('useLoadTxHistory', () => {
       [executionSuccessFilter, 450_001, 500_000],
       [executionSuccessFilter, 400_001, 450_000],
     ])
+  })
+
+  it('does not flash syncedToBlock to head-sync ranges while backfilling', async () => {
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(1_000_000)
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const queryFilterMock = jest.fn().mockResolvedValue([])
+    const syncedBlocks: number[] = []
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress: '0x1234567890123456789012345678901234567890',
+      safe: {
+        chainId: '1',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const txHistorySyncKey = buildTxHistorySyncKey('1', '0x1234567890123456789012345678901234567890')
+    const { result } = renderHook(
+      () => {
+        const loadResult = useLoadTxHistory()
+        const syncState = useAppSelector(selectTxHistorySync)
+
+        useEffect(() => {
+          if (syncState.syncedToBlock !== undefined) {
+            syncedBlocks.push(syncState.syncedToBlock)
+          }
+        }, [syncState.syncedToBlock])
+
+        return loadResult
+      },
+      {
+        initialReduxState: {
+          settings: {
+            ...initialSettingsState,
+            env: {
+              ...initialSettingsState.env,
+              historicalRpcLogBatchSize: 100_000,
+              historicalRpcLogMaxConcurrentRequests: 2,
+            },
+          },
+          historicalRpcSync: {
+            ...initialHistoricalRpcSyncState,
+            txHistoryBySafe: {
+              [txHistorySyncKey]: {
+                latestSyncedBlock: 900_000,
+                backfillCursor: 500_000,
+                backfillComplete: false,
+              },
+            },
+          },
+        } as any,
+      },
+    )
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    expect(syncedBlocks).toContain(500_000)
+    expect(syncedBlocks).toContain(450_001)
+    expect(syncedBlocks).toContain(400_001)
+    expect(syncedBlocks).not.toContain(950_001)
+    expect(syncedBlocks).not.toContain(900_001)
   })
 })
