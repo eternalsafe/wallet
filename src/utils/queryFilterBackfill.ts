@@ -127,8 +127,9 @@ export const queryFilterBackwards = async <TLog>({
 
   const queryRangeWithRetry = async (range: BlockRange): Promise<TLog[]> => {
     let attempt = 0
+    let isRetrying = true
 
-    while (true) {
+    while (isRetrying) {
       if (shouldContinue && !shouldContinue()) {
         return []
       }
@@ -146,6 +147,8 @@ export const queryFilterBackwards = async <TLog>({
         await sleep(backoffMs)
       }
     }
+
+    return []
   }
 
   for (let rangeIndex = 0; rangeIndex < ranges.length; rangeIndex += normalizedMaxConcurrentRequests) {

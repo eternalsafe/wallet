@@ -1,12 +1,12 @@
-type QueueTask<T> = {
-  request: () => Promise<T>
-  resolve: (value: T) => void
+type QueueTask = {
+  request: () => Promise<unknown>
+  resolve: (value: unknown) => void
   reject: (error: unknown) => void
 }
 
 let maxConcurrentRequests = 3
 let activeRequests = 0
-const queue: QueueTask<unknown>[] = []
+const queue: QueueTask[] = []
 
 const processQueue = (): void => {
   while (activeRequests < maxConcurrentRequests && queue.length > 0) {
@@ -37,8 +37,8 @@ export const setRpcSchedulerMaxConcurrency = (value: number): void => {
 export const scheduleRpcRequest = async <T>(request: () => Promise<T>): Promise<T> => {
   return await new Promise<T>((resolve, reject) => {
     queue.push({
-      request,
-      resolve,
+      request: async () => request(),
+      resolve: (value: unknown) => resolve(value as T),
       reject,
     })
     processQueue()
