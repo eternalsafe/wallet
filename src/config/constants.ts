@@ -15,26 +15,20 @@ export const HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX = 5
 
 export const clampHistoricalRpcLogBatchSize = (value: number): number => {
   const parsedValue = Number(value)
-  if (!Number.isFinite(parsedValue)) {
+  if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
     return 10_000
   }
 
-  return Math.max(
-    HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN,
-    Math.min(HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX, Math.floor(parsedValue)),
-  )
+  return Math.floor(parsedValue)
 }
 
 export const clampHistoricalRpcLogMaxConcurrentRequests = (value: number): number => {
   const parsedValue = Number(value)
-  if (!Number.isFinite(parsedValue)) {
+  if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
     return 5
   }
 
-  return Math.max(
-    HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN,
-    Math.min(HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX, Math.floor(parsedValue)),
-  )
+  return Math.floor(parsedValue)
 }
 
 // Magic numbers

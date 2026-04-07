@@ -17,11 +17,7 @@ import {
   clampHistoricalRpcLogBatchSize,
   clampHistoricalRpcLogMaxConcurrentRequests,
   HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
-  HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX,
-  HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN,
   HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
-  HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX,
-  HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN,
 } from '@/config/constants'
 import useChainId from '@/hooks/useChainId'
 import { useCurrentChain } from '@/hooks/useChains'
@@ -270,11 +266,7 @@ const EnvironmentVariables = () => {
                         }
 
                         const parsed = Number(value)
-                        return (
-                          Number.isInteger(parsed) &&
-                          parsed >= HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN &&
-                          parsed <= HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX
-                        )
+                        return Number.isInteger(parsed) && parsed > 0
                       },
                     })}
                     variant="outlined"
@@ -301,15 +293,14 @@ const EnvironmentVariables = () => {
                       ) : null,
                     }}
                     inputProps={{
-                      min: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN,
-                      max: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX,
+                      min: 1,
                       step: 1,
                     }}
                     fullWidth
                     error={!!formState.errors[EnvVariablesField.historicalRpcLogBatchSize]}
                     helperText={
                       formState.errors[EnvVariablesField.historicalRpcLogBatchSize]
-                        ? `Please enter an integer from ${HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MIN} to ${HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE_MAX}.`
+                        ? 'Please enter a positive integer.'
                         : undefined
                     }
                   />
@@ -324,11 +315,7 @@ const EnvironmentVariables = () => {
                         }
 
                         const parsed = Number(value)
-                        return (
-                          Number.isInteger(parsed) &&
-                          parsed >= HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN &&
-                          parsed <= HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX
-                        )
+                        return Number.isInteger(parsed) && parsed > 0
                       },
                     })}
                     variant="outlined"
@@ -357,15 +344,14 @@ const EnvironmentVariables = () => {
                       ) : null,
                     }}
                     inputProps={{
-                      min: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN,
-                      max: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX,
+                      min: 1,
                       step: 1,
                     }}
                     fullWidth
                     error={!!formState.errors[EnvVariablesField.historicalRpcLogMaxConcurrentRequests]}
                     helperText={
                       formState.errors[EnvVariablesField.historicalRpcLogMaxConcurrentRequests]
-                        ? `Please enter an integer from ${HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MIN} to ${HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS_MAX}.`
+                        ? 'Please enter a positive integer.'
                         : undefined
                     }
                   />
