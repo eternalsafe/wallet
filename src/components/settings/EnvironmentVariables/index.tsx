@@ -49,7 +49,9 @@ const EnvironmentVariables = () => {
     mode: 'onChange',
     values: {
       [EnvVariablesField.rpc]: settings.env?.rpc[chainId] ?? '',
-      [EnvVariablesField.historicalRpcLogBatchSize]: `${settings.env?.historicalRpcLogBatchSize ?? HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE}`,
+      [EnvVariablesField.historicalRpcLogBatchSize]: `${
+        settings.env?.historicalRpcLogBatchSize ?? HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE
+      }`,
       [EnvVariablesField.ipfs]: settings.env?.ipfs ?? '',
       [EnvVariablesField.tenderlyOrgName]: settings.env?.tenderly.orgName ?? '',
       [EnvVariablesField.tenderlyProjectName]: settings.env?.tenderly.projectName ?? '',
