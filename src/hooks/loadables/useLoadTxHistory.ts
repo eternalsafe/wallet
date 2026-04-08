@@ -46,6 +46,9 @@ export type TxHistoryItem = {
   safeTxHash: string
   timestamp: number
   executor: string
+  nonce?: number
+  blockNumber?: number
+  logIndex?: number
   decodedTxData?: SafeTransactionData
 }
 
@@ -53,42 +56,8 @@ export type TxHistory = {
   [txId: string]: TxHistoryItem
 }
 
-const parseNonce = (value: unknown, fallbackNonce: number): number => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value
-  }
-
-  if (typeof value === 'bigint') {
-    return Number(value)
-  }
-
-  if (value && typeof value === 'object') {
-    const withToNumber = value as { toNumber?: () => number }
-    if (typeof withToNumber.toNumber === 'function') {
-      try {
-        const parsed = withToNumber.toNumber()
-        if (Number.isFinite(parsed)) {
-          return parsed
-        }
-      } catch (_error) {
-        // Fall through to toString parsing below.
-      }
-    }
-
-    const withToString = value as { toString?: () => string }
-    if (typeof withToString.toString === 'function') {
-      const parsed = Number(withToString.toString())
-      if (Number.isFinite(parsed)) {
-        return parsed
-      }
-    }
-  }
-
-  return fallbackNonce
-}
-
-function parseDecodedTxData(decodedTxData: Result, fallbackNonce: number): SafeTransactionData {
-  const [to, value, data, operation, safeTxGas, baseGas, gasPrice, gasToken, refundReceiver, nonceArg] = decodedTxData
+function parseDecodedTxData(decodedTxData: Result, nonce: number): SafeTransactionData {
+  const [to, value, data, operation, safeTxGas, baseGas, gasPrice, gasToken, refundReceiver] = decodedTxData
   return {
     to,
     value,
@@ -99,7 +68,7 @@ function parseDecodedTxData(decodedTxData: Result, fallbackNonce: number): SafeT
     gasPrice,
     gasToken,
     refundReceiver,
-    nonce: parseNonce(nonceArg, fallbackNonce),
+    nonce,
   }
 }
 
@@ -246,8 +215,64 @@ const sortParsedLogs = (logs: ParsedExecutionLog[]): ParsedExecutionLog[] => {
   })
 }
 
+const sortHistoryItemsByExecutionDesc = (a: TxHistoryItem, b: TxHistoryItem): number => {
+  const blockDiff = (b.blockNumber ?? 0) - (a.blockNumber ?? 0)
+  if (blockDiff !== 0) {
+    return blockDiff
+  }
+
+  const logDiff = (b.logIndex ?? 0) - (a.logIndex ?? 0)
+  if (logDiff !== 0) {
+    return logDiff
+  }
+
+  const timestampDiff = (b.timestamp ?? 0) - (a.timestamp ?? 0)
+  if (timestampDiff !== 0) {
+    return timestampDiff
+  }
+
+  return b.txId.localeCompare(a.txId)
+}
+
+const deriveNoncesFromExecutionOrder = (history: TxHistory, safeNonce: number): TxHistory => {
+  if (!Number.isFinite(safeNonce) || safeNonce < 0) {
+    return history
+  }
+
+  const orderedItems = Object.values(history).sort(sortHistoryItemsByExecutionDesc)
+  if (!orderedItems.length) {
+    return history
+  }
+
+  const lastExecutedNonce = safeNonce - 1
+  const nextHistory: TxHistory = {
+    ...history,
+  }
+
+  orderedItems.forEach((item, index) => {
+    const derivedNonce = lastExecutedNonce - index
+    if (derivedNonce < 0) {
+      return
+    }
+
+    nextHistory[item.txId] = {
+      ...item,
+      nonce: derivedNonce,
+      decodedTxData: item.decodedTxData
+        ? {
+            ...item.decodedTxData,
+            nonce: derivedNonce,
+          }
+        : item.decodedTxData,
+    }
+  })
+
+  return nextHistory
+}
+
 const mergeParsedLogsIntoHistory = (
   safeAddress: string,
+  safeNonce: number,
   currentHistory: TxHistory,
   logs: ParsedExecutionLog[],
 ): TxHistory => {
@@ -255,15 +280,11 @@ const mergeParsedLogsIntoHistory = (
   const nextHistory = {
     ...currentHistory,
   }
-  let nextNonce =
-    Object.values(nextHistory).reduce((highestNonce, item) => {
-      const nonce = item?.decodedTxData?.nonce
-      return typeof nonce === 'number' ? Math.max(highestNonce, nonce) : highestNonce
-    }, -1) + 1
 
   orderedLogs.forEach((log) => {
     const txId = buildMultisigTxId(safeAddress, log.safeTxHash)
     const existingItem = nextHistory[txId]
+    const existingNonce = existingItem?.nonce ?? existingItem?.decodedTxData?.nonce ?? 0
 
     nextHistory[txId] = {
       txId,
@@ -271,13 +292,16 @@ const mergeParsedLogsIntoHistory = (
       safeTxHash: log.safeTxHash,
       timestamp: log.timestamp > 0 ? log.timestamp : existingItem?.timestamp ?? 0,
       executor: log.executor || existingItem?.executor || '',
+      nonce: existingItem?.nonce,
+      blockNumber: log.blockNumber ?? existingItem?.blockNumber,
+      logIndex: log.logIndex ?? existingItem?.logIndex,
       decodedTxData: log.decodedTxData
-        ? parseDecodedTxData(log.decodedTxData, existingItem?.decodedTxData?.nonce ?? nextNonce++)
+        ? parseDecodedTxData(log.decodedTxData, existingNonce)
         : existingItem?.decodedTxData,
     }
   })
 
-  return nextHistory
+  return deriveNoncesFromExecutionOrder(nextHistory, safeNonce)
 }
 
 const getForwardSyncRanges = (
@@ -541,7 +565,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
 
           const parsedLogs = parsedBatch.filter(Boolean) as ParsedExecutionLog[]
           if (parsedLogs.length) {
-            workingHistory = mergeParsedLogsIntoHistory(safeAddress, workingHistory, parsedLogs)
+            workingHistory = mergeParsedLogsIntoHistory(safeAddress, safe.nonce, workingHistory, parsedLogs)
             dataRef.current = workingHistory
             setData(workingHistory)
             if (nextCursor.historyRecoveryApplied) {
@@ -651,6 +675,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
     historicalRpcLogBatchSize,
     historicalRpcLogMaxConcurrentRequests,
     provider,
+    safe.nonce,
     safe.version,
     safeAddress,
   ])

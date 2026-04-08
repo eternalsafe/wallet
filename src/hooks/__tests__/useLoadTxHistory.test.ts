@@ -317,7 +317,7 @@ describe('useLoadTxHistory', () => {
     expect(Object.values(history)[0]?.safeTxHash).toEqual(`0x${'b'.repeat(64)}`)
   })
 
-  it('uses decoded execTransaction nonce instead of fallback sequence numbers', async () => {
+  it('derives nonce from execution order and safe nonce instead of calldata arguments', async () => {
     const provider = new JsonRpcProvider(mainnetPublicRpcUri)
     ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
       .fn()
@@ -345,26 +345,24 @@ describe('useLoadTxHistory', () => {
         args: { txHash: `0x${'d'.repeat(64)}` },
       },
     ])
-    const decodeFunctionDataMock = jest.fn().mockImplementation((_methodName: string, data: string) => {
-      const nonce = data === '0x01' ? 42 : 43
-      return [
-        '0x0000000000000000000000000000000000000001',
-        '0',
-        '0x',
-        0,
-        0,
-        0,
-        0,
-        '0x0000000000000000000000000000000000000000',
-        '0x0000000000000000000000000000000000000000',
-        { toNumber: () => nonce, toString: () => String(nonce) },
-      ]
-    })
+    const decodeFunctionDataMock = jest.fn().mockImplementation((_methodName: string, data: string) => [
+      '0x0000000000000000000000000000000000000001',
+      '0',
+      data === '0x01' ? '0xaaaa' : '0xbbbb',
+      0,
+      0,
+      0,
+      0,
+      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000',
+      '0x1234',
+    ])
 
     mockUseSafeInfo.mockReturnValue({
       safeAddress: '0x1234567890123456789012345678901234567890',
       safe: {
         chainId: '1',
+        nonce: 44,
         version: '1.4.1',
       },
     } as any)
@@ -400,6 +398,8 @@ describe('useLoadTxHistory', () => {
     const history = result.current[0] || {}
     const historyByTxHash = Object.fromEntries(Object.values(history).map((item) => [item.txHash, item]))
 
+    expect(historyByTxHash[`0x${'a'.repeat(64)}`]?.nonce).toBe(42)
+    expect(historyByTxHash[`0x${'c'.repeat(64)}`]?.nonce).toBe(43)
     expect(historyByTxHash[`0x${'a'.repeat(64)}`]?.decodedTxData?.nonce).toBe(42)
     expect(historyByTxHash[`0x${'c'.repeat(64)}`]?.decodedTxData?.nonce).toBe(43)
   })
