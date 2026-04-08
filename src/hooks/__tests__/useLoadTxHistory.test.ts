@@ -111,7 +111,7 @@ describe('useLoadTxHistory', () => {
     ])
   })
 
-  it('resets stale persisted cursor state and backfills from the latest block window', async () => {
+  it('syncs newer head ranges incrementally and continues backfill from persisted cursor', async () => {
     const provider = new JsonRpcProvider(mainnetPublicRpcUri)
     ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
       .fn()
@@ -169,7 +169,8 @@ describe('useLoadTxHistory', () => {
 
     expect(queryFilterMock.mock.calls).toEqual([
       [executionSuccessFilter, 900_001, 1_000_000],
-      [executionSuccessFilter, 800_001, 900_000],
+      [executionSuccessFilter, 400_001, 500_000],
+      [executionSuccessFilter, 300_001, 400_000],
     ])
   })
 
@@ -244,10 +245,10 @@ describe('useLoadTxHistory', () => {
       expect(result.current[2]).toBe(false)
     })
 
-    expect(syncedBlocks).toContain(1_000_000)
-    expect(syncedBlocks).toContain(900_001)
-    expect(syncedBlocks).toContain(800_001)
-    expect(syncedBlocks).not.toContain(950_001)
+    expect(syncedBlocks).toContain(500_000)
+    expect(syncedBlocks).toContain(400_001)
+    expect(syncedBlocks).toContain(300_001)
+    expect(syncedBlocks).not.toContain(900_001)
   })
 
   it('parses tx hash from positional log args when named txHash is unavailable', async () => {

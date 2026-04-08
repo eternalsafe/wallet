@@ -17,15 +17,18 @@ import {
 import { showNotification } from '@/store/notificationsSlice'
 import { selectHistoricalRpcLogBatchSize, selectHistoricalRpcLogMaxConcurrentRequests } from '@/store/settingsSlice'
 import { resetTxHistorySync, setTxHistorySync } from '@/store/txHistorySyncSlice'
+import { selectTxHistory } from '@/store/txHistorySlice'
 import { getSafeContract } from '@/utils/safe-versions'
 import { buildMultisigTxId } from '@/utils/tx-id'
 import { queryFilterBackwards } from '@/utils/queryFilterBackfill'
 import { scheduleRpcRequest, setRpcSchedulerMaxConcurrency } from '@/utils/rpcRequestScheduler'
 import type { SafeTransactionData } from '@safe-global/safe-core-sdk-types'
 import type { Event } from '@ethersproject/contracts'
+import { Interface } from '@ethersproject/abi'
 import type { Result } from 'ethers/lib/utils'
 
 const HISTORY_PARSE_CONCURRENCY = 5
+const executionSuccessEventInterface = new Interface(['event ExecutionSuccess(bytes32 txHash, uint256 payment)'])
 
 type ParsedExecutionLog = {
   blockNumber: number
@@ -92,6 +95,49 @@ const mapWithConcurrencyLimit = async <T, U>(
   return results
 }
 
+export const extractSafeTxHashFromExecutionSuccessLog = (
+  log: Event,
+  safeContractInterface?: NonNullable<ReturnType<typeof getSafeContract>>['interface'],
+): string | undefined => {
+  const logArgs = log.args as ({ txHash?: string } & { [key: number]: unknown }) | undefined
+  const txHashFromArgs = logArgs?.txHash ?? (typeof logArgs?.[0] === 'string' ? (logArgs[0] as string) : undefined)
+  if (txHashFromArgs) {
+    return txHashFromArgs
+  }
+
+  if (!log.topics || !log.data) {
+    return
+  }
+
+  const parseWithInterface = (iface: {
+    parseLog: (event: { topics: string[]; data: string }) => { args: unknown }
+  }) => {
+    const parsedLog = iface.parseLog({
+      topics: log.topics as string[],
+      data: log.data,
+    })
+    const parsedArgs = parsedLog.args as ({ txHash?: string } & { [key: number]: unknown }) | undefined
+    return parsedArgs?.txHash ?? (typeof parsedArgs?.[0] === 'string' ? (parsedArgs[0] as string) : undefined)
+  }
+
+  if (safeContractInterface) {
+    try {
+      const txHashFromSafeContractInterface = parseWithInterface(safeContractInterface)
+      if (txHashFromSafeContractInterface) {
+        return txHashFromSafeContractInterface
+      }
+    } catch (_error) {
+      // Fall through to canonical event decoding below.
+    }
+  }
+
+  try {
+    return parseWithInterface(executionSuccessEventInterface)
+  } catch (_error) {
+    return
+  }
+}
+
 const parseExecutionSuccessLog = async ({
   log,
   provider,
@@ -107,39 +153,40 @@ const parseExecutionSuccessLog = async ({
   txDataCache: Map<string, Promise<{ executor: string; decodedTxData?: Result }>>
   scheduleRequest: <T>(request: () => Promise<T>) => Promise<T>
 }): Promise<ParsedExecutionLog | undefined> => {
-  const logArgs = log.args as ({ txHash?: string } & { [key: number]: unknown }) | undefined
-  const safeTxHash = logArgs?.txHash ?? (typeof logArgs?.[0] === 'string' ? (logArgs[0] as string) : undefined)
+  const safeTxHash = extractSafeTxHashFromExecutionSuccessLog(log, safeContract.interface)
   if (!safeTxHash || !log.transactionHash) {
     return
   }
 
   const timestampPromise =
     blockTimestampCache.get(log.blockNumber) ||
-    scheduleRequest(() => provider.getBlock(log.blockNumber)).then((block) =>
-      block?.timestamp ? block.timestamp * 1000 : 0,
-    )
+    scheduleRequest(() => provider.getBlock(log.blockNumber))
+      .then((block) => (block?.timestamp ? block.timestamp * 1000 : 0))
+      .catch(() => 0)
 
   blockTimestampCache.set(log.blockNumber, timestampPromise)
 
   const txDataPromise =
     txDataCache.get(log.transactionHash) ||
-    scheduleRequest(() => provider.getTransaction(log.transactionHash)).then((tx) => {
-      const executor = tx?.from ?? ''
-      const txData = tx?.data
+    scheduleRequest(() => provider.getTransaction(log.transactionHash))
+      .then((tx) => {
+        const executor = tx?.from ?? ''
+        const txData = tx?.data
 
-      if (!txData) {
-        return { executor, decodedTxData: undefined }
-      }
-
-      try {
-        return {
-          executor,
-          decodedTxData: safeContract.interface.decodeFunctionData('execTransaction', txData),
+        if (!txData) {
+          return { executor, decodedTxData: undefined }
         }
-      } catch (_error) {
-        return { executor, decodedTxData: undefined }
-      }
-    })
+
+        try {
+          return {
+            executor,
+            decodedTxData: safeContract.interface.decodeFunctionData('execTransaction', txData),
+          }
+        } catch (_error) {
+          return { executor, decodedTxData: undefined }
+        }
+      })
+      .catch(() => ({ executor: '', decodedTxData: undefined }))
 
   txDataCache.set(log.transactionHash, txDataPromise)
 
@@ -195,6 +242,47 @@ const mergeParsedLogsIntoHistory = (
   return nextHistory
 }
 
+const getForwardSyncRanges = (
+  fromBlock: number,
+  toBlock: number,
+  batchSize: number,
+  maxRanges: number,
+): Array<{ fromBlock: number; toBlock: number }> => {
+  const normalizedFromBlock = Math.max(0, Math.floor(fromBlock))
+  const normalizedToBlock = Math.max(0, Math.floor(toBlock))
+  const normalizedBatchSize = Math.max(1, Math.floor(batchSize))
+  const normalizedMaxRanges = Math.max(1, Math.floor(maxRanges))
+  const ranges: Array<{ fromBlock: number; toBlock: number }> = []
+
+  if (normalizedFromBlock > normalizedToBlock) {
+    return ranges
+  }
+
+  let currentFrom = normalizedFromBlock
+
+  while (currentFrom <= normalizedToBlock && ranges.length < normalizedMaxRanges) {
+    const currentTo = Math.min(normalizedToBlock, currentFrom + normalizedBatchSize - 1)
+    ranges.push({ fromBlock: currentFrom, toBlock: currentTo })
+    currentFrom = currentTo + 1
+  }
+
+  return ranges
+}
+
+const isTxHistoryForSafe = (history: TxHistory | undefined, safeAddress: string | undefined): history is TxHistory => {
+  if (!history || !safeAddress) {
+    return false
+  }
+
+  const historyItems = Object.values(history)
+  if (!historyItems.length) {
+    return false
+  }
+
+  const txIdPrefix = `multisig_${safeAddress.toLowerCase()}_`
+  return historyItems.every((item) => item?.txId?.toLowerCase().startsWith(txIdPrefix))
+}
+
 export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   const dispatch = useAppDispatch()
   const provider = useMultiWeb3ReadOnly()
@@ -208,18 +296,22 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   const txHistoryCursor = useAppSelector((state) =>
     txHistorySyncKey ? selectTxHistoryCursor(state, txHistorySyncKey) : undefined,
   )
+  const persistedTxHistory = useAppSelector((state) => selectTxHistory(state).data)
+  const initialPersistedHistory = useMemo(() => {
+    return isTxHistoryForSafe(persistedTxHistory, safeAddress) ? persistedTxHistory : undefined
+  }, [persistedTxHistory, safeAddress])
   const [pollCount, resetPolling] = useIntervalCounter(POLLING_INTERVAL)
 
-  const [data, setData] = useState<TxHistory>()
+  const [data, setData] = useState<TxHistory | undefined>(initialPersistedHistory)
   const [error, setError] = useState<Error>()
   const [loading, setLoading] = useState<boolean>(false)
   const txHistoryCursorRef = useRef<TxHistoryBackfillCursor>()
-  const dataRef = useRef<TxHistory>({})
+  const dataRef = useRef<TxHistory>(initialPersistedHistory ?? {})
   const loadRef = useRef<(() => Promise<void>) | undefined>()
   const isLoadInFlightRef = useRef(false)
   const hasQueuedLoadRef = useRef(false)
-  const hasReconciledPersistedCursorRef = useRef(false)
-  const hasInitializedDataRef = useRef(false)
+  const hasInitializedDataRef = useRef(Boolean(initialPersistedHistory))
+  const hasMountedRef = useRef(false)
   const blockTimestampCacheRef = useRef(new Map<number, Promise<number>>())
   const txDataCacheRef = useRef(new Map<string, Promise<{ executor: string; decodedTxData?: Result }>>())
 
@@ -230,6 +322,16 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   useEffect(() => {
     dataRef.current = data ?? {}
   }, [data])
+
+  useEffect(() => {
+    if (hasInitializedDataRef.current || !initialPersistedHistory) {
+      return
+    }
+
+    dataRef.current = initialPersistedHistory
+    setData(initialPersistedHistory)
+    hasInitializedDataRef.current = true
+  }, [initialPersistedHistory])
 
   useEffect(() => {
     let isCurrent = true
@@ -270,9 +372,9 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
       setLoading(true)
       setRpcSchedulerMaxConcurrency(historicalRpcLogMaxConcurrentRequests)
       if (!hasInitializedDataRef.current) {
-        const emptyHistory: TxHistory = {}
-        dataRef.current = emptyHistory
-        setData(emptyHistory)
+        const initialHistory = initialPersistedHistory || {}
+        dataRef.current = initialHistory
+        setData(initialHistory)
         hasInitializedDataRef.current = true
       }
 
@@ -280,27 +382,14 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         const executionFilter = safeContract.filters.ExecutionSuccess()
         const latestBlock = await scheduleRpcRequest(() => provider.getBlockNumber())
         const currentCursor = txHistoryCursorRef.current
-        const hasHistoryInMemory = Object.keys(dataRef.current).length > 0
-        const shouldResetPersistedCursor =
-          !hasReconciledPersistedCursorRef.current && !!currentCursor && !hasHistoryInMemory
-        const initializedCursor: TxHistoryBackfillCursor = shouldResetPersistedCursor
-          ? {
-              latestSyncedBlock: latestBlock,
-              backfillCursor: latestBlock,
-              backfillComplete: false,
-            }
-          : currentCursor || {
-              latestSyncedBlock: latestBlock,
-              backfillCursor: latestBlock,
-              backfillComplete: false,
-            }
-
-        if ((!currentCursor || shouldResetPersistedCursor) && txHistorySyncKey) {
-          dispatch(setTxHistoryCursor({ key: txHistorySyncKey, value: initializedCursor }))
+        const initializedCursor: TxHistoryBackfillCursor = currentCursor || {
+          latestSyncedBlock: latestBlock,
+          backfillCursor: latestBlock,
+          backfillComplete: false,
         }
 
-        if (!hasReconciledPersistedCursorRef.current) {
-          hasReconciledPersistedCursorRef.current = true
+        if (!currentCursor && txHistorySyncKey) {
+          dispatch(setTxHistoryCursor({ key: txHistorySyncKey, value: initializedCursor }))
         }
 
         dispatch(
@@ -351,20 +440,27 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         }
 
         if (latestBlock > nextCursor.latestSyncedBlock) {
-          await queryFilterBackwards<Event>({
+          const headSyncRanges = getForwardSyncRanges(
+            nextCursor.latestSyncedBlock + 1,
             latestBlock,
-            stopAtBlock: nextCursor.latestSyncedBlock + 1,
-            batchSize: historicalRpcLogBatchSize,
-            maxConcurrentRequests: historicalRpcLogMaxConcurrentRequests,
-            collectLogs: false,
-            shouldContinue: () => isCurrent,
-            scheduleRequest: scheduleRpcRequest,
-            queryRange: ({ fromBlock, toBlock }) => safeContract.queryFilter(executionFilter, fromBlock, toBlock),
-            onBatch: async (batchLogs, range) => applyBatchLogs(batchLogs, range, false),
-          })
-          nextCursor = {
-            ...nextCursor,
-            latestSyncedBlock: latestBlock,
+            historicalRpcLogBatchSize,
+            historicalRpcLogMaxConcurrentRequests,
+          )
+          const logsByRange = await Promise.all(
+            headSyncRanges.map(async (range) => ({
+              range,
+              logs: await scheduleRpcRequest(() =>
+                safeContract.queryFilter(executionFilter, range.fromBlock, range.toBlock),
+              ),
+            })),
+          )
+
+          for (const { range, logs } of logsByRange) {
+            await applyBatchLogs(logs, range, false)
+            nextCursor = {
+              ...nextCursor,
+              latestSyncedBlock: Math.max(nextCursor.latestSyncedBlock, range.toBlock),
+            }
           }
         }
 
@@ -434,6 +530,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
     txHistorySyncKey,
     historicalRpcLogBatchSize,
     historicalRpcLogMaxConcurrentRequests,
+    initialPersistedHistory,
     provider,
     safe.version,
     safeAddress,
@@ -473,9 +570,13 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
 
   // Reset the counter when safe address/chainId changes
   useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true
+      return
+    }
+
     resetPolling()
     dataRef.current = {}
-    hasReconciledPersistedCursorRef.current = false
     hasInitializedDataRef.current = false
     blockTimestampCacheRef.current.clear()
     txDataCacheRef.current.clear()

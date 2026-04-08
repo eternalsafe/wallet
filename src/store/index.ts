@@ -63,6 +63,7 @@ const rootReducer = combineReducers({
 
 const persistedSlices: (keyof PreloadedState<RootState>)[] = [
   sessionSlice.name,
+  txHistorySlice.name,
   addressBookSlice.name,
   pendingTxsSlice.name,
   addedSafesSlice.name,
