@@ -298,6 +298,14 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   )
   const persistedTxHistory = useAppSelector((state) => selectTxHistory(state).data)
   const initialPersistedHistory = useMemo(() => {
+    if (!persistedTxHistory) {
+      return
+    }
+
+    if (!safeAddress) {
+      return persistedTxHistory
+    }
+
     return isTxHistoryForSafe(persistedTxHistory, safeAddress) ? persistedTxHistory : undefined
   }, [persistedTxHistory, safeAddress])
   const [pollCount, resetPolling] = useIntervalCounter(POLLING_INTERVAL)
@@ -312,6 +320,9 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   const hasQueuedLoadRef = useRef(false)
   const hasInitializedDataRef = useRef(Boolean(initialPersistedHistory))
   const hasMountedRef = useRef(false)
+  const previousSafeKeyRef = useRef<string | undefined>(
+    safeAddress ? `${chainId}:${safeAddress.toLowerCase()}` : undefined,
+  )
   const blockTimestampCacheRef = useRef(new Map<number, Promise<number>>())
   const txDataCacheRef = useRef(new Map<string, Promise<{ executor: string; decodedTxData?: Result }>>())
 
@@ -350,10 +361,12 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
       }
 
       if (!safeAddress || !provider) {
-        setData(undefined)
         setError(undefined)
         setLoading(false)
-        dispatch(resetTxHistorySync())
+        if (!Object.keys(dataRef.current).length) {
+          setData(undefined)
+          dispatch(resetTxHistorySync())
+        }
         isLoadInFlightRef.current = false
         return
       }
@@ -570,8 +583,22 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
 
   // Reset the counter when safe address/chainId changes
   useEffect(() => {
+    const nextSafeKey = safeAddress ? `${chainId}:${safeAddress.toLowerCase()}` : undefined
+
     if (!hasMountedRef.current) {
       hasMountedRef.current = true
+      previousSafeKeyRef.current = nextSafeKey
+      return
+    }
+
+    const previousSafeKey = previousSafeKeyRef.current
+    previousSafeKeyRef.current = nextSafeKey
+
+    if (!previousSafeKey) {
+      return
+    }
+
+    if (previousSafeKey === nextSafeKey) {
       return
     }
 

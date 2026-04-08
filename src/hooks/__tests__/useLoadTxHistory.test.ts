@@ -493,6 +493,94 @@ describe('useLoadTxHistory', () => {
     expect(queryFilterMock).toHaveBeenCalledWith(executionSuccessFilter, 2_315_765, 2_415_764)
   })
 
+  it('keeps persisted history when safe address resolves after the first render', async () => {
+    const safeAddress = '0x577A0D87f4e6fbdd55d51Ac4a4344EC042C04bb2'
+    const latestBlock = 2_415_764
+    const persistedTxId = buildMultisigTxId(safeAddress, `0x${'b'.repeat(64)}`)
+    let currentSafeAddress: string | undefined
+
+    const persistedTxHistory = {
+      [persistedTxId]: {
+        txId: persistedTxId,
+        txHash: `0x${'a'.repeat(64)}`,
+        safeTxHash: `0x${'b'.repeat(64)}`,
+        timestamp: latestBlock * 1000,
+        executor: '0x1111111111111111111111111111111111111111',
+      },
+    }
+
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(latestBlock)
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const queryFilterMock = jest.fn().mockResolvedValue([])
+
+    mockUseSafeInfo.mockImplementation(
+      () =>
+        ({
+          safeAddress: currentSafeAddress,
+          safe: {
+            chainId: '11155111',
+            version: '1.4.1',
+          },
+        } as any),
+    )
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const txHistorySyncKey = buildTxHistorySyncKey('11155111', safeAddress)
+    const { result, rerender } = renderHook(() => useLoadTxHistory(), {
+      initialReduxState: {
+        txHistory: {
+          data: persistedTxHistory,
+          loading: false,
+        },
+        settings: {
+          ...initialSettingsState,
+          env: {
+            ...initialSettingsState.env,
+            historicalRpcLogBatchSize: 100_000,
+            historicalRpcLogMaxConcurrentRequests: 1,
+          },
+        },
+        historicalRpcSync: {
+          ...initialHistoricalRpcSyncState,
+          txHistoryBySafe: {
+            [txHistorySyncKey]: {
+              latestSyncedBlock: latestBlock,
+              backfillCursor: latestBlock,
+              backfillComplete: false,
+            },
+          },
+        },
+      } as any,
+    })
+
+    expect(result.current[0]).toHaveProperty(persistedTxId)
+
+    currentSafeAddress = safeAddress
+    rerender()
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    const history = result.current[0] || {}
+    expect(history).toHaveProperty(persistedTxId)
+    expect(queryFilterMock).toHaveBeenCalledWith(executionSuccessFilter, 2_315_765, 2_415_764)
+  })
+
   it('shows history fetch errors with an RPC settings link', async () => {
     const provider = new JsonRpcProvider(mainnetPublicRpcUri)
     ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
