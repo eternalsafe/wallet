@@ -218,6 +218,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   const loadRef = useRef<(() => Promise<void>) | undefined>()
   const isLoadInFlightRef = useRef(false)
   const hasQueuedLoadRef = useRef(false)
+  const hasReconciledPersistedCursorRef = useRef(false)
   const hasInitializedDataRef = useRef(false)
   const blockTimestampCacheRef = useRef(new Map<number, Promise<number>>())
   const txDataCacheRef = useRef(new Map<string, Promise<{ executor: string; decodedTxData?: Result }>>())
@@ -279,14 +280,27 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         const executionFilter = safeContract.filters.ExecutionSuccess()
         const latestBlock = await scheduleRpcRequest(() => provider.getBlockNumber())
         const currentCursor = txHistoryCursorRef.current
-        const initializedCursor: TxHistoryBackfillCursor = currentCursor || {
-          latestSyncedBlock: latestBlock,
-          backfillCursor: latestBlock,
-          backfillComplete: false,
+        const hasHistoryInMemory = Object.keys(dataRef.current).length > 0
+        const shouldResetPersistedCursor =
+          !hasReconciledPersistedCursorRef.current && !!currentCursor && !hasHistoryInMemory
+        const initializedCursor: TxHistoryBackfillCursor = shouldResetPersistedCursor
+          ? {
+              latestSyncedBlock: latestBlock,
+              backfillCursor: latestBlock,
+              backfillComplete: false,
+            }
+          : currentCursor || {
+              latestSyncedBlock: latestBlock,
+              backfillCursor: latestBlock,
+              backfillComplete: false,
+            }
+
+        if ((!currentCursor || shouldResetPersistedCursor) && txHistorySyncKey) {
+          dispatch(setTxHistoryCursor({ key: txHistorySyncKey, value: initializedCursor }))
         }
 
-        if (!currentCursor && txHistorySyncKey) {
-          dispatch(setTxHistoryCursor({ key: txHistorySyncKey, value: initializedCursor }))
+        if (!hasReconciledPersistedCursorRef.current) {
+          hasReconciledPersistedCursorRef.current = true
         }
 
         dispatch(
@@ -461,6 +475,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   useEffect(() => {
     resetPolling()
     dataRef.current = {}
+    hasReconciledPersistedCursorRef.current = false
     hasInitializedDataRef.current = false
     blockTimestampCacheRef.current.clear()
     txDataCacheRef.current.clear()
