@@ -373,10 +373,12 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
 
       const safeContract = getSafeContract(safeAddress, safe.version, provider)
       if (!safeContract) {
-        setData(undefined)
         setError(undefined)
         setLoading(false)
-        dispatch(resetTxHistorySync())
+        if (!Object.keys(dataRef.current).length) {
+          setData(undefined)
+          dispatch(resetTxHistorySync())
+        }
         isLoadInFlightRef.current = false
         return
       }
