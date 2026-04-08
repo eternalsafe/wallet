@@ -161,14 +161,21 @@ export const queryFilterBackwards = async <TLog>({
     }
 
     const concurrentRanges = ranges.slice(rangeIndex, rangeIndex + normalizedMaxConcurrentRequests)
-    const logsByRange = await Promise.all(
-      concurrentRanges.map(async (range) => ({
-        range,
-        logs: await queryRangeWithRetry(range),
-      })),
-    )
+    const logsByRange = concurrentRanges.map(async (range) => {
+      try {
+        return {
+          range,
+          logs: await queryRangeWithRetry(range),
+        }
+      } catch (error) {
+        return {
+          range,
+          error,
+        }
+      }
+    })
 
-    for (const { range, logs } of logsByRange) {
+    for (const logsByRangePromise of logsByRange) {
       if (processedBatches >= normalizedMaxBatches) {
         break
       }
@@ -176,6 +183,13 @@ export const queryFilterBackwards = async <TLog>({
       if (shouldContinue && !shouldContinue()) {
         break
       }
+
+      const logsByRangeResult = await logsByRangePromise
+      if ('error' in logsByRangeResult) {
+        throw logsByRangeResult.error
+      }
+
+      const { range, logs } = logsByRangeResult
 
       if (collectLogs) {
         collectedLogs.push(...logs)

@@ -221,7 +221,11 @@ const mergeParsedLogsIntoHistory = (
   const nextHistory = {
     ...currentHistory,
   }
-  let nextNonce = Object.keys(nextHistory).length
+  let nextNonce =
+    Object.values(nextHistory).reduce((highestNonce, item) => {
+      const nonce = item?.decodedTxData?.nonce
+      return typeof nonce === 'number' ? Math.max(highestNonce, nonce) : highestNonce
+    }, -1) + 1
 
   orderedLogs.forEach((log) => {
     const txId = buildMultisigTxId(safeAddress, log.safeTxHash)
@@ -229,10 +233,10 @@ const mergeParsedLogsIntoHistory = (
 
     nextHistory[txId] = {
       txId,
-      txHash: log.txHash,
+      txHash: log.txHash || existingItem?.txHash || '',
       safeTxHash: log.safeTxHash,
-      timestamp: log.timestamp,
-      executor: log.executor,
+      timestamp: log.timestamp > 0 ? log.timestamp : (existingItem?.timestamp ?? 0),
+      executor: log.executor || existingItem?.executor || '',
       decodedTxData: log.decodedTxData
         ? parseDecodedTxData(log.decodedTxData, existingItem?.decodedTxData?.nonce ?? nextNonce++)
         : existingItem?.decodedTxData,
@@ -403,8 +407,18 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
           backfillComplete: false,
         }
 
-        if (!currentCursor && txHistorySyncKey) {
-          dispatch(setTxHistoryCursor({ key: txHistorySyncKey, value: initializedCursor }))
+        const persistCursor = (cursor: TxHistoryBackfillCursor) => {
+          txHistoryCursorRef.current = cursor
+          if (!txHistorySyncKey || !isCurrent) {
+            return
+          }
+          dispatch(setTxHistoryCursor({ key: txHistorySyncKey, value: cursor }))
+        }
+
+        if (!currentCursor) {
+          persistCursor(initializedCursor)
+        } else {
+          txHistoryCursorRef.current = currentCursor
         }
 
         dispatch(
@@ -476,6 +490,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
               ...nextCursor,
               latestSyncedBlock: Math.max(nextCursor.latestSyncedBlock, range.toBlock),
             }
+            persistCursor(nextCursor)
           }
         }
 
@@ -500,6 +515,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
                 backfillCursor: Math.max(0, nextBackfillCursor),
                 backfillComplete: range.fromBlock === 0,
               }
+              persistCursor(nextCursor)
             },
           })
         }

@@ -4,7 +4,11 @@ import useIntervalCounter from '@/hooks/useIntervalCounter'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import useLoadTxHistory from '@/hooks/loadables/useLoadTxHistory'
-import { buildTxHistorySyncKey, initialState as initialHistoricalRpcSyncState } from '@/store/historicalRpcSyncSlice'
+import {
+  buildTxHistorySyncKey,
+  initialState as initialHistoricalRpcSyncState,
+  selectTxHistoryCursor,
+} from '@/store/historicalRpcSyncSlice'
 import { useAppSelector } from '@/store'
 import { initialState as initialSettingsState } from '@/store/settingsSlice'
 import { selectNotifications } from '@/store/notificationsSlice'
@@ -675,6 +679,205 @@ describe('useLoadTxHistory', () => {
     const history = result.current[0] || {}
     expect(history).toHaveProperty(persistedTxId)
     expect(history[persistedTxId]?.timestamp).toBe(persistedTxBlock * 1000)
+  })
+
+  it('persists backfill cursor progress before all concurrent ranges complete', async () => {
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(1_000_000)
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const firstBackfillRange = createDeferred<any[]>()
+    const secondBackfillRange = createDeferred<any[]>()
+    const queryFilterMock = jest
+      .fn()
+      .mockImplementation(async (_filter: unknown, fromBlock: number, toBlock: number) => {
+        if (fromBlock === 400_001 && toBlock === 500_000) {
+          return firstBackfillRange.promise
+        }
+        if (fromBlock === 300_001 && toBlock === 400_000) {
+          return secondBackfillRange.promise
+        }
+        return []
+      })
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress: '0x1234567890123456789012345678901234567890',
+      safe: {
+        chainId: '1',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const txHistorySyncKey = buildTxHistorySyncKey('1', '0x1234567890123456789012345678901234567890')
+    const cursorBackfillBlocks: number[] = []
+    const { result } = renderHook(
+      () => {
+        const loadResult = useLoadTxHistory()
+        const cursor = useAppSelector((state) => selectTxHistoryCursor(state, txHistorySyncKey))
+
+        useEffect(() => {
+          if (cursor?.backfillCursor !== undefined) {
+            cursorBackfillBlocks.push(cursor.backfillCursor)
+          }
+        }, [cursor?.backfillCursor])
+
+        return loadResult
+      },
+      {
+        initialReduxState: {
+          settings: {
+            ...initialSettingsState,
+            env: {
+              ...initialSettingsState.env,
+              historicalRpcLogBatchSize: 100_000,
+              historicalRpcLogMaxConcurrentRequests: 2,
+            },
+          },
+          historicalRpcSync: {
+            ...initialHistoricalRpcSyncState,
+            txHistoryBySafe: {
+              [txHistorySyncKey]: {
+                latestSyncedBlock: 1_000_000,
+                backfillCursor: 500_000,
+                backfillComplete: false,
+              },
+            },
+          },
+        } as any,
+      },
+    )
+
+    await waitFor(() => {
+      expect(queryFilterMock).toHaveBeenCalledWith(executionSuccessFilter, 400_001, 500_000)
+      expect(queryFilterMock).toHaveBeenCalledWith(executionSuccessFilter, 300_001, 400_000)
+    })
+
+    firstBackfillRange.resolve([])
+
+    await waitFor(() => {
+      expect(cursorBackfillBlocks).toContain(400_000)
+    })
+
+    secondBackfillRange.resolve([])
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    expect(cursorBackfillBlocks).toContain(300_000)
+  })
+
+  it('does not overwrite persisted tx timestamps when block lookups fail transiently', async () => {
+    const safeAddress = '0x577A0D87f4e6fbdd55d51Ac4a4344EC042C04bb2'
+    const latestBlock = 10_700_000
+    const txBlock = 10_608_581
+    const safeTxHash = `0x${'f'.repeat(64)}`
+    const txHash = `0x${'e'.repeat(64)}`
+    const persistedTxId = buildMultisigTxId(safeAddress, safeTxHash)
+    const persistedTimestamp = 1_713_210_123_000
+
+    const persistedTxHistory = {
+      [persistedTxId]: {
+        txId: persistedTxId,
+        txHash,
+        safeTxHash,
+        timestamp: persistedTimestamp,
+        executor: '0x1111111111111111111111111111111111111111',
+      },
+    }
+
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(latestBlock)
+    ;(provider as JsonRpcProvider & { getBlock: jest.Mock }).getBlock = jest.fn().mockRejectedValue(new Error('429'))
+    ;(provider as JsonRpcProvider & { getTransaction: jest.Mock }).getTransaction = jest.fn().mockResolvedValue({
+      from: '0x1111111111111111111111111111111111111111',
+      data: '0x',
+    })
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const queryFilterMock = jest
+      .fn()
+      .mockImplementation(async (_filter: unknown, fromBlock: number, toBlock: number) =>
+        fromBlock <= txBlock && toBlock >= txBlock
+          ? [
+              {
+                blockNumber: txBlock,
+                logIndex: 0,
+                transactionHash: txHash,
+                args: { txHash: safeTxHash },
+              },
+            ]
+          : [],
+      )
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress,
+      safe: {
+        chainId: '11155111',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const txHistorySyncKey = buildTxHistorySyncKey('11155111', safeAddress)
+    const { result } = renderHook(() => useLoadTxHistory(), {
+      initialReduxState: {
+        txHistory: {
+          data: persistedTxHistory,
+          loading: false,
+        },
+        settings: {
+          ...initialSettingsState,
+          env: {
+            ...initialSettingsState.env,
+            historicalRpcLogBatchSize: 100_000,
+            historicalRpcLogMaxConcurrentRequests: 1,
+          },
+        },
+        historicalRpcSync: {
+          ...initialHistoricalRpcSyncState,
+          txHistoryBySafe: {
+            [txHistorySyncKey]: {
+              latestSyncedBlock: latestBlock,
+              backfillCursor: txBlock,
+              backfillComplete: false,
+            },
+          },
+        },
+      } as any,
+    })
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    const history = result.current[0] || {}
+    expect(history[persistedTxId]?.timestamp).toBe(persistedTimestamp)
   })
 
   it('shows history fetch errors with an RPC settings link', async () => {

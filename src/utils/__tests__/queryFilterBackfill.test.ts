@@ -1,6 +1,18 @@
 import { getBackwardBlockRanges, queryFilterBackwards } from '@/utils/queryFilterBackfill'
 
 describe('queryFilterBackfill', () => {
+  const createDeferred = <T>() => {
+    let resolve: (value: T) => void = () => undefined
+    let reject: (reason?: unknown) => void = () => undefined
+
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res
+      reject = rej
+    })
+
+    return { promise, resolve, reject }
+  }
+
   it('builds backward block ranges from latest block to block 0', () => {
     expect(getBackwardBlockRanges(25, 10)).toEqual([
       { fromBlock: 16, toBlock: 25 },
@@ -82,5 +94,37 @@ describe('queryFilterBackfill', () => {
     })
 
     expect(result).toEqual([])
+  })
+
+  it('processes completed ranges without waiting for all in-flight requests', async () => {
+    const firstRange = createDeferred<string[]>()
+    const secondRange = createDeferred<string[]>()
+    const onBatch = jest.fn()
+    const queryRange = jest
+      .fn()
+      .mockImplementationOnce(async () => firstRange.promise)
+      .mockImplementationOnce(async () => secondRange.promise)
+
+    const runBackfill = queryFilterBackwards({
+      latestBlock: 19,
+      batchSize: 10,
+      maxConcurrentRequests: 2,
+      maxBatches: 2,
+      queryRange,
+      onBatch,
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    firstRange.resolve([])
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(onBatch).toHaveBeenCalledTimes(1)
+    expect(onBatch).toHaveBeenLastCalledWith([], { fromBlock: 10, toBlock: 19 })
+
+    secondRange.resolve([])
+    await runBackfill
+
+    expect(onBatch).toHaveBeenCalledTimes(2)
+    expect(onBatch).toHaveBeenLastCalledWith([], { fromBlock: 0, toBlock: 9 })
   })
 })
