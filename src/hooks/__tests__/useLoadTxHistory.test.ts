@@ -345,18 +345,20 @@ describe('useLoadTxHistory', () => {
         args: { txHash: `0x${'d'.repeat(64)}` },
       },
     ])
-    const decodeFunctionDataMock = jest.fn().mockImplementation((_methodName: string, data: string) => [
-      '0x0000000000000000000000000000000000000001',
-      '0',
-      data === '0x01' ? '0xaaaa' : '0xbbbb',
-      0,
-      0,
-      0,
-      0,
-      '0x0000000000000000000000000000000000000000',
-      '0x0000000000000000000000000000000000000000',
-      '0x1234',
-    ])
+    const decodeFunctionDataMock = jest
+      .fn()
+      .mockImplementation((_methodName: string, data: string) => [
+        '0x0000000000000000000000000000000000000001',
+        '0',
+        data === '0x01' ? '0xaaaa' : '0xbbbb',
+        0,
+        0,
+        0,
+        0,
+        '0x0000000000000000000000000000000000000000',
+        '0x0000000000000000000000000000000000000000',
+        '0x1234',
+      ])
 
     mockUseSafeInfo.mockReturnValue({
       safeAddress: '0x1234567890123456789012345678901234567890',
