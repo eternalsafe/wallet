@@ -13,6 +13,7 @@ import { CONFIG_SERVICE_CHAINS } from '@/tests/mocks/chains'
 import { renderHook, waitFor } from '@/tests/test-utils'
 import { getSafeContract } from '@/utils/safe-versions'
 import { AppRoutes } from '@/config/routes'
+import getChainsConfig from '@/config/supportedChains'
 
 jest.mock('@/hooks/useSafeInfo', () => jest.fn())
 jest.mock('@/hooks/wallets/web3', () => ({
@@ -30,9 +31,13 @@ describe('useLoadTxHistory', () => {
   const mockGetSafeContract = getSafeContract as jest.MockedFunction<typeof getSafeContract>
 
   const mainnetPublicRpcUri = CONFIG_SERVICE_CHAINS.find((chain) => chain.chainId === '1')?.publicRpcUri.value
+  const sepoliaPublicRpcUri = getChainsConfig().find((chain) => chain.chainId === '11155111')?.publicRpcUri.value
 
   if (!mainnetPublicRpcUri) {
     throw new Error('Expected a hardcoded mainnet publicRpcUri in test mocks')
+  }
+  if (!sepoliaPublicRpcUri) {
+    throw new Error('Expected a hardcoded sepolia publicRpcUri in supported chain config')
   }
 
   beforeEach(() => {
@@ -53,7 +58,7 @@ describe('useLoadTxHistory', () => {
   }
 
   it('backfills historical batches from latest backwards using configured batch window', async () => {
-    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    const provider = new JsonRpcProvider(sepoliaPublicRpcUri)
     const getBlockNumberMock = jest.fn().mockResolvedValue(1_000_000)
     ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = getBlockNumberMock
 
@@ -526,13 +531,8 @@ describe('useLoadTxHistory', () => {
     const upperBoundaryBlock = 5_698_792
     const lowerBoundaryBlock = 5_475_050
     const coveringBatchSize = upperBoundaryBlock - lowerBoundaryBlock + 1
-    const gnosisPublicRpcUri = CONFIG_SERVICE_CHAINS.find((chain) => chain.chainId === '100')?.publicRpcUri.value
 
-    if (!gnosisPublicRpcUri) {
-      throw new Error('Expected a hardcoded gnosis publicRpcUri in test mocks')
-    }
-
-    const provider = new JsonRpcProvider(gnosisPublicRpcUri)
+    const provider = new JsonRpcProvider(sepoliaPublicRpcUri)
     ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
       .fn()
       .mockResolvedValue(upperBoundaryBlock)
@@ -568,7 +568,7 @@ describe('useLoadTxHistory', () => {
     mockUseSafeInfo.mockReturnValue({
       safeAddress,
       safe: {
-        chainId: '100',
+        chainId: '11155111',
         version: '1.4.1',
       },
     } as any)
