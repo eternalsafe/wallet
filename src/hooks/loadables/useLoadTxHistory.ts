@@ -385,7 +385,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
       setLoading(true)
       setRpcSchedulerMaxConcurrency(historicalRpcLogMaxConcurrentRequests)
       if (!hasInitializedDataRef.current) {
-        const initialHistory = initialPersistedHistory || {}
+        const initialHistory = Object.keys(dataRef.current).length ? dataRef.current : {}
         dataRef.current = initialHistory
         setData(initialHistory)
         hasInitializedDataRef.current = true
@@ -543,7 +543,6 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
     txHistorySyncKey,
     historicalRpcLogBatchSize,
     historicalRpcLogMaxConcurrentRequests,
-    initialPersistedHistory,
     provider,
     safe.version,
     safeAddress,
