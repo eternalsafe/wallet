@@ -26,7 +26,7 @@ export const ExpandableTransactionItem = ({
         unmountOnExit: false,
       }}
       elevation={0}
-      defaultExpanded={!!txDetails && !!txDetails.txData}
+      defaultExpanded={false}
       data-testid={testId}
     >
       <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ justifyContent: 'flex-start', overflowX: 'auto' }}>
@@ -50,7 +50,7 @@ export const TransactionSkeleton = () => (
       <Skeleton variant="text" width="35px" />
     </Box>
 
-    <Accordion disableGutters elevation={0} defaultExpanded>
+    <Accordion disableGutters elevation={0} defaultExpanded={false}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ justifyContent: 'flex-start', overflowX: 'auto' }}>
         <Skeleton width="100%" />
       </AccordionSummary>

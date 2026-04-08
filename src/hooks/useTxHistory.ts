@@ -35,30 +35,30 @@ const useTxHistory = (): {
         return []
       }
 
+      const executedTransactionsSorted = Object.values(executedTransactions).sort((a, b) => b.timestamp - a.timestamp)
+
       const results: Array<DetailedTransaction | undefined> = await Promise.all(
-        Object.values(executedTransactions)
-          .map(async (executedTx) => {
-            let txKey = getTxKeyFromTxId(executedTx.txId)
-            if (!txKey) return
+        executedTransactionsSorted.map(async (executedTx) => {
+          let txKey = getTxKeyFromTxId(executedTx.txId)
+          if (!txKey) return
 
-            const tx = transactions?.[txKey]
+          const tx = transactions?.[txKey]
 
-            if (!tx) {
-              return partiallyDecodedTransaction(executedTx, safeAddress)
-            }
+          if (!tx) {
+            return partiallyDecodedTransaction(executedTx, safeAddress)
+          }
 
-            const details = await extractTxDetails(safeAddress, tx, safe)
+          const details = await extractTxDetails(safeAddress, tx, safe)
 
-            enrichTransactionDetailsFromHistory(details, executedTx)
+          enrichTransactionDetailsFromHistory(details, executedTx)
 
-            const transaction = makeTxFromDetails(details)
+          const transaction = makeTxFromDetails(details)
 
-            return {
-              ...transaction,
-              details,
-            }
-          })
-          .reverse(),
+          return {
+            ...transaction,
+            details,
+          }
+        }),
       )
 
       return results.filter(isDetailedTransactionListItem)
