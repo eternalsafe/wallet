@@ -681,11 +681,101 @@ describe('useLoadTxHistory', () => {
     expect(history[persistedTxId]?.timestamp).toBe(persistedTxBlock * 1000)
   })
 
+  it('rebuilds from latest when cursor is behind head but persisted history is missing', async () => {
+    const safeAddress = '0x577A0D87f4e6fbdd55d51Ac4a4344EC042C04bb2'
+    const latestBlock = 10_700_000
+    const staleCursor = 8_816_699
+    const txBlock = 10_608_581
+    const txHash = `0x${'e'.repeat(64)}`
+    const safeTxHash = `0x${'f'.repeat(64)}`
+    const persistedTxId = buildMultisigTxId(safeAddress, safeTxHash)
+
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(latestBlock)
+    ;(provider as JsonRpcProvider & { getBlock: jest.Mock }).getBlock = jest
+      .fn()
+      .mockImplementation(async (blockNumber: number) => ({ timestamp: blockNumber }))
+    ;(provider as JsonRpcProvider & { getTransaction: jest.Mock }).getTransaction = jest.fn().mockResolvedValue({
+      from: '0x1111111111111111111111111111111111111111',
+      data: '0x',
+    })
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const queryFilterMock = jest.fn().mockImplementation(async (_filter: unknown, fromBlock: number, toBlock: number) =>
+      fromBlock <= txBlock && toBlock >= txBlock
+        ? [
+            {
+              blockNumber: txBlock,
+              logIndex: 0,
+              transactionHash: txHash,
+              args: { txHash: safeTxHash },
+            },
+          ]
+        : [],
+    )
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress,
+      safe: {
+        chainId: '11155111',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const txHistorySyncKey = buildTxHistorySyncKey('11155111', safeAddress)
+    const { result } = renderHook(() => useLoadTxHistory(), {
+      initialReduxState: {
+        settings: {
+          ...initialSettingsState,
+          env: {
+            ...initialSettingsState.env,
+            historicalRpcLogBatchSize: 100_000,
+            historicalRpcLogMaxConcurrentRequests: 1,
+          },
+        },
+        historicalRpcSync: {
+          ...initialHistoricalRpcSyncState,
+          txHistoryBySafe: {
+            [txHistorySyncKey]: {
+              latestSyncedBlock: latestBlock,
+              backfillCursor: staleCursor,
+              backfillComplete: false,
+            },
+          },
+        },
+      } as any,
+    })
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    expect(queryFilterMock).toHaveBeenCalledWith(executionSuccessFilter, 10_600_001, 10_700_000)
+
+    const history = result.current[0] || {}
+    expect(history).toHaveProperty(persistedTxId)
+  })
+
   it('persists backfill cursor progress before all concurrent ranges complete', async () => {
     const provider = new JsonRpcProvider(mainnetPublicRpcUri)
     ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
       .fn()
       .mockResolvedValue(1_000_000)
+    const safeAddress = '0x1234567890123456789012345678901234567890'
+    const persistedTxId = buildMultisigTxId(safeAddress, `0x${'1'.repeat(64)}`)
 
     const executionSuccessFilter = { id: 'ExecutionSuccess' }
     const firstBackfillRange = createDeferred<any[]>()
@@ -703,7 +793,7 @@ describe('useLoadTxHistory', () => {
       })
 
     mockUseSafeInfo.mockReturnValue({
-      safeAddress: '0x1234567890123456789012345678901234567890',
+      safeAddress,
       safe: {
         chainId: '1',
         version: '1.4.1',
@@ -721,7 +811,7 @@ describe('useLoadTxHistory', () => {
       },
     } as any)
 
-    const txHistorySyncKey = buildTxHistorySyncKey('1', '0x1234567890123456789012345678901234567890')
+    const txHistorySyncKey = buildTxHistorySyncKey('1', safeAddress)
     const cursorBackfillBlocks: number[] = []
     const { result } = renderHook(
       () => {
@@ -738,6 +828,18 @@ describe('useLoadTxHistory', () => {
       },
       {
         initialReduxState: {
+          txHistory: {
+            data: {
+              [persistedTxId]: {
+                txId: persistedTxId,
+                txHash: `0x${'2'.repeat(64)}`,
+                safeTxHash: `0x${'1'.repeat(64)}`,
+                timestamp: 1_000_000_000,
+                executor: '0x1111111111111111111111111111111111111111',
+              },
+            },
+            loading: false,
+          },
           settings: {
             ...initialSettingsState,
             env: {

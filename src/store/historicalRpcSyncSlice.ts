@@ -5,6 +5,7 @@ export type TxHistoryBackfillCursor = {
   latestSyncedBlock: number
   backfillCursor: number
   backfillComplete: boolean
+  historyRecoveryApplied?: boolean
 }
 
 export type ERC721OwnershipCursor = {

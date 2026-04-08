@@ -401,11 +401,33 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
         const executionFilter = safeContract.filters.ExecutionSuccess()
         const latestBlock = await scheduleRpcRequest(() => provider.getBlockNumber())
         const currentCursor = txHistoryCursorRef.current
-        const initializedCursor: TxHistoryBackfillCursor = currentCursor || {
-          latestSyncedBlock: latestBlock,
-          backfillCursor: latestBlock,
-          backfillComplete: false,
-        }
+        const normalizedCurrentCursor: TxHistoryBackfillCursor | undefined = currentCursor
+          ? {
+              ...currentCursor,
+              historyRecoveryApplied: currentCursor.historyRecoveryApplied ?? false,
+            }
+          : undefined
+        const historyIsEmpty = !Object.keys(dataRef.current).length
+        const shouldRecoverMissingHistory =
+          !!normalizedCurrentCursor &&
+          historyIsEmpty &&
+          !normalizedCurrentCursor.backfillComplete &&
+          normalizedCurrentCursor.latestSyncedBlock >= latestBlock &&
+          normalizedCurrentCursor.backfillCursor < latestBlock &&
+          !normalizedCurrentCursor.historyRecoveryApplied
+        const initializedCursor: TxHistoryBackfillCursor = shouldRecoverMissingHistory
+          ? {
+              latestSyncedBlock: latestBlock,
+              backfillCursor: latestBlock,
+              backfillComplete: false,
+              historyRecoveryApplied: true,
+            }
+          : normalizedCurrentCursor || {
+              latestSyncedBlock: latestBlock,
+              backfillCursor: latestBlock,
+              backfillComplete: false,
+              historyRecoveryApplied: false,
+            }
 
         const persistCursor = (cursor: TxHistoryBackfillCursor) => {
           txHistoryCursorRef.current = cursor
@@ -415,10 +437,10 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
           dispatch(setTxHistoryCursor({ key: txHistorySyncKey, value: cursor }))
         }
 
-        if (!currentCursor) {
+        if (!normalizedCurrentCursor || shouldRecoverMissingHistory) {
           persistCursor(initializedCursor)
         } else {
-          txHistoryCursorRef.current = currentCursor
+          txHistoryCursorRef.current = normalizedCurrentCursor
         }
 
         dispatch(
@@ -462,6 +484,13 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
             workingHistory = mergeParsedLogsIntoHistory(safeAddress, workingHistory, parsedLogs)
             dataRef.current = workingHistory
             setData(workingHistory)
+            if (nextCursor.historyRecoveryApplied) {
+              nextCursor = {
+                ...nextCursor,
+                historyRecoveryApplied: false,
+              }
+              persistCursor(nextCursor)
+            }
           }
           if (updateProgress) {
             dispatch(setTxHistorySync({ loading: true, latestBlock, syncedToBlock: range.fromBlock }))
