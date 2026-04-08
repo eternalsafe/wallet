@@ -14,6 +14,7 @@ import { renderHook, waitFor } from '@/tests/test-utils'
 import { getSafeContract } from '@/utils/safe-versions'
 import { AppRoutes } from '@/config/routes'
 import getChainsConfig from '@/config/supportedChains'
+import { buildMultisigTxId } from '@/utils/tx-id'
 
 jest.mock('@/hooks/useSafeInfo', () => jest.fn())
 jest.mock('@/hooks/wallets/web3', () => ({
@@ -389,11 +390,21 @@ describe('useLoadTxHistory', () => {
     expect(Object.values(history)).toHaveLength(1)
   })
 
-  it('rebuilds history from head when a persisted cursor exists without in-memory history data', async () => {
+  it('resumes from persisted cursor and preserves persisted history after refresh', async () => {
     const safeAddress = '0x577A0D87f4e6fbdd55d51Ac4a4344EC042C04bb2'
     const txBlock = 5_475_050
-    const latestBlock = 10_000_000
+    const latestBlock = 2_415_764
     const staleCursorBlock = 2_415_764
+    const persistedTxId = buildMultisigTxId(safeAddress, `0x${'b'.repeat(64)}`)
+    const persistedTxHistory = {
+      [persistedTxId]: {
+        txId: persistedTxId,
+        txHash: `0x${'a'.repeat(64)}`,
+        safeTxHash: `0x${'b'.repeat(64)}`,
+        timestamp: txBlock * 1000,
+        executor: '0x1111111111111111111111111111111111111111',
+      },
+    }
 
     const provider = new JsonRpcProvider(mainnetPublicRpcUri)
     ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
@@ -446,11 +457,15 @@ describe('useLoadTxHistory', () => {
     const txHistorySyncKey = buildTxHistorySyncKey('11155111', safeAddress)
     const { result } = renderHook(() => useLoadTxHistory(), {
       initialReduxState: {
+        txHistory: {
+          data: persistedTxHistory,
+          loading: false,
+        },
         settings: {
           ...initialSettingsState,
           env: {
             ...initialSettingsState.env,
-            historicalRpcLogBatchSize: latestBlock,
+            historicalRpcLogBatchSize: 100_000,
             historicalRpcLogMaxConcurrentRequests: 1,
           },
         },
@@ -473,7 +488,8 @@ describe('useLoadTxHistory', () => {
 
     const history = result.current[0] || {}
     expect(Object.values(history)).toHaveLength(1)
-    expect(queryFilterMock).toHaveBeenCalledWith(executionSuccessFilter, 1, latestBlock)
+    expect(history).toHaveProperty(persistedTxId)
+    expect(queryFilterMock).toHaveBeenCalledWith(executionSuccessFilter, 2_315_765, 2_415_764)
   })
 
   it('shows history fetch errors with an RPC settings link', async () => {
