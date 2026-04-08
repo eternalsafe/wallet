@@ -18,14 +18,17 @@ export const createStoreHydrator = (makeStore: (initialState?: Partial<RootState
       super(props)
 
       this.store = makeStore(props.initialState)
+
+      // Hydrate synchronously on the client so hooks see persisted state on first render.
+      if (typeof window !== 'undefined') {
+        this.store.dispatch({
+          type: HYDRATE_ACTION,
+          payload: getPersistedState(),
+        })
+      }
     }
 
     componentDidMount() {
-      this.store.dispatch({
-        type: HYDRATE_ACTION,
-        payload: getPersistedState(),
-      })
-
       window.addEventListener('storage', this.handleStorageChange)
     }
 
