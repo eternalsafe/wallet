@@ -681,6 +681,92 @@ describe('useLoadTxHistory', () => {
     expect(history[persistedTxId]?.timestamp).toBe(persistedTxBlock * 1000)
   })
 
+  it('keeps matching persisted history entries when persisted cache contains other safes', async () => {
+    const safeAddress = '0x577A0D87f4e6fbdd55d51Ac4a4344EC042C04bb2'
+    const otherSafeAddress = '0x1111111111111111111111111111111111111111'
+    const latestBlock = 10_700_000
+    const safeTxId = buildMultisigTxId(safeAddress, `0x${'b'.repeat(64)}`)
+    const otherSafeTxId = buildMultisigTxId(otherSafeAddress, `0x${'d'.repeat(64)}`)
+
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(latestBlock)
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const queryFilterMock = jest.fn().mockResolvedValue([])
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress,
+      safe: {
+        chainId: '11155111',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const txHistorySyncKey = buildTxHistorySyncKey('11155111', safeAddress)
+    const { result } = renderHook(() => useLoadTxHistory(), {
+      initialReduxState: {
+        txHistory: {
+          data: {
+            [safeTxId]: {
+              txId: safeTxId,
+              txHash: `0x${'a'.repeat(64)}`,
+              safeTxHash: `0x${'b'.repeat(64)}`,
+              timestamp: latestBlock * 1000,
+              executor: '0x1111111111111111111111111111111111111111',
+            },
+            [otherSafeTxId]: {
+              txId: otherSafeTxId,
+              txHash: `0x${'c'.repeat(64)}`,
+              safeTxHash: `0x${'d'.repeat(64)}`,
+              timestamp: latestBlock * 1000,
+              executor: '0x2222222222222222222222222222222222222222',
+            },
+          },
+          loading: false,
+        },
+        settings: {
+          ...initialSettingsState,
+          env: {
+            ...initialSettingsState.env,
+            historicalRpcLogBatchSize: 100_000,
+            historicalRpcLogMaxConcurrentRequests: 1,
+          },
+        },
+        historicalRpcSync: {
+          ...initialHistoricalRpcSyncState,
+          txHistoryBySafe: {
+            [txHistorySyncKey]: {
+              latestSyncedBlock: latestBlock,
+              backfillCursor: latestBlock,
+              backfillComplete: false,
+            },
+          },
+        },
+      } as any,
+    })
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    const history = result.current[0] || {}
+    expect(history).toHaveProperty(safeTxId)
+    expect(history).not.toHaveProperty(otherSafeTxId)
+  })
+
   it('rebuilds from latest when cursor is behind head but persisted history is missing', async () => {
     const safeAddress = '0x577A0D87f4e6fbdd55d51Ac4a4344EC042C04bb2'
     const latestBlock = 10_700_000

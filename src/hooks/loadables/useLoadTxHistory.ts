@@ -273,18 +273,23 @@ const getForwardSyncRanges = (
   return ranges
 }
 
-const isTxHistoryForSafe = (history: TxHistory | undefined, safeAddress: string | undefined): history is TxHistory => {
+const getTxHistoryForSafe = (
+  history: TxHistory | undefined,
+  safeAddress: string | undefined,
+): TxHistory | undefined => {
   if (!history || !safeAddress) {
-    return false
-  }
-
-  const historyItems = Object.values(history)
-  if (!historyItems.length) {
-    return false
+    return
   }
 
   const txIdPrefix = `multisig_${safeAddress.toLowerCase()}_`
-  return historyItems.every((item) => item?.txId?.toLowerCase().startsWith(txIdPrefix))
+  const scopedHistory = Object.entries(history).reduce<TxHistory>((acc, [txId, item]) => {
+    if (item?.txId?.toLowerCase().startsWith(txIdPrefix)) {
+      acc[txId] = item
+    }
+    return acc
+  }, {})
+
+  return Object.keys(scopedHistory).length ? scopedHistory : undefined
 }
 
 export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
@@ -310,7 +315,7 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
       return persistedTxHistory
     }
 
-    return isTxHistoryForSafe(persistedTxHistory, safeAddress) ? persistedTxHistory : undefined
+    return getTxHistoryForSafe(persistedTxHistory, safeAddress)
   }, [persistedTxHistory, safeAddress])
   const [pollCount, resetPolling] = useIntervalCounter(POLLING_INTERVAL)
 
@@ -347,6 +352,27 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
     setData(initialPersistedHistory)
     hasInitializedDataRef.current = true
   }, [initialPersistedHistory])
+
+  useEffect(() => {
+    if (!safeAddress) {
+      return
+    }
+
+    const currentHistory = dataRef.current
+    const currentKeys = Object.keys(currentHistory)
+    if (!currentKeys.length) {
+      return
+    }
+
+    const scopedHistory = getTxHistoryForSafe(currentHistory, safeAddress)
+    const scopedKeys = Object.keys(scopedHistory ?? {})
+    if (scopedKeys.length === currentKeys.length) {
+      return
+    }
+
+    dataRef.current = scopedHistory ?? {}
+    setData(scopedHistory)
+  }, [safeAddress])
 
   useEffect(() => {
     let isCurrent = true
