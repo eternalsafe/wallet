@@ -53,8 +53,42 @@ export type TxHistory = {
   [txId: string]: TxHistoryItem
 }
 
-function parseDecodedTxData(decodedTxData: Result, nonce: number): SafeTransactionData {
-  const [to, value, data, operation, safeTxGas, baseGas, gasPrice, gasToken, refundReceiver] = decodedTxData
+const parseNonce = (value: unknown, fallbackNonce: number): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  if (typeof value === 'bigint') {
+    return Number(value)
+  }
+
+  if (value && typeof value === 'object') {
+    const withToNumber = value as { toNumber?: () => number }
+    if (typeof withToNumber.toNumber === 'function') {
+      try {
+        const parsed = withToNumber.toNumber()
+        if (Number.isFinite(parsed)) {
+          return parsed
+        }
+      } catch (_error) {
+        // Fall through to toString parsing below.
+      }
+    }
+
+    const withToString = value as { toString?: () => string }
+    if (typeof withToString.toString === 'function') {
+      const parsed = Number(withToString.toString())
+      if (Number.isFinite(parsed)) {
+        return parsed
+      }
+    }
+  }
+
+  return fallbackNonce
+}
+
+function parseDecodedTxData(decodedTxData: Result, fallbackNonce: number): SafeTransactionData {
+  const [to, value, data, operation, safeTxGas, baseGas, gasPrice, gasToken, refundReceiver, nonceArg] = decodedTxData
   return {
     to,
     value,
@@ -65,7 +99,7 @@ function parseDecodedTxData(decodedTxData: Result, nonce: number): SafeTransacti
     gasPrice,
     gasToken,
     refundReceiver,
-    nonce,
+    nonce: parseNonce(nonceArg, fallbackNonce),
   }
 }
 

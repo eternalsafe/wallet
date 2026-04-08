@@ -317,6 +317,93 @@ describe('useLoadTxHistory', () => {
     expect(Object.values(history)[0]?.safeTxHash).toEqual(`0x${'b'.repeat(64)}`)
   })
 
+  it('uses decoded execTransaction nonce instead of fallback sequence numbers', async () => {
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(1_000_000)
+    ;(provider as JsonRpcProvider & { getBlock: jest.Mock }).getBlock = jest.fn().mockResolvedValue({ timestamp: 123 })
+    ;(provider as JsonRpcProvider & { getTransaction: jest.Mock }).getTransaction = jest
+      .fn()
+      .mockImplementation(async (txHash: string) => ({
+        from: '0x1111111111111111111111111111111111111111',
+        data: txHash === `0x${'a'.repeat(64)}` ? '0x01' : '0x02',
+      }))
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const queryFilterMock = jest.fn().mockResolvedValue([
+      {
+        blockNumber: 1_000_000,
+        logIndex: 0,
+        transactionHash: `0x${'a'.repeat(64)}`,
+        args: { txHash: `0x${'b'.repeat(64)}` },
+      },
+      {
+        blockNumber: 1_000_000,
+        logIndex: 1,
+        transactionHash: `0x${'c'.repeat(64)}`,
+        args: { txHash: `0x${'d'.repeat(64)}` },
+      },
+    ])
+    const decodeFunctionDataMock = jest.fn().mockImplementation((_methodName: string, data: string) => {
+      const nonce = data === '0x01' ? 42 : 43
+      return [
+        '0x0000000000000000000000000000000000000001',
+        '0',
+        '0x',
+        0,
+        0,
+        0,
+        0,
+        '0x0000000000000000000000000000000000000000',
+        '0x0000000000000000000000000000000000000000',
+        { toNumber: () => nonce, toString: () => String(nonce) },
+      ]
+    })
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress: '0x1234567890123456789012345678901234567890',
+      safe: {
+        chainId: '1',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: decodeFunctionDataMock,
+      },
+    } as any)
+
+    const { result } = renderHook(() => useLoadTxHistory(), {
+      initialReduxState: {
+        settings: {
+          ...initialSettingsState,
+          env: {
+            ...initialSettingsState.env,
+            historicalRpcLogBatchSize: 1_000_000,
+            historicalRpcLogMaxConcurrentRequests: 1,
+          },
+        },
+      } as any,
+    })
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    const history = result.current[0] || {}
+    const historyByTxHash = Object.fromEntries(Object.values(history).map((item) => [item.txHash, item]))
+
+    expect(historyByTxHash[`0x${'a'.repeat(64)}`]?.decodedTxData?.nonce).toBe(42)
+    expect(historyByTxHash[`0x${'c'.repeat(64)}`]?.decodedTxData?.nonce).toBe(43)
+  })
+
   it('does not cancel in-flight history loads when poll count changes', async () => {
     let pollCount = 0
     const resetPollingMock = jest.fn()
