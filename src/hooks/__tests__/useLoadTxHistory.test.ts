@@ -810,20 +810,18 @@ describe('useLoadTxHistory', () => {
     })
 
     const executionSuccessFilter = { id: 'ExecutionSuccess' }
-    const queryFilterMock = jest
-      .fn()
-      .mockImplementation(async (_filter: unknown, fromBlock: number, toBlock: number) =>
-        fromBlock <= txBlock && toBlock >= txBlock
-          ? [
-              {
-                blockNumber: txBlock,
-                logIndex: 0,
-                transactionHash: txHash,
-                args: { txHash: safeTxHash },
-              },
-            ]
-          : [],
-      )
+    const queryFilterMock = jest.fn().mockImplementation(async (_filter: unknown, fromBlock: number, toBlock: number) =>
+      fromBlock <= txBlock && toBlock >= txBlock
+        ? [
+            {
+              blockNumber: txBlock,
+              logIndex: 0,
+              transactionHash: txHash,
+              args: { txHash: safeTxHash },
+            },
+          ]
+        : [],
+    )
 
     mockUseSafeInfo.mockReturnValue({
       safeAddress,

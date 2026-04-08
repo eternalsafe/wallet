@@ -235,7 +235,7 @@ const mergeParsedLogsIntoHistory = (
       txId,
       txHash: log.txHash || existingItem?.txHash || '',
       safeTxHash: log.safeTxHash,
-      timestamp: log.timestamp > 0 ? log.timestamp : (existingItem?.timestamp ?? 0),
+      timestamp: log.timestamp > 0 ? log.timestamp : existingItem?.timestamp ?? 0,
       executor: log.executor || existingItem?.executor || '',
       decodedTxData: log.decodedTxData
         ? parseDecodedTxData(log.decodedTxData, existingItem?.decodedTxData?.nonce ?? nextNonce++)
