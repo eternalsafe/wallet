@@ -7,6 +7,7 @@ import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { Errors, logError } from '@/services/exceptions'
 import { asError } from '@/services/exceptions/utils'
 import { useAppDispatch, useAppSelector } from '@/store'
+import { AppRoutes } from '@/config/routes'
 import {
   buildTxHistorySyncKey,
   selectTxHistoryCursor,
@@ -443,10 +444,14 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
     dispatch(
       showNotification({
         message:
-          'Error fetching transaction history. If you see this error often, please consider using a more stable RPC URL.',
+          'Error fetching transaction history. If you see this error often, please configure your RPC URL or Chain Queries settings.',
         groupKey: 'fetch-tx-history-error',
         variant: 'error',
         detailedMessage: error.message,
+        link: {
+          href: AppRoutes.settings.environmentVariables,
+          title: 'RPC settings',
+        },
       }),
     )
     logError(Errors._602, error.message)

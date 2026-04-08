@@ -7,10 +7,12 @@ import useLoadTxHistory from '@/hooks/loadables/useLoadTxHistory'
 import { buildTxHistorySyncKey, initialState as initialHistoricalRpcSyncState } from '@/store/historicalRpcSyncSlice'
 import { useAppSelector } from '@/store'
 import { initialState as initialSettingsState } from '@/store/settingsSlice'
+import { selectNotifications } from '@/store/notificationsSlice'
 import { selectTxHistorySync } from '@/store/txHistorySyncSlice'
 import { CONFIG_SERVICE_CHAINS } from '@/tests/mocks/chains'
 import { renderHook, waitFor } from '@/tests/test-utils'
 import { getSafeContract } from '@/utils/safe-versions'
+import { AppRoutes } from '@/config/routes'
 
 jest.mock('@/hooks/useSafeInfo', () => jest.fn())
 jest.mock('@/hooks/wallets/web3', () => ({
@@ -382,6 +384,56 @@ describe('useLoadTxHistory', () => {
 
     const history = result.current[0] || {}
     expect(Object.values(history)).toHaveLength(1)
+  })
+
+  it('shows history fetch errors with an RPC settings link', async () => {
+    const provider = new JsonRpcProvider(mainnetPublicRpcUri)
+    ;(provider as JsonRpcProvider & { getBlockNumber: jest.Mock }).getBlockNumber = jest
+      .fn()
+      .mockResolvedValue(1_000_000)
+
+    const executionSuccessFilter = { id: 'ExecutionSuccess' }
+    const queryFilterMock = jest.fn().mockRejectedValue(new Error('history rpc failed'))
+
+    mockUseSafeInfo.mockReturnValue({
+      safeAddress: '0x1234567890123456789012345678901234567890',
+      safe: {
+        chainId: '1',
+        version: '1.4.1',
+      },
+    } as any)
+    mockUseMultiWeb3ReadOnly.mockReturnValue(provider as any)
+    mockUseIntervalCounter.mockReturnValue([0, jest.fn()])
+    mockGetSafeContract.mockReturnValue({
+      filters: {
+        ExecutionSuccess: jest.fn(() => executionSuccessFilter),
+      },
+      queryFilter: queryFilterMock,
+      interface: {
+        decodeFunctionData: jest.fn(),
+      },
+    } as any)
+
+    const { result } = renderHook(() => {
+      const loadResult = useLoadTxHistory()
+      const notifications = useAppSelector(selectNotifications)
+      return { loadResult, notifications }
+    })
+
+    await waitFor(() => {
+      expect(result.current.loadResult[2]).toBe(false)
+    })
+
+    await waitFor(() => {
+      const notification = result.current.notifications.find((item) => item.groupKey === 'fetch-tx-history-error')
+      expect(notification?.message).toBe(
+        'Error fetching transaction history. If you see this error often, please configure your RPC URL or Chain Queries settings.',
+      )
+      expect(notification?.link).toEqual({
+        href: AppRoutes.settings.environmentVariables,
+        title: 'RPC settings',
+      })
+    })
   })
 
   it('loads boundary history blocks for safe 0x577A0D87f4e6fbdd55d51Ac4a4344EC042C04bb2 in a single covering batch', async () => {
