@@ -4,7 +4,7 @@ type QueueTask = {
   reject: (error: unknown) => void
 }
 
-let maxConcurrentRequests = 3
+let maxConcurrentRequests = 10
 let activeRequests = 0
 const queue: QueueTask[] = []
 
