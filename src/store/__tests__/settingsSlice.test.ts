@@ -1,6 +1,8 @@
 import {
   settingsSlice,
   initialState,
+  selectHistoricalRpcLogBatchSize,
+  selectHistoricalRpcLogMaxConcurrentRequests,
   selectSafeAppsUseLightBackground,
   selectWalletConnectApiKey,
   selectWalletConnectPairingCode,
@@ -73,6 +75,56 @@ describe('settingsSlice', () => {
         projectName: '',
         accessToken: '',
       })
+    })
+  })
+
+  describe('historical RPC batching settings', () => {
+    it('should set the historical RPC log batch size', () => {
+      const state = settingsSlice.reducer(initialState, settingsSlice.actions.setHistoricalRpcLogBatchSize(12_345))
+
+      expect(state.env.historicalRpcLogBatchSize).toBe(12_345)
+    })
+
+    it('should select positive historical RPC log batch size values without max clamping', () => {
+      const state = {
+        [settingsSlice.name]: {
+          ...initialState,
+          env: {
+            ...initialState.env,
+            historicalRpcLogBatchSize: 55_555,
+          },
+        },
+      } as any
+
+      expect(selectHistoricalRpcLogBatchSize(state)).toBe(55_555)
+    })
+
+    it('should select positive max concurrent historical RPC requests without max clamping', () => {
+      const reduced = settingsSlice.reducer(
+        initialState,
+        settingsSlice.actions.setHistoricalRpcLogMaxConcurrentRequests(7),
+      )
+
+      expect(reduced.env.historicalRpcLogMaxConcurrentRequests).toBe(7)
+
+      const state = {
+        [settingsSlice.name]: reduced,
+      } as any
+
+      expect(selectHistoricalRpcLogMaxConcurrentRequests(state)).toBe(7)
+    })
+
+    it('should fall back to default batch size for non-positive values', () => {
+      const reduced = settingsSlice.reducer(initialState, settingsSlice.actions.setHistoricalRpcLogBatchSize(0))
+      expect(reduced.env.historicalRpcLogBatchSize).toBe(10_000)
+    })
+
+    it('should fall back to default max concurrent requests for non-positive values', () => {
+      const reduced = settingsSlice.reducer(
+        initialState,
+        settingsSlice.actions.setHistoricalRpcLogMaxConcurrentRequests(0),
+      )
+      expect(reduced.env.historicalRpcLogMaxConcurrentRequests).toBe(10)
     })
   })
 
