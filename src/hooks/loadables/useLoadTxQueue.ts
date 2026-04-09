@@ -58,7 +58,7 @@ export const useLoadTxQueue = (): AsyncResult<Array<DetailedTransaction>> => {
     }
   }, [error])
 
-  return [data, error, loading || executedTransactionsLoading]
+  return [data, error, loading || (executedTransactionsLoading && !executedTransactions)]
 }
 
 export default useLoadTxQueue

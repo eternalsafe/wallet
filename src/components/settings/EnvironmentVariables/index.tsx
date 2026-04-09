@@ -3,8 +3,22 @@ import { Paper, Grid, Typography, TextField, Button, Tooltip, IconButton, SvgIco
 import InputAdornment from '@mui/material/InputAdornment'
 import RotateLeftIcon from '@mui/icons-material/RotateLeft'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { selectSettings, setIPFS, setRpc, setTenderly, setWalletConnectApiKey } from '@/store/settingsSlice'
-import { CHAINLIST_URL } from '@/config/constants'
+import {
+  selectSettings,
+  setHistoricalRpcLogBatchSize,
+  setHistoricalRpcLogMaxConcurrentRequests,
+  setIPFS,
+  setRpc,
+  setTenderly,
+  setWalletConnectApiKey,
+} from '@/store/settingsSlice'
+import {
+  CHAINLIST_URL,
+  clampHistoricalRpcLogBatchSize,
+  clampHistoricalRpcLogMaxConcurrentRequests,
+  HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+  HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
+} from '@/config/constants'
 import useChainId from '@/hooks/useChainId'
 import { useCurrentChain } from '@/hooks/useChains'
 import InfoIcon from '@/public/images/notifications/info.svg'
@@ -14,6 +28,8 @@ import { useEffect, useState } from 'react'
 
 export enum EnvVariablesField {
   rpc = 'rpc',
+  historicalRpcLogBatchSize = 'historicalRpcLogBatchSize',
+  historicalRpcLogMaxConcurrentRequests = 'historicalRpcLogMaxConcurrentRequests',
   ipfs = 'ipfs',
   tenderlyOrgName = 'tenderlyOrgName',
   tenderlyProjectName = 'tenderlyProjectName',
@@ -23,6 +39,8 @@ export enum EnvVariablesField {
 
 export type EnvVariablesFormData = {
   [EnvVariablesField.rpc]: string
+  [EnvVariablesField.historicalRpcLogBatchSize]: string
+  [EnvVariablesField.historicalRpcLogMaxConcurrentRequests]: string
   [EnvVariablesField.ipfs]: string
   [EnvVariablesField.tenderlyOrgName]: string
   [EnvVariablesField.tenderlyProjectName]: string
@@ -35,11 +53,23 @@ const EnvironmentVariables = () => {
   const chain = useCurrentChain()
   const settings = useAppSelector(selectSettings)
   const dispatch = useAppDispatch()
+  const historicalRpcLogBatchSizeValue = settings.env?.historicalRpcLogBatchSize
+  const historicalRpcLogMaxConcurrentRequestsValue = settings.env?.historicalRpcLogMaxConcurrentRequests
 
   const formMethods = useForm<EnvVariablesFormData>({
     mode: 'onChange',
     values: {
       [EnvVariablesField.rpc]: settings.env?.rpc[chainId] ?? '',
+      [EnvVariablesField.historicalRpcLogBatchSize]:
+        historicalRpcLogBatchSizeValue === undefined ||
+        historicalRpcLogBatchSizeValue === HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE
+          ? ''
+          : `${historicalRpcLogBatchSizeValue}`,
+      [EnvVariablesField.historicalRpcLogMaxConcurrentRequests]:
+        historicalRpcLogMaxConcurrentRequestsValue === undefined ||
+        historicalRpcLogMaxConcurrentRequestsValue === HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS
+          ? ''
+          : `${historicalRpcLogMaxConcurrentRequestsValue}`,
       [EnvVariablesField.ipfs]: settings.env?.ipfs ?? '',
       [EnvVariablesField.tenderlyOrgName]: settings.env?.tenderly.orgName ?? '',
       [EnvVariablesField.tenderlyProjectName]: settings.env?.tenderly.projectName ?? '',
@@ -51,6 +81,8 @@ const EnvironmentVariables = () => {
   const { register, handleSubmit, formState, setValue, watch } = formMethods
 
   const rpc = watch(EnvVariablesField.rpc)
+  const historicalRpcLogBatchSize = watch(EnvVariablesField.historicalRpcLogBatchSize)
+  const historicalRpcLogMaxConcurrentRequests = watch(EnvVariablesField.historicalRpcLogMaxConcurrentRequests)
   const ipfs = watch(EnvVariablesField.ipfs)
   const tenderlyOrgName = watch(EnvVariablesField.tenderlyOrgName)
   const tenderlyProjectName = watch(EnvVariablesField.tenderlyProjectName)
@@ -77,6 +109,17 @@ const EnvironmentVariables = () => {
         chainId,
         rpc: rpcValue,
       }),
+    )
+
+    const parsedBatchSize = Number.parseInt(data[EnvVariablesField.historicalRpcLogBatchSize], 10)
+    dispatch(setHistoricalRpcLogBatchSize(clampHistoricalRpcLogBatchSize(parsedBatchSize)))
+
+    const parsedMaxConcurrentRequests = Number.parseInt(
+      data[EnvVariablesField.historicalRpcLogMaxConcurrentRequests],
+      10,
+    )
+    dispatch(
+      setHistoricalRpcLogMaxConcurrentRequests(clampHistoricalRpcLogMaxConcurrentRequests(parsedMaxConcurrentRequests)),
     )
 
     // strip ending slash if present
@@ -183,6 +226,137 @@ const EnvironmentVariables = () => {
                 }}
                 fullWidth
               />
+
+              <Typography fontWeight={700} mt={3}>
+                Chain Queries
+                <Tooltip
+                  placement="top"
+                  arrow
+                  title={
+                    <Box alignItems="center" gap={1} padding={1}>
+                      <span>Configure historical chain-query batching behavior used for backfills.</span>
+                      <br />
+                      <br />
+                      <span>
+                        Default block range: {HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE.toLocaleString()}. Default max
+                        concurrent requests: {HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS.toLocaleString()}.
+                      </span>
+                    </Box>
+                  }
+                >
+                  <span aria-label="Chain Queries info">
+                    <SvgIcon
+                      component={InfoIcon}
+                      inheritViewBox
+                      fontSize="small"
+                      color="border"
+                      sx={{ verticalAlign: 'middle', ml: 0.5 }}
+                    />
+                  </span>
+                </Tooltip>
+              </Typography>
+
+              <Grid mt={2} container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    {...register(EnvVariablesField.historicalRpcLogBatchSize, {
+                      validate: (value) => {
+                        if (value.trim() === '') {
+                          return true
+                        }
+
+                        const parsed = Number(value)
+                        return Number.isInteger(parsed) && parsed > 0
+                      },
+                    })}
+                    variant="outlined"
+                    type="number"
+                    label="Block range"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    InputProps={{
+                      endAdornment: historicalRpcLogBatchSize ? (
+                        <InputAdornment position="end">
+                          <Tooltip title="Reset to default value">
+                            <IconButton
+                              onClick={() =>
+                                setValue(EnvVariablesField.historicalRpcLogBatchSize, '', { shouldValidate: true })
+                              }
+                              size="small"
+                              color="primary"
+                            >
+                              <RotateLeftIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      ) : null,
+                    }}
+                    inputProps={{
+                      min: 1,
+                      step: 1,
+                    }}
+                    fullWidth
+                    error={!!formState.errors[EnvVariablesField.historicalRpcLogBatchSize]}
+                    helperText={
+                      formState.errors[EnvVariablesField.historicalRpcLogBatchSize]
+                        ? 'Please enter a positive integer.'
+                        : undefined
+                    }
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    {...register(EnvVariablesField.historicalRpcLogMaxConcurrentRequests, {
+                      validate: (value) => {
+                        if (value.trim() === '') {
+                          return true
+                        }
+
+                        const parsed = Number(value)
+                        return Number.isInteger(parsed) && parsed > 0
+                      },
+                    })}
+                    variant="outlined"
+                    type="number"
+                    label="Max concurrent requests"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    InputProps={{
+                      endAdornment: historicalRpcLogMaxConcurrentRequests ? (
+                        <InputAdornment position="end">
+                          <Tooltip title="Reset to default value">
+                            <IconButton
+                              onClick={() =>
+                                setValue(EnvVariablesField.historicalRpcLogMaxConcurrentRequests, '', {
+                                  shouldValidate: true,
+                                })
+                              }
+                              size="small"
+                              color="primary"
+                            >
+                              <RotateLeftIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      ) : null,
+                    }}
+                    inputProps={{
+                      min: 1,
+                      step: 1,
+                    }}
+                    fullWidth
+                    error={!!formState.errors[EnvVariablesField.historicalRpcLogMaxConcurrentRequests]}
+                    helperText={
+                      formState.errors[EnvVariablesField.historicalRpcLogMaxConcurrentRequests]
+                        ? 'Please enter a positive integer.'
+                        : undefined
+                    }
+                  />
+                </Grid>
+              </Grid>
 
               <Typography fontWeight={700} mb={2} mt={3}>
                 IPFS URL

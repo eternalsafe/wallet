@@ -12,6 +12,7 @@ import {
 } from '@/utils/transactions'
 import { type DetailedTransaction, isDetailedTransactionListItem } from '@/utils/transaction-guards'
 import { selectTxHistory } from '@/store/txHistorySlice'
+import { selectTxHistorySync } from '@/store/txHistorySyncSlice'
 
 const useTxHistory = (): {
   data: Array<DetailedTransaction>
@@ -26,6 +27,7 @@ const useTxHistory = (): {
     (state) => selectTxHistory(state),
     isEqual,
   )
+  const { loading: syncLoading } = useAppSelector((state) => selectTxHistorySync(state), isEqual)
 
   const [data, error, loading] = useAsync<Array<DetailedTransaction>>(
     async () => {
@@ -33,30 +35,30 @@ const useTxHistory = (): {
         return []
       }
 
+      const executedTransactionsSorted = Object.values(executedTransactions).sort((a, b) => b.timestamp - a.timestamp)
+
       const results: Array<DetailedTransaction | undefined> = await Promise.all(
-        Object.values(executedTransactions)
-          .map(async (executedTx) => {
-            let txKey = getTxKeyFromTxId(executedTx.txId)
-            if (!txKey) return
+        executedTransactionsSorted.map(async (executedTx) => {
+          let txKey = getTxKeyFromTxId(executedTx.txId)
+          if (!txKey) return
 
-            const tx = transactions?.[txKey]
+          const tx = transactions?.[txKey]
 
-            if (!tx) {
-              return partiallyDecodedTransaction(executedTx, safeAddress)
-            }
+          if (!tx) {
+            return partiallyDecodedTransaction(executedTx, safeAddress)
+          }
 
-            const details = await extractTxDetails(safeAddress, tx, safe)
+          const details = await extractTxDetails(safeAddress, tx, safe)
 
-            enrichTransactionDetailsFromHistory(details, executedTx)
+          enrichTransactionDetailsFromHistory(details, executedTx)
 
-            const transaction = makeTxFromDetails(details)
+          const transaction = makeTxFromDetails(details)
 
-            return {
-              ...transaction,
-              details,
-            }
-          })
-          .reverse(),
+          return {
+            ...transaction,
+            details,
+          }
+        }),
       )
 
       return results.filter(isDetailedTransactionListItem)
@@ -68,7 +70,7 @@ const useTxHistory = (): {
   return {
     data: data ?? [],
     error: error?.message,
-    loading: loading || executedTransactionsLoading,
+    loading: loading || syncLoading || (executedTransactionsLoading && !executedTransactions),
   }
 }
 

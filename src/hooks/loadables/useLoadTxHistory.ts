@@ -1,16 +1,45 @@
-import { useEffect } from 'react'
-import useAsync, { type AsyncResult } from '../useAsync'
-import { Errors, logError } from '@/services/exceptions'
-import useSafeInfo from '../useSafeInfo'
-import useIntervalCounter from '@/hooks/useIntervalCounter'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { type AsyncResult } from '../useAsync'
 import { POLLING_INTERVAL } from '@/config/constants'
+import useIntervalCounter from '@/hooks/useIntervalCounter'
+import useSafeInfo from '../useSafeInfo'
 import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
-import { useAppDispatch } from '@/store'
+import { Errors, logError } from '@/services/exceptions'
+import { asError } from '@/services/exceptions/utils'
+import { useAppDispatch, useAppSelector } from '@/store'
+import { AppRoutes } from '@/config/routes'
+import {
+  buildTxHistorySyncKey,
+  selectTxHistoryCursor,
+  setTxHistoryCursor,
+  type TxHistoryBackfillCursor,
+} from '@/store/historicalRpcSyncSlice'
 import { showNotification } from '@/store/notificationsSlice'
+import { selectHistoricalRpcLogBatchSize, selectHistoricalRpcLogMaxConcurrentRequests } from '@/store/settingsSlice'
+import { resetTxHistorySync, setTxHistorySync } from '@/store/txHistorySyncSlice'
+import { selectTxHistory } from '@/store/txHistorySlice'
 import { getSafeContract } from '@/utils/safe-versions'
-import type { SafeTransactionData } from '@safe-global/safe-core-sdk-types'
-import type { Result } from 'ethers/lib/utils'
 import { buildMultisigTxId } from '@/utils/tx-id'
+import { mapWithConcurrencyLimit } from '@/utils/mapWithConcurrencyLimit'
+import { scheduleRpcRequest, setRpcSchedulerMaxConcurrency } from '@/utils/rpcRequestScheduler'
+import { syncHistoricalLogsWindow } from '@/utils/syncHistoricalLogsWindow'
+import type { SafeTransactionData } from '@safe-global/safe-core-sdk-types'
+import type { Event } from '@ethersproject/contracts'
+import { Interface } from '@ethersproject/abi'
+import type { Result } from 'ethers/lib/utils'
+
+const HISTORY_PARSE_CONCURRENCY = 5
+const executionSuccessEventInterface = new Interface(['event ExecutionSuccess(bytes32 txHash, uint256 payment)'])
+
+type ParsedExecutionLog = {
+  blockNumber: number
+  logIndex: number
+  txHash: string
+  safeTxHash: string
+  timestamp: number
+  executor: string
+  decodedTxData?: Result
+}
 
 export type TxHistoryItem = {
   txId: string
@@ -18,6 +47,9 @@ export type TxHistoryItem = {
   safeTxHash: string
   timestamp: number
   executor: string
+  nonce?: number
+  blockNumber?: number
+  logIndex?: number
   decodedTxData?: SafeTransactionData
 }
 
@@ -41,60 +73,545 @@ function parseDecodedTxData(decodedTxData: Result, nonce: number): SafeTransacti
   }
 }
 
+export const extractSafeTxHashFromExecutionSuccessLog = (
+  log: Event,
+  safeContractInterface?: NonNullable<ReturnType<typeof getSafeContract>>['interface'],
+): string | undefined => {
+  const logArgs = log.args as ({ txHash?: string } & { [key: number]: unknown }) | undefined
+  const txHashFromArgs = logArgs?.txHash ?? (typeof logArgs?.[0] === 'string' ? (logArgs[0] as string) : undefined)
+  if (txHashFromArgs) {
+    return txHashFromArgs
+  }
+
+  if (!log.topics || !log.data) {
+    return
+  }
+
+  const parseWithInterface = (iface: {
+    parseLog: (event: { topics: string[]; data: string }) => { args: unknown }
+  }) => {
+    const parsedLog = iface.parseLog({
+      topics: log.topics as string[],
+      data: log.data,
+    })
+    const parsedArgs = parsedLog.args as ({ txHash?: string } & { [key: number]: unknown }) | undefined
+    return parsedArgs?.txHash ?? (typeof parsedArgs?.[0] === 'string' ? (parsedArgs[0] as string) : undefined)
+  }
+
+  if (safeContractInterface) {
+    try {
+      const txHashFromSafeContractInterface = parseWithInterface(safeContractInterface)
+      if (txHashFromSafeContractInterface) {
+        return txHashFromSafeContractInterface
+      }
+    } catch (_error) {
+      // Fall through to canonical event decoding below.
+    }
+  }
+
+  try {
+    return parseWithInterface(executionSuccessEventInterface)
+  } catch (_error) {
+    return
+  }
+}
+
+const parseExecutionSuccessLog = async ({
+  log,
+  provider,
+  safeContract,
+  blockTimestampCache,
+  txDataCache,
+  scheduleRequest,
+}: {
+  log: Event
+  provider: NonNullable<ReturnType<typeof useMultiWeb3ReadOnly>>
+  safeContract: NonNullable<ReturnType<typeof getSafeContract>>
+  blockTimestampCache: Map<number, Promise<number>>
+  txDataCache: Map<string, Promise<{ executor: string; decodedTxData?: Result }>>
+  scheduleRequest: <T>(request: () => Promise<T>) => Promise<T>
+}): Promise<ParsedExecutionLog | undefined> => {
+  const safeTxHash = extractSafeTxHashFromExecutionSuccessLog(log, safeContract.interface)
+  if (!safeTxHash || !log.transactionHash) {
+    return
+  }
+
+  const timestampPromise =
+    blockTimestampCache.get(log.blockNumber) ||
+    scheduleRequest(() => provider.getBlock(log.blockNumber))
+      .then((block) => (block?.timestamp ? block.timestamp * 1000 : 0))
+      .catch(() => 0)
+
+  blockTimestampCache.set(log.blockNumber, timestampPromise)
+
+  const txDataPromise =
+    txDataCache.get(log.transactionHash) ||
+    scheduleRequest(() => provider.getTransaction(log.transactionHash))
+      .then((tx) => {
+        const executor = tx?.from ?? ''
+        const txData = tx?.data
+
+        if (!txData) {
+          return { executor, decodedTxData: undefined }
+        }
+
+        try {
+          return {
+            executor,
+            decodedTxData: safeContract.interface.decodeFunctionData('execTransaction', txData),
+          }
+        } catch (_error) {
+          return { executor, decodedTxData: undefined }
+        }
+      })
+      .catch(() => ({ executor: '', decodedTxData: undefined }))
+
+  txDataCache.set(log.transactionHash, txDataPromise)
+
+  const [timestamp, { executor, decodedTxData }] = await Promise.all([timestampPromise, txDataPromise])
+
+  return {
+    blockNumber: log.blockNumber,
+    logIndex: log.logIndex,
+    txHash: log.transactionHash,
+    safeTxHash,
+    timestamp,
+    executor,
+    decodedTxData,
+  }
+}
+
+const sortParsedLogs = (logs: ParsedExecutionLog[]): ParsedExecutionLog[] => {
+  return [...logs].sort((a, b) => {
+    if (a.blockNumber !== b.blockNumber) {
+      return a.blockNumber - b.blockNumber
+    }
+    return a.logIndex - b.logIndex
+  })
+}
+
+const sortHistoryItemsByExecutionDesc = (a: TxHistoryItem, b: TxHistoryItem): number => {
+  const blockDiff = (b.blockNumber ?? 0) - (a.blockNumber ?? 0)
+  if (blockDiff !== 0) {
+    return blockDiff
+  }
+
+  const logDiff = (b.logIndex ?? 0) - (a.logIndex ?? 0)
+  if (logDiff !== 0) {
+    return logDiff
+  }
+
+  const timestampDiff = (b.timestamp ?? 0) - (a.timestamp ?? 0)
+  if (timestampDiff !== 0) {
+    return timestampDiff
+  }
+
+  return b.txId.localeCompare(a.txId)
+}
+
+const deriveNoncesFromExecutionOrder = (history: TxHistory, safeNonce: number): TxHistory => {
+  if (!Number.isFinite(safeNonce) || safeNonce < 0) {
+    return history
+  }
+
+  const orderedItems = Object.values(history).sort(sortHistoryItemsByExecutionDesc)
+  if (!orderedItems.length) {
+    return history
+  }
+
+  const lastExecutedNonce = safeNonce - 1
+  const nextHistory: TxHistory = {
+    ...history,
+  }
+
+  orderedItems.forEach((item, index) => {
+    const derivedNonce = lastExecutedNonce - index
+    if (derivedNonce < 0) {
+      return
+    }
+
+    nextHistory[item.txId] = {
+      ...item,
+      nonce: derivedNonce,
+      decodedTxData: item.decodedTxData
+        ? {
+            ...item.decodedTxData,
+            nonce: derivedNonce,
+          }
+        : item.decodedTxData,
+    }
+  })
+
+  return nextHistory
+}
+
+const mergeParsedLogsIntoHistory = (
+  safeAddress: string,
+  safeNonce: number,
+  currentHistory: TxHistory,
+  logs: ParsedExecutionLog[],
+): TxHistory => {
+  const orderedLogs = sortParsedLogs(logs)
+  const nextHistory = {
+    ...currentHistory,
+  }
+
+  orderedLogs.forEach((log) => {
+    const txId = buildMultisigTxId(safeAddress, log.safeTxHash)
+    const existingItem = nextHistory[txId]
+    const existingNonce = existingItem?.nonce ?? existingItem?.decodedTxData?.nonce ?? 0
+
+    nextHistory[txId] = {
+      txId,
+      txHash: log.txHash || existingItem?.txHash || '',
+      safeTxHash: log.safeTxHash,
+      timestamp: log.timestamp > 0 ? log.timestamp : existingItem?.timestamp ?? 0,
+      executor: log.executor || existingItem?.executor || '',
+      nonce: existingItem?.nonce,
+      blockNumber: log.blockNumber ?? existingItem?.blockNumber,
+      logIndex: log.logIndex ?? existingItem?.logIndex,
+      decodedTxData: log.decodedTxData
+        ? parseDecodedTxData(log.decodedTxData, existingNonce)
+        : existingItem?.decodedTxData,
+    }
+  })
+
+  return deriveNoncesFromExecutionOrder(nextHistory, safeNonce)
+}
+
+const getTxHistoryForSafe = (
+  history: TxHistory | undefined,
+  safeAddress: string | undefined,
+): TxHistory | undefined => {
+  if (!history || !safeAddress) {
+    return
+  }
+
+  const txIdPrefix = `multisig_${safeAddress.toLowerCase()}_`
+  const scopedHistory = Object.entries(history).reduce<TxHistory>((acc, [txId, item]) => {
+    if (item?.txId?.toLowerCase().startsWith(txIdPrefix)) {
+      acc[txId] = item
+    }
+    return acc
+  }, {})
+
+  return Object.keys(scopedHistory).length ? scopedHistory : undefined
+}
+
 export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
   const dispatch = useAppDispatch()
   const provider = useMultiWeb3ReadOnly()
   const { safe, safeAddress } = useSafeInfo()
+  const historicalRpcLogBatchSize = useAppSelector(selectHistoricalRpcLogBatchSize)
+  const historicalRpcLogMaxConcurrentRequests = useAppSelector(selectHistoricalRpcLogMaxConcurrentRequests)
   const { chainId } = safe
+  const txHistorySyncKey = useMemo(() => {
+    return safeAddress ? buildTxHistorySyncKey(chainId, safeAddress) : undefined
+  }, [chainId, safeAddress])
+  const txHistoryCursor = useAppSelector((state) =>
+    txHistorySyncKey ? selectTxHistoryCursor(state, txHistorySyncKey) : undefined,
+  )
+  const persistedTxHistory = useAppSelector((state) => selectTxHistory(state).data)
+  const initialPersistedHistory = useMemo(() => {
+    if (!persistedTxHistory) {
+      return
+    }
+
+    if (!safeAddress) {
+      return persistedTxHistory
+    }
+
+    return getTxHistoryForSafe(persistedTxHistory, safeAddress)
+  }, [persistedTxHistory, safeAddress])
   const [pollCount, resetPolling] = useIntervalCounter(POLLING_INTERVAL)
 
-  const [data, error, loading] = useAsync<TxHistory | undefined>(
-    async () => {
-      if (!safeAddress || !provider) return
+  const [data, setData] = useState<TxHistory | undefined>(initialPersistedHistory)
+  const [error, setError] = useState<Error>()
+  const [loading, setLoading] = useState<boolean>(false)
+  const txHistoryCursorRef = useRef<TxHistoryBackfillCursor>()
+  const dataRef = useRef<TxHistory>(initialPersistedHistory ?? {})
+  const loadRef = useRef<(() => Promise<void>) | undefined>()
+  const isLoadInFlightRef = useRef(false)
+  const hasQueuedLoadRef = useRef(false)
+  const hasInitializedDataRef = useRef(Boolean(initialPersistedHistory))
+  const hasMountedRef = useRef(false)
+  const previousSafeKeyRef = useRef<string | undefined>(
+    safeAddress ? `${chainId}:${safeAddress.toLowerCase()}` : undefined,
+  )
+  const blockTimestampCacheRef = useRef(new Map<number, Promise<number>>())
+  const txDataCacheRef = useRef(new Map<string, Promise<{ executor: string; decodedTxData?: Result }>>())
+
+  useEffect(() => {
+    txHistoryCursorRef.current = txHistoryCursor
+  }, [txHistoryCursor])
+
+  useEffect(() => {
+    dataRef.current = data ?? {}
+  }, [data])
+
+  useEffect(() => {
+    if (hasInitializedDataRef.current || !initialPersistedHistory) {
+      return
+    }
+
+    dataRef.current = initialPersistedHistory
+    setData(initialPersistedHistory)
+    hasInitializedDataRef.current = true
+  }, [initialPersistedHistory])
+
+  useEffect(() => {
+    if (!safeAddress) {
+      return
+    }
+
+    const currentHistory = dataRef.current
+    const currentKeys = Object.keys(currentHistory)
+    if (!currentKeys.length) {
+      return
+    }
+
+    const scopedHistory = getTxHistoryForSafe(currentHistory, safeAddress)
+    const scopedKeys = Object.keys(scopedHistory ?? {})
+    if (scopedKeys.length === currentKeys.length) {
+      return
+    }
+
+    dataRef.current = scopedHistory ?? {}
+    setData(scopedHistory)
+  }, [safeAddress])
+
+  useEffect(() => {
+    let isCurrent = true
+
+    const load = async () => {
+      if (isLoadInFlightRef.current) {
+        hasQueuedLoadRef.current = true
+        return
+      }
+
+      isLoadInFlightRef.current = true
+
+      if (typeof document !== 'undefined' && document.hidden) {
+        isLoadInFlightRef.current = false
+        return
+      }
+
+      if (!safeAddress || !provider) {
+        setError(undefined)
+        setLoading(false)
+        if (!Object.keys(dataRef.current).length) {
+          setData(undefined)
+          dispatch(resetTxHistorySync())
+        }
+        isLoadInFlightRef.current = false
+        return
+      }
 
       const safeContract = getSafeContract(safeAddress, safe.version, provider)
+      if (!safeContract) {
+        setError(undefined)
+        setLoading(false)
+        if (!Object.keys(dataRef.current).length) {
+          setData(undefined)
+          dispatch(resetTxHistorySync())
+        }
+        isLoadInFlightRef.current = false
+        return
+      }
 
-      if (!safeContract) return
+      setError(undefined)
+      setLoading(true)
+      setRpcSchedulerMaxConcurrency(historicalRpcLogMaxConcurrentRequests)
+      if (!hasInitializedDataRef.current) {
+        const initialHistory = Object.keys(dataRef.current).length ? dataRef.current : {}
+        dataRef.current = initialHistory
+        setData(initialHistory)
+        hasInitializedDataRef.current = true
+      }
 
-      const logs = await safeContract.queryFilter(safeContract.filters.ExecutionSuccess(), 0, 'latest')
+      try {
+        const executionFilter = safeContract.filters.ExecutionSuccess()
+        const latestBlock = await scheduleRpcRequest(() => provider.getBlockNumber())
+        const currentCursor = txHistoryCursorRef.current
+        const normalizedCurrentCursor: TxHistoryBackfillCursor | undefined = currentCursor
+          ? {
+              ...currentCursor,
+              historyRecoveryApplied: currentCursor.historyRecoveryApplied ?? false,
+            }
+          : undefined
+        const historyIsEmpty = !Object.keys(dataRef.current).length
+        const shouldRecoverMissingHistory =
+          !!normalizedCurrentCursor &&
+          historyIsEmpty &&
+          !normalizedCurrentCursor.backfillComplete &&
+          normalizedCurrentCursor.latestSyncedBlock >= latestBlock &&
+          normalizedCurrentCursor.backfillCursor < latestBlock &&
+          !normalizedCurrentCursor.historyRecoveryApplied
+        const initializedCursor: TxHistoryBackfillCursor = shouldRecoverMissingHistory
+          ? {
+              latestSyncedBlock: latestBlock,
+              backfillCursor: latestBlock,
+              backfillComplete: false,
+              historyRecoveryApplied: true,
+            }
+          : normalizedCurrentCursor || {
+              latestSyncedBlock: latestBlock,
+              backfillCursor: latestBlock,
+              backfillComplete: false,
+              historyRecoveryApplied: false,
+            }
 
-      let txs = await Promise.all(
-        logs.map(async (log, i) => {
-          const [timestamp, { executor, decodedTxData }]: [
-            number,
-            { executor: string; decodedTxData: Result | undefined },
-          ] = await Promise.all([
-            provider.getBlock(log.blockNumber).then((block) => block.timestamp * 1000),
-            provider.getTransaction(log.transactionHash).then((tx) => {
-              try {
-                const decodedTxData = safeContract.interface.decodeFunctionData('execTransaction', tx.data)
-                return { executor: tx.from, decodedTxData }
-              } catch (e) {
-                return { executor: tx.from, decodedTxData: undefined }
-              }
-            }),
-          ])
-
-          return {
-            txId: buildMultisigTxId(safeAddress, log.args.txHash),
-            txHash: log.transactionHash,
-            safeTxHash: log.args.txHash,
-            timestamp,
-            executor,
-            decodedTxData: decodedTxData ? parseDecodedTxData(decodedTxData, i) : undefined,
+        const persistCursor = (cursor: TxHistoryBackfillCursor) => {
+          txHistoryCursorRef.current = cursor
+          if (!txHistorySyncKey || !isCurrent) {
+            return
           }
-        }),
-      )
+          dispatch(setTxHistoryCursor({ key: txHistorySyncKey, value: cursor }))
+        }
 
-      return txs.reduce((acc, tx) => {
-        acc[tx.txId] = tx
-        return acc
-      }, {} as TxHistory)
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [safeAddress, provider, pollCount],
-    false,
-  )
+        if (!normalizedCurrentCursor || shouldRecoverMissingHistory) {
+          persistCursor(initializedCursor)
+        } else {
+          txHistoryCursorRef.current = normalizedCurrentCursor
+        }
+
+        dispatch(
+          setTxHistorySync({
+            loading: true,
+            latestBlock,
+            syncedToBlock: initializedCursor.backfillComplete ? 0 : Math.max(0, initializedCursor.backfillCursor),
+          }),
+        )
+
+        let nextCursor = initializedCursor
+        let workingHistory = {
+          ...dataRef.current,
+        }
+
+        const applyBatchLogs = async (batchLogs: Event[], range: { fromBlock: number }, updateProgress = true) => {
+          if (!isCurrent) {
+            return
+          }
+
+          let parsedBatch: Array<ParsedExecutionLog | undefined> = []
+          if (batchLogs.length) {
+            parsedBatch = await mapWithConcurrencyLimit(batchLogs, HISTORY_PARSE_CONCURRENCY, (log) =>
+              parseExecutionSuccessLog({
+                log,
+                provider,
+                safeContract,
+                blockTimestampCache: blockTimestampCacheRef.current,
+                txDataCache: txDataCacheRef.current,
+                scheduleRequest: scheduleRpcRequest,
+              }),
+            )
+          }
+
+          if (!isCurrent) {
+            return
+          }
+
+          const parsedLogs = parsedBatch.filter(Boolean) as ParsedExecutionLog[]
+          if (parsedLogs.length) {
+            workingHistory = mergeParsedLogsIntoHistory(safeAddress, safe.nonce, workingHistory, parsedLogs)
+            dataRef.current = workingHistory
+            setData(workingHistory)
+            if (nextCursor.historyRecoveryApplied) {
+              nextCursor = {
+                ...nextCursor,
+                historyRecoveryApplied: false,
+              }
+              persistCursor(nextCursor)
+            }
+          }
+          if (updateProgress) {
+            dispatch(setTxHistorySync({ loading: true, latestBlock, syncedToBlock: range.fromBlock }))
+          }
+        }
+
+        nextCursor = (await syncHistoricalLogsWindow<Event>({
+          latestBlock,
+          cursor: nextCursor,
+          batchSize: historicalRpcLogBatchSize,
+          maxConcurrentRequests: historicalRpcLogMaxConcurrentRequests,
+          scheduleRequest: scheduleRpcRequest,
+          queryRange: ({ fromBlock, toBlock }) => safeContract.queryFilter(executionFilter, fromBlock, toBlock),
+          onHeadBatch: async (logs, range) => {
+            await applyBatchLogs(logs, range, false)
+          },
+          onBackfillBatch: async (logs, range) => {
+            await applyBatchLogs(logs, range)
+          },
+          onCursorUpdate: (cursor) => {
+            nextCursor = {
+              ...nextCursor,
+              ...cursor,
+              historyRecoveryApplied: nextCursor.historyRecoveryApplied,
+            }
+            persistCursor(nextCursor)
+          },
+          shouldContinue: () => isCurrent,
+        })) as TxHistoryBackfillCursor
+
+        if (isCurrent && txHistorySyncKey) {
+          dispatch(setTxHistoryCursor({ key: txHistorySyncKey, value: nextCursor }))
+          dispatch(
+            setTxHistorySync({
+              loading: !nextCursor.backfillComplete,
+              latestBlock,
+              syncedToBlock: nextCursor.backfillComplete ? 0 : Math.max(0, nextCursor.backfillCursor + 1),
+            }),
+          )
+        }
+      } catch (err) {
+        if (isCurrent) {
+          setError(asError(err))
+          dispatch(setTxHistorySync({ loading: false }))
+        }
+      } finally {
+        if (isCurrent) {
+          setLoading(false)
+        }
+        isLoadInFlightRef.current = false
+        if (isCurrent && hasQueuedLoadRef.current) {
+          hasQueuedLoadRef.current = false
+          void load()
+        }
+      }
+    }
+
+    loadRef.current = load
+    void load()
+
+    return () => {
+      isCurrent = false
+      hasQueuedLoadRef.current = false
+      isLoadInFlightRef.current = false
+      loadRef.current = undefined
+    }
+  }, [
+    dispatch,
+    txHistorySyncKey,
+    historicalRpcLogBatchSize,
+    historicalRpcLogMaxConcurrentRequests,
+    provider,
+    safe.nonce,
+    safe.version,
+    safeAddress,
+  ])
+
+  useEffect(() => {
+    if (!pollCount) {
+      return
+    }
+
+    const runLoad = loadRef.current
+    if (!runLoad) {
+      return
+    }
+
+    void runLoad()
+  }, [pollCount])
 
   // Log errors
   useEffect(() => {
@@ -102,10 +619,14 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
     dispatch(
       showNotification({
         message:
-          'Error fetching transaction history. If you see this error often, please consider using a more stable RPC URL.',
+          'Error fetching transaction history. If you see this error often, please configure your RPC URL or Chain Queries settings.',
         groupKey: 'fetch-tx-history-error',
         variant: 'error',
         detailedMessage: error.message,
+        link: {
+          href: AppRoutes.settings.environmentVariables,
+          title: 'RPC settings',
+        },
       }),
     )
     logError(Errors._602, error.message)
@@ -113,7 +634,31 @@ export const useLoadTxHistory = (): AsyncResult<TxHistory> => {
 
   // Reset the counter when safe address/chainId changes
   useEffect(() => {
+    const nextSafeKey = safeAddress ? `${chainId}:${safeAddress.toLowerCase()}` : undefined
+
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true
+      previousSafeKeyRef.current = nextSafeKey
+      return
+    }
+
+    const previousSafeKey = previousSafeKeyRef.current
+    previousSafeKeyRef.current = nextSafeKey
+
+    if (!previousSafeKey) {
+      return
+    }
+
+    if (previousSafeKey === nextSafeKey) {
+      return
+    }
+
     resetPolling()
+    dataRef.current = {}
+    hasInitializedDataRef.current = false
+    blockTimestampCacheRef.current.clear()
+    txDataCacheRef.current.clear()
+    setData(undefined)
   }, [resetPolling, safeAddress, chainId])
 
   return [data, error, loading]

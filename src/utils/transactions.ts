@@ -304,14 +304,19 @@ export const getTxKeyFromTxId = (txId: string) => {
 }
 
 export const enrichTransactionDetailsFromHistory = (details: TransactionDetails, executedTx: TxHistoryItem) => {
+  const historyNonce = executedTx.nonce ?? executedTx.decodedTxData?.nonce
   details.txStatus = TransactionStatus.SUCCESS
   details.txHash = executedTx.txHash
   details.executedAt = executedTx.timestamp
+  if (historyNonce !== undefined) {
+    details.detailedExecutionInfo.nonce = historyNonce
+  }
   details.detailedExecutionInfo.safeTxHash = executedTx.safeTxHash
   details.detailedExecutionInfo.executor = addressEx(executedTx.executor)
 }
 
 export const partiallyDecodedTransaction = (executedTx: TxHistoryItem, safeAddress: string): DetailedTransaction => {
+  const historyNonce = executedTx.nonce ?? executedTx.decodedTxData?.nonce ?? 0
   const dataByteLength = executedTx.decodedTxData?.data ? Buffer.byteLength(executedTx.decodedTxData?.data) : 0
   const dataSize = dataByteLength >= 2 ? Math.floor((dataByteLength - 2) / 2) : 0
 
@@ -331,7 +336,7 @@ export const partiallyDecodedTransaction = (executedTx: TxHistoryItem, safeAddre
       },
       executionInfo: {
         type: DetailedExecutionInfoType.MULTISIG,
-        nonce: executedTx.decodedTxData?.nonce ?? 0,
+        nonce: historyNonce,
         confirmationsRequired: 0,
         confirmationsSubmitted: 1,
         missingSigners: [],
@@ -360,7 +365,7 @@ export const partiallyDecodedTransaction = (executedTx: TxHistoryItem, safeAddre
       detailedExecutionInfo: {
         type: DetailedExecutionInfoType.MULTISIG,
         submittedAt: 0,
-        nonce: executedTx.decodedTxData?.nonce ?? 0,
+        nonce: historyNonce,
         safeTxGas: executedTx.decodedTxData?.safeTxGas.toString() ?? '0',
         baseGas: executedTx.decodedTxData?.baseGas.toString() ?? '0',
         gasPrice: executedTx.decodedTxData?.gasPrice.toString() ?? '0',

@@ -49,7 +49,7 @@ const PaginatedTxns = ({ useTxns }: { useTxns: typeof useTxHistory | typeof useT
 
   return (
     <Box position="relative">
-      {pages.map((pageUrl, index) => (
+      {pages.map((pageUrl) => (
         <TxPage key={pageUrl} useTxns={useTxns} />
       ))}
     </Box>

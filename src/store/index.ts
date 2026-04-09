@@ -16,6 +16,7 @@ import { safeInfoSlice } from './safeInfoSlice'
 import { balancesSlice } from './balancesSlice'
 import { sessionSlice } from './sessionSlice'
 import { txHistoryListener, txHistorySlice } from './txHistorySlice'
+import { txHistorySyncSlice } from './txHistorySyncSlice'
 import { txQueueSlice } from './txQueueSlice'
 import { addressBookSlice } from './addressBookSlice'
 import { notificationsSlice } from './notificationsSlice'
@@ -32,6 +33,7 @@ import { customTokensSlice } from './customTokensSlice'
 import { customCollectiblesSlice } from '@/store/customCollectiblesSlice'
 import { addedTxsSlice } from './addedTxsSlice'
 import { collectiblesBalanceSlice } from '@/store/collectiblesBalancesSlice'
+import { historicalRpcSyncSlice } from './historicalRpcSyncSlice'
 
 const rootReducer = combineReducers({
   [chainsSlice.name]: chainsSlice.reducer,
@@ -41,6 +43,7 @@ const rootReducer = combineReducers({
   [collectiblesBalanceSlice.name]: collectiblesBalanceSlice.reducer,
   [sessionSlice.name]: sessionSlice.reducer,
   [txHistorySlice.name]: txHistorySlice.reducer,
+  [txHistorySyncSlice.name]: txHistorySyncSlice.reducer,
   [txQueueSlice.name]: txQueueSlice.reducer,
   [addressBookSlice.name]: addressBookSlice.reducer,
   [notificationsSlice.name]: notificationsSlice.reducer,
@@ -55,10 +58,12 @@ const rootReducer = combineReducers({
   [customTokensSlice.name]: customTokensSlice.reducer,
   [customCollectiblesSlice.name]: customCollectiblesSlice.reducer,
   [addedTxsSlice.name]: addedTxsSlice.reducer,
+  [historicalRpcSyncSlice.name]: historicalRpcSyncSlice.reducer,
 })
 
 const persistedSlices: (keyof PreloadedState<RootState>)[] = [
   sessionSlice.name,
+  txHistorySlice.name,
   addressBookSlice.name,
   pendingTxsSlice.name,
   addedSafesSlice.name,
@@ -70,6 +75,7 @@ const persistedSlices: (keyof PreloadedState<RootState>)[] = [
   customTokensSlice.name,
   customCollectiblesSlice.name,
   addedTxsSlice.name,
+  historicalRpcSyncSlice.name,
 ]
 
 export const getPersistedState = () => {

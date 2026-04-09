@@ -13,6 +13,7 @@ import type { Provider } from '@ethersproject/providers'
 import { ethers } from 'ethers'
 import useChainId from '@/hooks/useChainId'
 import { useCurrentChain } from '@/hooks/useChains'
+import { AppRoutes } from '@/config/routes'
 
 export const getSafeImplementation = async (web3: Provider, safeAddress: string, chainId: string) => {
   return web3
@@ -135,10 +136,14 @@ export const useInitSafeCoreSDK = () => {
         dispatch(
           showNotification({
             message:
-              'Please try connecting your Safe again. Ensure the address, chain and RPC URL are correct. If you see this error often, please consider using a more stable RPC URL.',
+              'Please try connecting your Safe again. Ensure the address, chain and RPC URL are correct. If you see this error often, try configuring your RPC settings.',
             groupKey: 'core-sdk-init-error',
             variant: 'error',
             detailedMessage: e.message,
+            link: {
+              href: AppRoutes.settings.environmentVariables,
+              title: 'RPC settings',
+            },
           }),
         )
         trackError(ErrorCodes._105, e.message)

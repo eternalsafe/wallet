@@ -3,7 +3,13 @@ import { createSelector, createSlice } from '@reduxjs/toolkit'
 import merge from 'lodash/merge'
 
 import type { RootState } from '@/store'
-import { WC_PROJECT_ID } from '@/config/constants'
+import {
+  clampHistoricalRpcLogBatchSize,
+  clampHistoricalRpcLogMaxConcurrentRequests,
+  HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+  HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
+  WC_PROJECT_ID,
+} from '@/config/constants'
 
 export type EnvState = {
   tenderly: {
@@ -15,6 +21,8 @@ export type EnvState = {
     [chainId: string]: string
   }
   ipfs: string
+  historicalRpcLogBatchSize: number
+  historicalRpcLogMaxConcurrentRequests: number
   walletConnectApiKey: string
   walletConnectPairingCode: string
 }
@@ -70,6 +78,8 @@ export const initialState: SettingsState = {
       accessToken: '',
     },
     ipfs: '',
+    historicalRpcLogBatchSize: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+    historicalRpcLogMaxConcurrentRequests: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
     walletConnectApiKey: '',
     walletConnectPairingCode: '',
   },
@@ -134,6 +144,15 @@ export const settingsSlice = createSlice({
     setIPFS: (state, { payload }: PayloadAction<EnvState['ipfs']>) => {
       state.env.ipfs = payload
     },
+    setHistoricalRpcLogBatchSize: (state, { payload }: PayloadAction<EnvState['historicalRpcLogBatchSize']>) => {
+      state.env.historicalRpcLogBatchSize = clampHistoricalRpcLogBatchSize(payload)
+    },
+    setHistoricalRpcLogMaxConcurrentRequests: (
+      state,
+      { payload }: PayloadAction<EnvState['historicalRpcLogMaxConcurrentRequests']>,
+    ) => {
+      state.env.historicalRpcLogMaxConcurrentRequests = clampHistoricalRpcLogMaxConcurrentRequests(payload)
+    },
     setTenderly: (state, { payload }: PayloadAction<EnvState['tenderly']>) => {
       state.env.tenderly = merge({}, state.env.tenderly, payload)
     },
@@ -166,6 +185,8 @@ export const {
   removeCustomTokenList,
   setRpc,
   setIPFS,
+  setHistoricalRpcLogBatchSize,
+  setHistoricalRpcLogMaxConcurrentRequests,
   setTenderly,
   setWalletConnectApiKey,
   setWalletConnectPairingCode,
@@ -191,6 +212,16 @@ export const selectCustomTokenLists = createSelector(
 export const selectRpc = createSelector(selectSettings, (settings) => settings.env.rpc)
 
 export const selectIPFS = createSelector(selectSettings, (settings) => settings.env.ipfs)
+
+export const selectHistoricalRpcLogBatchSize = createSelector(selectSettings, (settings) =>
+  clampHistoricalRpcLogBatchSize(settings.env.historicalRpcLogBatchSize || HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE),
+)
+
+export const selectHistoricalRpcLogMaxConcurrentRequests = createSelector(selectSettings, (settings) =>
+  clampHistoricalRpcLogMaxConcurrentRequests(
+    settings.env.historicalRpcLogMaxConcurrentRequests || HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
+  ),
+)
 
 export const selectTenderly = createSelector(selectSettings, (settings) => settings.env.tenderly)
 
