@@ -105,7 +105,6 @@ const ReviewSignMessageOnChain = ({ message, method, requestId }: SignMessageOnC
     setSafeTx,
     setSafeTxError,
     signMessageAddress,
-    readOnlySignMessageLibContract,
   ])
 
   const handleSubmit = async () => {

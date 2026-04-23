@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen } from '@/tests/test-utils'
 import AppFrame from '@/components/safe-apps/AppFrame'
 import { initialState as initialSettingsState } from '@/store/settingsSlice'
+import { TokenType } from '@safe-global/safe-gateway-typescript-sdk'
 
 jest.mock('@/hooks/useChainId', () => jest.fn(() => '1'))
 
@@ -161,7 +162,7 @@ describe('AppFrame appearance', () => {
           data: [
             {
               tokenInfo: {
-                type: 'NATIVE_TOKEN',
+                type: TokenType.NATIVE_TOKEN,
                 address: '0x0000000000000000000000000000000000000000',
                 decimals: 18,
                 symbol: 'ETH',

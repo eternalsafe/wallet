@@ -10,6 +10,7 @@ import { createUpdateSafeTxs } from '../safeUpdateParams'
 import { LATEST_SAFE_VERSION } from '@/config/constants'
 import * as web3 from '@/hooks/wallets/web3'
 import type { MulticallProvider } from 'ethers-multicall-provider'
+import type { JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
 
 const MOCK_SAFE_ADDRESS = '0x0000000000000000000000000000000000005AFE'
 
@@ -22,7 +23,7 @@ describe('safeUpgradeParams', () => {
             getNetwork: jest.fn().mockResolvedValue({ chainId: Number(5) }),
             _isProvider: jest.fn().mockReturnValue(true),
           }
-        })() as unknown as MulticallProvider,
+        })() as unknown as MulticallProvider<JsonRpcProvider | Web3Provider>,
     )
 
     const mockSafe = {
@@ -65,7 +66,7 @@ describe('safeUpgradeParams', () => {
             getNetwork: jest.fn().mockResolvedValue({ chainId: Number(100) }),
             _isProvider: jest.fn().mockReturnValue(true),
           }
-        })() as unknown as MulticallProvider,
+        })() as unknown as MulticallProvider<JsonRpcProvider | Web3Provider>,
     )
 
     const mockSafe = {

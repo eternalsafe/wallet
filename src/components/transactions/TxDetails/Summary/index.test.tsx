@@ -24,7 +24,7 @@ const buildTxDetails = (value: string): TransactionDetails =>
       value,
       hexData: '0x',
     },
-  } as TransactionDetails)
+  } as unknown as TransactionDetails)
 
 describe('Summary', () => {
   it('shows formatted transaction value in advanced details', () => {

@@ -3,9 +3,11 @@ import SingleTx from '@/pages/transactions/tx'
 import * as extractTxInfo from '@/services/tx/extractTxInfo'
 import * as useSafeInfo from '@/hooks/useSafeInfo'
 import * as addedTxsSlice from '@/store/addedTxsSlice'
-import type { SafeInfo, TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
+import type { SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
 import { OperationType, type SafeTransaction } from '@safe-global/safe-core-sdk-types'
 import EthSafeTransaction from '@safe-global/protocol-kit/dist/src/utils/transactions/SafeTransaction'
+import type { EternalSafeTransaction } from '@/store/addedTxsSlice'
+import type { TransactionDetails } from '@/utils/transaction-guards'
 
 const SAFE_ADDRESS = '0x87a57cBf742CC1Fc702D0E9BF595b1E056693e2f'
 
@@ -19,7 +21,7 @@ const txDetails = {
       value: '0xc778417E063141139Fce010982780140Aa0cD5Ab',
     },
   },
-} as TransactionDetails
+} as unknown as TransactionDetails
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -47,7 +49,7 @@ jest
       value: '1000000000000000000',
       to: '0x1234567890123456789012345678901234567890',
       operation: OperationType.Call,
-    })
+    }) as unknown as EternalSafeTransaction
   })
 
 jest

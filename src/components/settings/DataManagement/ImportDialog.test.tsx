@@ -4,6 +4,7 @@ import { useAppDispatch } from '@/store'
 import { useGlobalImportJsonParser } from '@/components/settings/DataManagement/useGlobalImportFileParser'
 import { setCustomChains } from '@/store/customChainsSlice'
 import { ImportDialog } from '@/components/settings/DataManagement/ImportDialog'
+import type { ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
 
 jest.mock('@/store', () => ({
   useAppDispatch: jest.fn(),
@@ -38,7 +39,7 @@ describe('ImportDialog', () => {
         chainName: 'Base Sepolia',
         shortName: 'base-sepolia',
         custom: true,
-      },
+      } as unknown as ChainInfo,
     ]
 
     mockUseAppDispatch.mockReturnValue(dispatchMock)
