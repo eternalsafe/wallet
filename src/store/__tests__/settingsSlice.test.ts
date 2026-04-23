@@ -1,6 +1,10 @@
 import {
+  HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+  HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
   settingsSlice,
   initialState,
+  selectHistoricalRpcLogBatchSize,
+  selectHistoricalRpcLogMaxConcurrentRequests,
   selectSafeAppsUseLightBackground,
   selectWalletConnectApiKey,
   selectWalletConnectPairingCode,
@@ -101,6 +105,55 @@ describe('settingsSlice', () => {
 
       expect(selectWalletConnectApiKey(state)).toBe('my-key')
       expect(selectWalletConnectPairingCode(state)).toBe('wc:pairing')
+    })
+  })
+
+  describe('historical rpc log settings', () => {
+    it('should set the historical rpc log batch size', () => {
+      const state = settingsSlice.reducer(initialState, settingsSlice.actions.setHistoricalRpcLogBatchSize(2500))
+
+      expect(state.env.historicalRpcLogBatchSize).toBe(2500)
+    })
+
+    it('should set the historical rpc log max concurrent requests', () => {
+      const state = settingsSlice.reducer(
+        initialState,
+        settingsSlice.actions.setHistoricalRpcLogMaxConcurrentRequests(12),
+      )
+
+      expect(state.env.historicalRpcLogMaxConcurrentRequests).toBe(12)
+    })
+
+    it('falls back to defaults when persisted values are unusable', () => {
+      const state = {
+        [settingsSlice.name]: {
+          ...initialState,
+          env: {
+            ...initialState.env,
+            historicalRpcLogBatchSize: 0,
+            historicalRpcLogMaxConcurrentRequests: -1,
+          },
+        },
+      } as any
+
+      expect(selectHistoricalRpcLogBatchSize(state)).toBe(HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE)
+      expect(selectHistoricalRpcLogMaxConcurrentRequests(state)).toBe(HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS)
+    })
+
+    it('returns large persisted positive integers without clamping', () => {
+      const state = {
+        [settingsSlice.name]: {
+          ...initialState,
+          env: {
+            ...initialState.env,
+            historicalRpcLogBatchSize: 50000,
+            historicalRpcLogMaxConcurrentRequests: 99,
+          },
+        },
+      } as any
+
+      expect(selectHistoricalRpcLogBatchSize(state)).toBe(50000)
+      expect(selectHistoricalRpcLogMaxConcurrentRequests(state)).toBe(99)
     })
   })
 

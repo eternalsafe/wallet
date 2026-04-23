@@ -6,8 +6,15 @@ export const IS_DEV = process.env.NODE_ENV === 'development'
 // Magic numbers
 export const POLLING_INTERVAL = 15_000
 export const BASE_TX_GAS = 21_000
+export const HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE = 10_000
+export const HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS = 4
 export const LS_NAMESPACE = 'ETERNALSAFE__'
 export const LATEST_SAFE_VERSION = process.env.NEXT_PUBLIC_SAFE_VERSION || '1.4.1'
+
+export const getPositiveIntegerOrDefault = (value: unknown, fallback: number): number => {
+  const parsedValue = typeof value === 'string' ? Number(value) : value
+  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : fallback
+}
 
 // Wallets
 export const WC_PROJECT_ID = process.env.NEXT_PUBLIC_WC_PROJECT_ID || ''

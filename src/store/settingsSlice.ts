@@ -3,7 +3,14 @@ import { createSelector, createSlice } from '@reduxjs/toolkit'
 import merge from 'lodash/merge'
 
 import type { RootState } from '@/store'
-import { WC_PROJECT_ID } from '@/config/constants'
+import {
+  HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+  HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
+  WC_PROJECT_ID,
+  getPositiveIntegerOrDefault,
+} from '@/config/constants'
+
+export { HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE, HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS } from '@/config/constants'
 
 export type EnvState = {
   tenderly: {
@@ -14,6 +21,8 @@ export type EnvState = {
   rpc: {
     [chainId: string]: string
   }
+  historicalRpcLogBatchSize: number
+  historicalRpcLogMaxConcurrentRequests: number
   ipfs: string
   walletConnectApiKey: string
   walletConnectPairingCode: string
@@ -64,6 +73,8 @@ export const initialState: SettingsState = {
   },
   env: {
     rpc: {},
+    historicalRpcLogBatchSize: HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+    historicalRpcLogMaxConcurrentRequests: HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
     tenderly: {
       orgName: '',
       projectName: '',
@@ -131,6 +142,15 @@ export const settingsSlice = createSlice({
         delete state.env.rpc[chainId]
       }
     },
+    setHistoricalRpcLogBatchSize: (state, { payload }: PayloadAction<EnvState['historicalRpcLogBatchSize']>) => {
+      state.env.historicalRpcLogBatchSize = payload
+    },
+    setHistoricalRpcLogMaxConcurrentRequests: (
+      state,
+      { payload }: PayloadAction<EnvState['historicalRpcLogMaxConcurrentRequests']>,
+    ) => {
+      state.env.historicalRpcLogMaxConcurrentRequests = payload
+    },
     setIPFS: (state, { payload }: PayloadAction<EnvState['ipfs']>) => {
       state.env.ipfs = payload
     },
@@ -165,6 +185,8 @@ export const {
   addCustomTokenList,
   removeCustomTokenList,
   setRpc,
+  setHistoricalRpcLogBatchSize,
+  setHistoricalRpcLogMaxConcurrentRequests,
   setIPFS,
   setTenderly,
   setWalletConnectApiKey,
@@ -189,6 +211,17 @@ export const selectCustomTokenLists = createSelector(
 )
 
 export const selectRpc = createSelector(selectSettings, (settings) => settings.env.rpc)
+
+export const selectHistoricalRpcLogBatchSize = createSelector(selectSettings, (settings) => {
+  return getPositiveIntegerOrDefault(settings.env?.historicalRpcLogBatchSize, HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE)
+})
+
+export const selectHistoricalRpcLogMaxConcurrentRequests = createSelector(selectSettings, (settings) => {
+  return getPositiveIntegerOrDefault(
+    settings.env?.historicalRpcLogMaxConcurrentRequests,
+    HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
+  )
+})
 
 export const selectIPFS = createSelector(selectSettings, (settings) => settings.env.ipfs)
 
