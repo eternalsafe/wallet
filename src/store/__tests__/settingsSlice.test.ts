@@ -1,6 +1,9 @@
 import {
   HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
   HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
+  getPositiveIntegerOrDefault,
+} from '@/config/constants'
+import {
   settingsSlice,
   initialState,
   selectHistoricalRpcLogBatchSize,
@@ -130,8 +133,24 @@ describe('settingsSlice', () => {
           ...initialState,
           env: {
             ...initialState.env,
-            historicalRpcLogBatchSize: 0,
-            historicalRpcLogMaxConcurrentRequests: -1,
+            historicalRpcLogBatchSize: Number.NaN,
+            historicalRpcLogMaxConcurrentRequests: 0,
+          },
+        },
+      } as any
+
+      expect(selectHistoricalRpcLogBatchSize(state)).toBe(HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE)
+      expect(selectHistoricalRpcLogMaxConcurrentRequests(state)).toBe(HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS)
+    })
+
+    it('falls back to defaults for stringified unusable persisted values', () => {
+      const state = {
+        [settingsSlice.name]: {
+          ...initialState,
+          env: {
+            ...initialState.env,
+            historicalRpcLogBatchSize: 'NaN',
+            historicalRpcLogMaxConcurrentRequests: '0',
           },
         },
       } as any
@@ -154,6 +173,12 @@ describe('settingsSlice', () => {
 
       expect(selectHistoricalRpcLogBatchSize(state)).toBe(50000)
       expect(selectHistoricalRpcLogMaxConcurrentRequests(state)).toBe(99)
+    })
+  })
+
+  describe('positive integer helper', () => {
+    it('returns the fallback for NaN', () => {
+      expect(getPositiveIntegerOrDefault(Number.NaN, 7)).toBe(7)
     })
   })
 

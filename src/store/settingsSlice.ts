@@ -10,8 +10,6 @@ import {
   getPositiveIntegerOrDefault,
 } from '@/config/constants'
 
-export { HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE, HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS } from '@/config/constants'
-
 export type EnvState = {
   tenderly: {
     orgName: string
