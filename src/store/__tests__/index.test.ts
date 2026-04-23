@@ -1,4 +1,6 @@
 import { _hydrationReducer } from '@/store'
+import { txHistorySlice } from '../txHistorySlice'
+import { historicalRpcSyncSlice } from '../historicalRpcSyncSlice'
 
 describe('store', () => {
   describe('hydrationReducer', () => {
@@ -128,6 +130,100 @@ describe('store', () => {
       expect(mergedState === initialState).toBeFalsy()
       // @ts-expect-error demo state
       expect(mergedState === persistedState).toBeFalsy()
+    })
+
+    it('should merge persisted txHistory and historicalRpcSync slices into the initial state safely', () => {
+      const initialState = {
+        [txHistorySlice.name]: {
+          loading: false,
+          data: {
+            initialTx: {
+              txId: 'initialTx',
+              txHash: '0xinitial',
+              safeTxHash: '0xinitial',
+              timestamp: 1,
+              executor: '0x0000000000000000000000000000000000000001',
+            },
+          },
+        },
+        [historicalRpcSyncSlice.name]: {
+          txHistoryBySafe: {
+            '1:0x1111111111111111111111111111111111111111': {
+              latestSyncedBlock: 10,
+              backfillCursor: 9,
+              backfillComplete: false,
+            },
+          },
+        },
+      }
+
+      const persistedState = {
+        [txHistorySlice.name]: {
+          data: {
+            persistedTx: {
+              txId: 'persistedTx',
+              txHash: '0xpersisted',
+              safeTxHash: '0xpersisted',
+              timestamp: 2,
+              executor: '0x0000000000000000000000000000000000000002',
+            },
+          },
+        },
+        [historicalRpcSyncSlice.name]: {
+          txHistoryBySafe: {
+            '1:0x1111111111111111111111111111111111111111': {
+              backfillCursor: 5,
+            },
+            '1:0x2222222222222222222222222222222222222222': {
+              latestSyncedBlock: 20,
+              backfillCursor: 19,
+              backfillComplete: true,
+            },
+          },
+        },
+      }
+
+      // @ts-expect-error demo state
+      const mergedState = _hydrationReducer(initialState, {
+        type: '@@HYDRATE',
+        payload: persistedState,
+      })
+
+      expect(mergedState).toStrictEqual({
+        [txHistorySlice.name]: {
+          loading: false,
+          data: {
+            initialTx: {
+              txId: 'initialTx',
+              txHash: '0xinitial',
+              safeTxHash: '0xinitial',
+              timestamp: 1,
+              executor: '0x0000000000000000000000000000000000000001',
+            },
+            persistedTx: {
+              txId: 'persistedTx',
+              txHash: '0xpersisted',
+              safeTxHash: '0xpersisted',
+              timestamp: 2,
+              executor: '0x0000000000000000000000000000000000000002',
+            },
+          },
+        },
+        [historicalRpcSyncSlice.name]: {
+          txHistoryBySafe: {
+            '1:0x1111111111111111111111111111111111111111': {
+              latestSyncedBlock: 10,
+              backfillCursor: 5,
+              backfillComplete: false,
+            },
+            '1:0x2222222222222222222222222222222222222222': {
+              latestSyncedBlock: 20,
+              backfillCursor: 19,
+              backfillComplete: true,
+            },
+          },
+        },
+      })
     })
   })
 })

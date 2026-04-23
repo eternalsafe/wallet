@@ -16,6 +16,7 @@ import { safeInfoSlice } from './safeInfoSlice'
 import { balancesSlice } from './balancesSlice'
 import { sessionSlice } from './sessionSlice'
 import { txHistoryListener, txHistorySlice } from './txHistorySlice'
+import { historicalRpcSyncSlice } from './historicalRpcSyncSlice'
 import { txQueueSlice } from './txQueueSlice'
 import { addressBookSlice } from './addressBookSlice'
 import { notificationsSlice } from './notificationsSlice'
@@ -41,6 +42,7 @@ const rootReducer = combineReducers({
   [collectiblesBalanceSlice.name]: collectiblesBalanceSlice.reducer,
   [sessionSlice.name]: sessionSlice.reducer,
   [txHistorySlice.name]: txHistorySlice.reducer,
+  [historicalRpcSyncSlice.name]: historicalRpcSyncSlice.reducer,
   [txQueueSlice.name]: txQueueSlice.reducer,
   [addressBookSlice.name]: addressBookSlice.reducer,
   [notificationsSlice.name]: notificationsSlice.reducer,
@@ -70,6 +72,8 @@ const persistedSlices: (keyof PreloadedState<RootState>)[] = [
   customTokensSlice.name,
   customCollectiblesSlice.name,
   addedTxsSlice.name,
+  txHistorySlice.name,
+  historicalRpcSyncSlice.name,
 ]
 
 export const getPersistedState = () => {
