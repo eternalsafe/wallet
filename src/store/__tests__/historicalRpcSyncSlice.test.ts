@@ -1,4 +1,10 @@
-import { buildTxHistorySyncKey, historicalRpcSyncSlice, selectTxHistoryCursor, setTxHistoryCursor } from '../historicalRpcSyncSlice'
+import {
+  buildTxHistorySyncKey,
+  clearTxHistoryCursor,
+  historicalRpcSyncSlice,
+  selectTxHistoryCursor,
+  setTxHistoryCursor,
+} from '../historicalRpcSyncSlice'
 import type { RootState } from '..'
 
 describe('historicalRpcSyncSlice', () => {
@@ -33,6 +39,35 @@ describe('historicalRpcSyncSlice', () => {
             backfillComplete: false,
           },
         },
+      })
+    })
+  })
+
+  describe('clearTxHistoryCursor', () => {
+    it('should remove the stored cursor for the chain and safe address', () => {
+      const populatedState = historicalRpcSyncSlice.reducer(
+        undefined,
+        setTxHistoryCursor({
+          chainId: '1',
+          safeAddress: '0xAbCdEf1234567890ABCDef1234567890abCDef12',
+          cursor: {
+            latestSyncedBlock: 123,
+            backfillCursor: 45,
+            backfillComplete: false,
+          },
+        }),
+      )
+
+      const state = historicalRpcSyncSlice.reducer(
+        populatedState,
+        clearTxHistoryCursor({
+          chainId: '1',
+          safeAddress: '0xAbCdEf1234567890ABCDef1234567890abCDef12',
+        }),
+      )
+
+      expect(state).toEqual({
+        txHistoryBySafe: {},
       })
     })
   })
