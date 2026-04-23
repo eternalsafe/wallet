@@ -23,6 +23,7 @@ describe('useOnboard', () => {
               ens: {
                 name: 'test.eth',
               },
+              uns: null,
               balance: {
                 ETH: '0.002346456767547',
               },
@@ -38,11 +39,12 @@ describe('useOnboard', () => {
             {
               address: '0x2',
               ens: null,
+              uns: null,
               balance: null,
             },
           ],
         },
-      ] as WalletState[]
+      ] as unknown as WalletState[]
 
       expect(getConnectedWallet(wallets)).toEqual({
         label: 'Wallet 1',
@@ -66,11 +68,12 @@ describe('useOnboard', () => {
             {
               address: '0xinvalid',
               ens: null,
+              uns: null,
               balance: null,
             },
           ],
         },
-      ] as WalletState[]
+      ] as unknown as WalletState[]
 
       expect(getConnectedWallet(wallets)).toBeNull()
     })

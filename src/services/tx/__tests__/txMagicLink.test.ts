@@ -1,9 +1,9 @@
-import { OperationType } from '@safe-global/safe-core-sdk-types'
-import { encodeTransactionMagicLink, decodeTransactionMagicLink, type TransactionMagicLink } from '../txMagicLink'
+import { OperationType, type SafeTransaction } from '@safe-global/safe-core-sdk-types'
+import { encodeTransactionMagicLink, decodeTransactionMagicLink } from '../txMagicLink'
 
 describe('txMagicLink', () => {
   it('should encode and decode correctly', () => {
-    const tx: TransactionMagicLink = {
+    const tx = {
       txParams: {
         data: '0x',
         baseGas: 21000,
@@ -19,7 +19,7 @@ describe('txMagicLink', () => {
       signatures: {
         '0x1234567890123456789012345678901234567890': '0x123',
       },
-    }
+    } as unknown as SafeTransaction
 
     const link = encodeTransactionMagicLink(tx)
 

@@ -74,11 +74,12 @@ const mockOnboardState = {
         {
           address: '0x1234567890123456789012345678901234567890',
           ens: null,
+          uns: null,
           balance: null,
         },
       ],
     },
-  ] as WalletState[],
+  ] as unknown as WalletState[],
   accountCenter: {
     enabled: true,
   },

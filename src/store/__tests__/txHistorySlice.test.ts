@@ -1,7 +1,4 @@
 import { createListenerMiddleware } from '@reduxjs/toolkit'
-import { LabelValue, TransactionListItemType } from '@safe-global/safe-gateway-typescript-sdk'
-import type { TransactionListItem, Label, ConflictHeader, DateLabel } from '@safe-global/safe-gateway-typescript-sdk'
-
 import * as txEvents from '@/services/tx/txEvents'
 import { selectTxFromHistory, txHistoryListener, txHistorySlice } from '../txHistorySlice'
 import type { PendingTxsState } from '../pendingTxsSlice'
@@ -27,9 +24,9 @@ describe('txHistorySlice', () => {
             },
           },
         },
-      } as RootState
+      } as unknown as RootState
 
-      expect(selectTxFromHistory(state, txIdChecksum)).toEqual(state.txHistory.data[txIdLower])
+      expect(selectTxFromHistory(state, txIdChecksum)).toEqual(state.txHistory.data?.[txIdLower])
     })
   })
 
@@ -64,7 +61,9 @@ describe('txHistorySlice', () => {
 
       const action = txHistorySlice.actions.set({
         loading: false,
-        data: [{ txId: '0x123', txHash: '0x456', timestamp: 0, executor: '0x789' }],
+        data: {
+          '0x123': { txId: '0x123', txHash: '0x456', safeTxHash: '0x123', timestamp: 0, executor: '0x789' },
+        },
       })
 
       listenerMiddlewareInstance.middleware(listenerApi)(jest.fn())(action)
@@ -73,6 +72,7 @@ describe('txHistorySlice', () => {
         txId: '0x123',
         groupKey: 'groupKey',
         txHash: '0x456',
+        safeTxHash: '0x123',
         timestamp: 0,
         executor: '0x789',
       })
@@ -94,13 +94,6 @@ describe('txHistorySlice', () => {
         getState: jest.fn(() => state),
         dispatch: jest.fn(),
       }
-
-      const transaction = {
-        type: TransactionListItemType.TRANSACTION,
-        transaction: {
-          id: '0x123',
-        },
-      } as TransactionListItem
 
       const action = txHistorySlice.actions.set({
         loading: false,
@@ -129,26 +122,9 @@ describe('txHistorySlice', () => {
         dispatch: jest.fn(),
       }
 
-      const dateLabel: DateLabel = {
-        type: TransactionListItemType.DATE_LABEL,
-        timestamp: 0,
-      }
-
-      const label: Label = {
-        label: LabelValue.Queued,
-        type: TransactionListItemType.LABEL,
-      }
-
-      const conflictHeader: ConflictHeader = {
-        nonce: 0,
-        type: TransactionListItemType.CONFLICT_HEADER,
-      }
-
       const action = txHistorySlice.actions.set({
         loading: false,
-        data: {
-          results: [dateLabel, label, conflictHeader],
-        },
+        data: {},
       })
 
       listenerMiddlewareInstance.middleware(listenerApi)(jest.fn())(action)
@@ -173,17 +149,10 @@ describe('txHistorySlice', () => {
         dispatch: jest.fn(),
       }
 
-      const transaction = {
-        type: TransactionListItemType.TRANSACTION,
-        transaction: {
-          id: '0x456',
-        },
-      } as TransactionListItem
-
       const action = txHistorySlice.actions.set({
         loading: false,
         data: {
-          results: [transaction],
+          '0x456': { txId: '0x456', txHash: '0x456', safeTxHash: '0x456', timestamp: 0, executor: '0x789' },
         },
       })
 

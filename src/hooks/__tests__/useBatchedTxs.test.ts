@@ -1,15 +1,15 @@
 import {
   type MultisigExecutionInfo,
   type Transaction,
-  type TransactionDetails,
   TransactionInfoType,
   type TransactionListItem,
   TransactionStatus,
+  DetailedExecutionInfoType,
 } from '@safe-global/safe-gateway-typescript-sdk'
 import { ConflictType, TransactionListItemType } from '@safe-global/safe-gateway-typescript-sdk'
 import { getBatchableTransactions } from '@/hooks/useBatchedTxs'
 import { defaultTx, getMockTx } from '@/tests/mocks/transactions'
-import type { DetailedTransaction } from '@/utils/transaction-guards'
+import type { DetailedTransaction, TransactionDetails } from '@/utils/transaction-guards'
 import { addressEx } from '@/utils/addresses'
 
 const mockTxDetails: TransactionDetails = {
@@ -22,6 +22,21 @@ const mockTxDetails: TransactionDetails = {
     dataSize: '0',
     value: '0',
     isCancellation: false,
+  },
+  detailedExecutionInfo: {
+    type: DetailedExecutionInfoType.MULTISIG,
+    nonce: 0,
+    confirmationsRequired: 1,
+    confirmations: [],
+    safeTxHash: '0x',
+    baseGas: '0',
+    gasPrice: '0',
+    gasToken: '0x0000000000000000000000000000000000000000',
+    refundReceiver: addressEx('0x'),
+    safeTxGas: '0',
+    submittedAt: 0,
+    signers: [],
+    trusted: true,
   },
 }
 

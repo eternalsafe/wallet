@@ -32,7 +32,7 @@ const txSummary = {
     confirmationsSubmitted: 1,
     missingSigners: [],
   },
-} as TransactionSummary
+} as unknown as TransactionSummary
 
 const txDetails = {
   txId: TX_ID,
@@ -60,11 +60,11 @@ const txDetails = {
     signers: [],
     trusted: true,
   },
-} as TransactionDetails
+} as unknown as TransactionDetails
 
 describe('TxSigners', () => {
   beforeEach(() => {
-    jest.spyOn(useWallet, 'default').mockReturnValue(undefined)
+    jest.spyOn(useWallet, 'default').mockReturnValue(null)
     jest.spyOn(useIsPending, 'default').mockReturnValue(false)
     jest.spyOn(useTransactionStatus, 'default').mockReturnValue('Success')
     jest.spyOn(useSafeInfo, 'default').mockReturnValue({

@@ -39,11 +39,7 @@ describe('usePendingActions hook', () => {
     const mockPage = {
       error: undefined,
       loading: false,
-      page: {
-        next: undefined,
-        previous: undefined,
-        results: [],
-      },
+      data: [],
     }
     jest.spyOn(useTxQueue, 'default').mockReturnValue(mockPage)
 
@@ -96,7 +92,7 @@ describe('usePendingActions hook', () => {
     const mockPage = {
       error: undefined,
       loading: false,
-      data: page,
+      data: page as ReturnType<typeof useTxQueue.default>['data'],
     }
     jest.spyOn(useTxQueue, 'default').mockReturnValue(mockPage)
 

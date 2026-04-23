@@ -21,7 +21,7 @@ describe('DecodedTx', () => {
               nonce: 58,
               safeTxGas: 0,
             },
-          } as SafeTransaction
+          } as unknown as SafeTransaction
         }
         decodedData={{
           method: 'Native token transfer',
@@ -67,7 +67,7 @@ describe('DecodedTx', () => {
               nonce: 58,
               safeTxGas: 0,
             },
-          } as SafeTransaction
+          } as unknown as SafeTransaction
         }
         decodedData={{
           method: 'transfer',
@@ -115,7 +115,7 @@ describe('DecodedTx', () => {
               nonce: 58,
               safeTxGas: 0,
             },
-          } as SafeTransaction
+          } as unknown as SafeTransaction
         }
         decodedData={{
           method: 'multiSend',
@@ -209,7 +209,7 @@ describe('DecodedTx', () => {
               nonce: 58,
               safeTxGas: 0,
             },
-          } as SafeTransaction
+          } as unknown as SafeTransaction
         }
         decodedData={{
           method: 'deposit',
