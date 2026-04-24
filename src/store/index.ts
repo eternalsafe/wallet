@@ -76,6 +76,19 @@ const persistedSlices: (keyof PreloadedState<RootState>)[] = [
   historicalRpcSyncSlice.name,
 ]
 
+const normalizeTxHistoryHydration = (state: ReturnType<typeof txHistorySlice.reducer> | undefined) => {
+  const normalizedState = state ?? {
+    data: undefined,
+    loading: false,
+  }
+
+  return {
+    ...normalizedState,
+    loading: false,
+    error: undefined,
+  }
+}
+
 export const getPersistedState = () => {
   return getPreloadedState(persistedSlices)
 }
@@ -100,6 +113,7 @@ export const _hydrationReducer: typeof rootReducer = (state, action) => {
 
     return {
       ...mergedState,
+      [txHistorySlice.name]: normalizeTxHistoryHydration(mergedState[txHistorySlice.name]),
       [historicalRpcSyncSlice.name]: normalizeHistoricalRpcSyncState(mergedState[historicalRpcSyncSlice.name]),
     }
   }

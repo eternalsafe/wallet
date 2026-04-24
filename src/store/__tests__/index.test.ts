@@ -34,7 +34,8 @@ describe('store', () => {
 
       const persistedState = {
         [txHistorySlice.name]: {
-          loading: false,
+          loading: true,
+          error: 'stale error',
           data: {
             persistedTx: {
               txId: 'persistedTx',
@@ -63,6 +64,7 @@ describe('store', () => {
       expect(mergedState[txHistorySlice.name]).toStrictEqual({
         ...initialState[txHistorySlice.name],
         loading: false,
+        error: undefined,
         data: {
           persistedTx: {
             txId: 'persistedTx',
@@ -118,23 +120,25 @@ describe('store', () => {
       })
 
       const persistedState = getPersistedState()
+      const expectedSliceNames = [
+        'session',
+        'addressBook',
+        'pendingTxs',
+        'addedSafes',
+        'settings',
+        'safeApps',
+        'pendingSafeMessages',
+        'batch',
+        'customChains',
+        'customTokens',
+        'customCollectibles',
+        'addedTxs',
+        txHistorySlice.name,
+        historicalRpcSyncSlice.name,
+      ]
 
-      expect(mockedLocal.getItem.mock.calls).toEqual([
-        ['session'],
-        ['addressBook'],
-        ['pendingTxs'],
-        ['addedSafes'],
-        ['settings'],
-        ['safeApps'],
-        ['pendingSafeMessages'],
-        ['batch'],
-        ['customChains'],
-        ['customTokens'],
-        ['customCollectibles'],
-        ['addedTxs'],
-        [txHistorySlice.name],
-        [historicalRpcSyncSlice.name],
-      ])
+      expect(mockedLocal.getItem.mock.calls).toHaveLength(expectedSliceNames.length)
+      expect(mockedLocal.getItem.mock.calls.map(([key]) => key).sort()).toEqual([...expectedSliceNames].sort())
       expect(persistedState[txHistorySlice.name]).toStrictEqual({
         loading: false,
         data: {
