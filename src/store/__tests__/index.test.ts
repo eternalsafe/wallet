@@ -119,8 +119,22 @@ describe('store', () => {
 
       const persistedState = getPersistedState()
 
-      expect(mockedLocal.getItem).toHaveBeenCalledWith(txHistorySlice.name)
-      expect(mockedLocal.getItem).toHaveBeenCalledWith(historicalRpcSyncSlice.name)
+      expect(mockedLocal.getItem.mock.calls).toEqual([
+        ['session'],
+        ['addressBook'],
+        ['pendingTxs'],
+        ['addedSafes'],
+        ['settings'],
+        ['safeApps'],
+        ['pendingSafeMessages'],
+        ['batch'],
+        ['customChains'],
+        ['customTokens'],
+        ['customCollectibles'],
+        ['addedTxs'],
+        [txHistorySlice.name],
+        [historicalRpcSyncSlice.name],
+      ])
       expect(persistedState[txHistorySlice.name]).toStrictEqual({
         loading: false,
         data: {
