@@ -26,13 +26,25 @@ describe('store', () => {
   })
 
   describe('hydrationReducer', () => {
-    it('should normalize partial historicalRpcSync cursors during hydration', () => {
+    it('should merge persisted txHistory and historicalRpcSync without losing initial defaults', () => {
       // @ts-expect-error demo state
       const initialState = _hydrationReducer(undefined, {
         type: '@@INIT',
       })
 
       const persistedState = {
+        [txHistorySlice.name]: {
+          loading: false,
+          data: {
+            persistedTx: {
+              txId: 'persistedTx',
+              txHash: '0xpersisted',
+              safeTxHash: '0xpersisted',
+              timestamp: 2,
+              executor: '0x0000000000000000000000000000000000000002',
+            },
+          },
+        },
         [historicalRpcSyncSlice.name]: {
           txHistoryBySafe: {
             '1:0x1111111111111111111111111111111111111111': {
@@ -46,6 +58,20 @@ describe('store', () => {
       const mergedState = _hydrationReducer(initialState, {
         type: '@@HYDRATE',
         payload: persistedState,
+      })
+
+      expect(mergedState[txHistorySlice.name]).toStrictEqual({
+        ...initialState[txHistorySlice.name],
+        loading: false,
+        data: {
+          persistedTx: {
+            txId: 'persistedTx',
+            txHash: '0xpersisted',
+            safeTxHash: '0xpersisted',
+            timestamp: 2,
+            executor: '0x0000000000000000000000000000000000000002',
+          },
+        },
       })
 
       expect(mergedState[historicalRpcSyncSlice.name].txHistoryBySafe['1:0x1111111111111111111111111111111111111111']).toEqual(
@@ -95,8 +121,25 @@ describe('store', () => {
 
       expect(mockedLocal.getItem).toHaveBeenCalledWith(txHistorySlice.name)
       expect(mockedLocal.getItem).toHaveBeenCalledWith(historicalRpcSyncSlice.name)
-      expect(persistedState[txHistorySlice.name]).toBeDefined()
-      expect(persistedState[historicalRpcSyncSlice.name]).toBeDefined()
+      expect(persistedState[txHistorySlice.name]).toStrictEqual({
+        loading: false,
+        data: {
+          persistedTx: {
+            txId: 'persistedTx',
+            txHash: '0xpersisted',
+            safeTxHash: '0xpersisted',
+            timestamp: 2,
+            executor: '0x0000000000000000000000000000000000000002',
+          },
+        },
+      })
+      expect(persistedState[historicalRpcSyncSlice.name]).toStrictEqual({
+        txHistoryBySafe: {
+          '1:0x1111111111111111111111111111111111111111': {
+            backfillCursor: 5,
+          },
+        },
+      })
     })
   })
 })
