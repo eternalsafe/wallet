@@ -12,8 +12,37 @@ export type HistoricalRpcSyncState = {
   txHistoryBySafe: Record<string, TxHistoryBackfillCursor>
 }
 
+const initialBackfillCursor: TxHistoryBackfillCursor = {
+  latestSyncedBlock: 0,
+  backfillCursor: 0,
+  backfillComplete: false,
+}
+
 export const buildTxHistorySyncKey = (chainId: string, safeAddress: string) => {
   return `${chainId}:${safeAddress.toLowerCase()}`
+}
+
+export const normalizeTxHistoryBackfillCursor = (
+  cursor: Partial<TxHistoryBackfillCursor> | undefined,
+): TxHistoryBackfillCursor => {
+  return {
+    latestSyncedBlock: cursor?.latestSyncedBlock ?? initialBackfillCursor.latestSyncedBlock,
+    backfillCursor: cursor?.backfillCursor ?? initialBackfillCursor.backfillCursor,
+    backfillComplete: cursor?.backfillComplete ?? initialBackfillCursor.backfillComplete,
+  }
+}
+
+export const normalizeHistoricalRpcSyncState = (
+  state: HistoricalRpcSyncState | undefined,
+): HistoricalRpcSyncState => {
+  return {
+    txHistoryBySafe: Object.fromEntries(
+      Object.entries(state?.txHistoryBySafe ?? {}).map(([key, cursor]) => [
+        key,
+        normalizeTxHistoryBackfillCursor(cursor),
+      ]),
+    ),
+  }
 }
 
 const initialState: HistoricalRpcSyncState = {

@@ -16,7 +16,7 @@ import { safeInfoSlice } from './safeInfoSlice'
 import { balancesSlice } from './balancesSlice'
 import { sessionSlice } from './sessionSlice'
 import { txHistoryListener, txHistorySlice } from './txHistorySlice'
-import { historicalRpcSyncSlice } from './historicalRpcSyncSlice'
+import { historicalRpcSyncSlice, normalizeHistoricalRpcSyncState } from './historicalRpcSyncSlice'
 import { txQueueSlice } from './txQueueSlice'
 import { addressBookSlice } from './addressBookSlice'
 import { notificationsSlice } from './notificationsSlice'
@@ -96,7 +96,12 @@ export const _hydrationReducer: typeof rootReducer = (state, action) => {
      * @see https://lodash.com/docs/4.17.15#merge
      */
 
-    return merge({}, state, action.payload)
+    const mergedState = merge({}, state, action.payload)
+
+    return {
+      ...mergedState,
+      [historicalRpcSyncSlice.name]: normalizeHistoricalRpcSyncState(mergedState[historicalRpcSyncSlice.name]),
+    }
   }
   return rootReducer(state, action)
 }
