@@ -80,12 +80,19 @@ const filterHistoryForSafe = (history: TxHistory | undefined, safeAddress: strin
   return Object.fromEntries(entries)
 }
 
-const sortHistoryItems = (left: TxHistoryItem, right: TxHistoryItem) => {
-  if (left.timestamp !== right.timestamp) {
-    return left.timestamp - right.timestamp
+const mergeTxHistoryItem = (current: TxHistoryItem | undefined, next: TxHistoryItem): TxHistoryItem => {
+  return {
+    ...current,
+    ...next,
+    decodedTxData: next.decodedTxData
+      ? current?.decodedTxData
+        ? {
+            ...next.decodedTxData,
+            nonce: current.decodedTxData.nonce,
+          }
+        : next.decodedTxData
+      : current?.decodedTxData,
   }
-
-  return left.txId.localeCompare(right.txId)
 }
 
 const mergeHistory = (current: TxHistory | undefined, nextItems: TxHistoryItem[]): TxHistory => {
@@ -94,23 +101,14 @@ const mergeHistory = (current: TxHistory | undefined, nextItems: TxHistoryItem[]
   }
 
   for (const item of nextItems) {
-    merged[item.txId] = item
+    merged[item.txId] = mergeTxHistoryItem(merged[item.txId], item)
   }
 
-  return Object.values(merged)
-    .sort(sortHistoryItems)
-    .reduce<TxHistory>((acc, item, index) => {
-      acc[item.txId] = item.decodedTxData
-        ? {
-            ...item,
-            decodedTxData: {
-              ...item.decodedTxData,
-              nonce: index,
-            },
-          }
-        : item
-      return acc
-    }, {})
+  return merged
+}
+
+const countDecodedHistoryItems = (history: TxHistory | undefined) => {
+  return Object.values(history ?? {}).filter((item) => item.decodedTxData).length
 }
 
 const mergeCursor = (
@@ -138,7 +136,7 @@ const buildCursorAfterRange = (
   const candidate = {
     latestSyncedBlock,
     backfillCursor: Math.max(0, range.fromBlock - 1),
-    backfillComplete: range.fromBlock <= 1,
+    backfillComplete: range.fromBlock === 0,
   }
 
   return mergeCursor(current, candidate)
@@ -156,32 +154,59 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
   const { safe, safeAddress } = useSafeInfo()
   const { chainId } = safe
   const [pollCount, resetPolling] = useIntervalCounter(POLLING_INTERVAL)
-
-  const batchSize = useAppSelector(selectHistoricalRpcLogBatchSize)
-  const maxConcurrentRequests = useAppSelector(selectHistoricalRpcLogMaxConcurrentRequests)
-  const persistedTxHistory = useAppSelector(
-    (state) => (safeAddress ? filterHistoryForSafe(selectTxHistory(state).data, safeAddress) : undefined),
-    isEqual,
-  )
   const syncKey = useMemo(() => {
     return safeAddress ? buildTxHistorySyncKey(chainId, safeAddress) : undefined
   }, [chainId, safeAddress])
+
+  const batchSize = useAppSelector(selectHistoricalRpcLogBatchSize)
+  const maxConcurrentRequests = useAppSelector(selectHistoricalRpcLogMaxConcurrentRequests)
   const persistedCursor = useAppSelector(
     (state) => (syncKey ? selectTxHistoryCursor(state, syncKey) : undefined),
+    isEqual,
+  )
+  const persistedTxHistory = useAppSelector(
+    (state) => {
+      if (!safeAddress || !syncKey || !selectTxHistoryCursor(state, syncKey)) {
+        return undefined
+      }
+
+      return filterHistoryForSafe(selectTxHistory(state).data, safeAddress)
+    },
     isEqual,
   )
 
   const [data, setData] = useState<TxHistory | undefined>(persistedTxHistory)
   const [error, setError] = useState<Error>()
   const [loading, setLoading] = useState(false)
+  const dataRef = useRef<TxHistory | undefined>(persistedTxHistory)
   const cursorRef = useRef<TxHistoryBackfillCursor | undefined>(persistedCursor)
+  const previousSyncKeyRef = useRef(syncKey)
 
   useEffect(() => {
     cursorRef.current = persistedCursor
   }, [persistedCursor])
 
   useEffect(() => {
-    setData(persistedTxHistory)
+    dataRef.current = data
+  }, [data])
+
+  useEffect(() => {
+    if (previousSyncKeyRef.current !== syncKey) {
+      previousSyncKeyRef.current = syncKey
+      dataRef.current = persistedTxHistory
+      setData(persistedTxHistory)
+      return
+    }
+
+    if (!persistedTxHistory) {
+      return
+    }
+
+    setData((current) => {
+      const merged = mergeHistory(current, Object.values(persistedTxHistory))
+      dataRef.current = merged
+      return merged
+    })
   }, [persistedTxHistory, syncKey])
 
   useEffect(() => {
@@ -192,6 +217,7 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
     if (!safeAddress || !provider || !syncKey) {
       setLoading(false)
       setError(undefined)
+      dataRef.current = undefined
       setData(undefined)
       return
     }
@@ -207,7 +233,11 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
     let cancelled = false
 
     const mergeIntoState = (items: TxHistoryItem[]) => {
-      setData((current) => mergeHistory(current, items))
+      setData((current) => {
+        const merged = mergeHistory(current, items)
+        dataRef.current = merged
+        return merged
+      })
     }
 
     const updateCursor = (nextCursor: TxHistoryBackfillCursor) => {
@@ -224,8 +254,9 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
     }
 
     const parseLogs = async (logs: ExecutionSuccessLog[]) => {
+      const nextNonceStart = countDecodedHistoryItems(dataRef.current)
       const parsed = await Promise.all(
-        logs.map(async (log) => {
+        logs.map(async (log, index) => {
           const [block, tx] = await Promise.all([provider.getBlock(log.blockNumber), provider.getTransaction(log.transactionHash)])
 
           let decodedTxData: Result | undefined
@@ -241,7 +272,7 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
             safeTxHash: log.args.txHash,
             timestamp: block.timestamp * 1000,
             executor: tx.from,
-            decodedTxData: decodedTxData ? parseDecodedTxData(decodedTxData, 0) : undefined,
+            decodedTxData: decodedTxData ? parseDecodedTxData(decodedTxData, nextNonceStart + index) : undefined,
           }
         }),
       )
