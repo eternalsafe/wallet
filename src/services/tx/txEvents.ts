@@ -1,4 +1,4 @@
-import type { TxHistoryItem } from '@/hooks/loadables/useLoadTxHistory'
+import type { TxHistoryItem } from '@/hooks/loadables/txHistory/types'
 import EventBus from '@/services/EventBus'
 import type { RequestId } from '@safe-global/safe-apps-sdk'
 

@@ -38,7 +38,7 @@ import { ethers } from 'ethers'
 import { type BaseTransaction } from '@safe-global/safe-apps-sdk'
 import { id } from 'ethers/lib/utils'
 import { isEmptyHexData } from '@/utils/hex'
-import type { TxHistoryItem } from '@/hooks/loadables/useLoadTxHistory'
+import type { TxHistoryItem } from '@/hooks/loadables/txHistory/types'
 import { addressEx } from '@/utils/addresses'
 
 export const makeTxFromDetails = (txDetails: TransactionDetails): Transaction => {

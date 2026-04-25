@@ -2,7 +2,7 @@ import type { listenerMiddlewareInstance, RootState } from '@/store'
 import { txDispatch, TxEvent } from '@/services/tx/txEvents'
 import { selectPendingTxs } from './pendingTxsSlice'
 import { makeLoadableSlice } from './common'
-import type { TxHistory, TxHistoryItem } from '@/hooks/loadables/useLoadTxHistory'
+import type { TxHistory, TxHistoryItem } from '@/hooks/loadables/txHistory/types'
 import { createSelector } from '@reduxjs/toolkit'
 import { normalizeTxId } from '@/utils/tx-id'
 

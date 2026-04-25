@@ -41,6 +41,38 @@ describe('historicalRpcSyncSlice', () => {
         },
       })
     })
+
+    it('should keep cursor progress monotonic for the same chain and safe address', () => {
+      const state = historicalRpcSyncSlice.reducer(
+        historicalRpcSyncSlice.reducer(
+          undefined,
+          setTxHistoryCursor({
+            chainId: '1',
+            safeAddress: '0xAbCdEf1234567890ABCDef1234567890abCDef12',
+            cursor: {
+              latestSyncedBlock: 123,
+              backfillCursor: 45,
+              backfillComplete: false,
+            },
+          }),
+        ),
+        setTxHistoryCursor({
+          chainId: '1',
+          safeAddress: '0xAbCdEf1234567890ABCDef1234567890abCDef12',
+          cursor: {
+            latestSyncedBlock: 120,
+            backfillCursor: 90,
+            backfillComplete: false,
+          },
+        }),
+      )
+
+      expect(state.txHistoryBySafe['1:0xabcdef1234567890abcdef1234567890abcdef12']).toEqual({
+        latestSyncedBlock: 123,
+        backfillCursor: 45,
+        backfillComplete: false,
+      })
+    })
   })
 
   describe('clearTxHistoryCursor', () => {

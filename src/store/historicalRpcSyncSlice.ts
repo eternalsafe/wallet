@@ -18,6 +18,23 @@ const initialBackfillCursor: TxHistoryBackfillCursor = {
   backfillComplete: false,
 }
 
+const mergeTxHistoryBackfillCursor = (
+  current: TxHistoryBackfillCursor | undefined,
+  next: TxHistoryBackfillCursor,
+): TxHistoryBackfillCursor => {
+  if (!current) {
+    return next
+  }
+
+  const backfillComplete = current.backfillComplete || next.backfillComplete
+
+  return {
+    latestSyncedBlock: Math.max(current.latestSyncedBlock, next.latestSyncedBlock),
+    backfillCursor: backfillComplete ? 0 : Math.min(current.backfillCursor, next.backfillCursor),
+    backfillComplete,
+  }
+}
+
 export const buildTxHistorySyncKey = (chainId: string, safeAddress: string) => {
   return `${chainId}:${safeAddress.toLowerCase()}`
 }
@@ -65,7 +82,8 @@ export const historicalRpcSyncSlice = createSlice({
   initialState,
   reducers: {
     setTxHistoryCursor: (state, { payload }: PayloadAction<SetTxHistoryCursorPayload>) => {
-      state.txHistoryBySafe[buildTxHistorySyncKey(payload.chainId, payload.safeAddress)] = payload.cursor
+      const key = buildTxHistorySyncKey(payload.chainId, payload.safeAddress)
+      state.txHistoryBySafe[key] = mergeTxHistoryBackfillCursor(state.txHistoryBySafe[key], payload.cursor)
     },
     clearTxHistoryCursor: (state, { payload }: PayloadAction<ClearTxHistoryCursorPayload>) => {
       delete state.txHistoryBySafe[buildTxHistorySyncKey(payload.chainId, payload.safeAddress)]
