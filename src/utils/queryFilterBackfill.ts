@@ -3,16 +3,21 @@ export type BlockRange = {
   toBlock: number
 }
 
+const positiveIntegerOrOne = (value: number) => {
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 1
+}
+
 export const getBackwardBlockRanges = (
   latestBlock: number,
   batchSize: number,
   stopAtBlock = 0,
 ): BlockRange[] => {
+  const normalizedBatchSize = positiveIntegerOrOne(batchSize)
   const ranges: BlockRange[] = []
 
-  for (let toBlock = latestBlock; toBlock >= stopAtBlock; toBlock -= batchSize) {
+  for (let toBlock = latestBlock; toBlock >= stopAtBlock; toBlock -= normalizedBatchSize) {
     ranges.push({
-      fromBlock: Math.max(stopAtBlock, toBlock - batchSize + 1),
+      fromBlock: Math.max(stopAtBlock, toBlock - normalizedBatchSize + 1),
       toBlock,
     })
   }
@@ -27,7 +32,7 @@ type QueryFilterBackwardsParams<T> = {
   maxConcurrentRequests: number
   maxBatches?: number
   queryRange: (range: BlockRange) => Promise<T[]>
-  onBatch: (logs: T[], range: BlockRange) => Promise<void> | void
+  onBatch?: (logs: T[], range: BlockRange) => Promise<void> | void
 }
 
 export async function queryFilterBackwards<T>({
@@ -40,12 +45,17 @@ export async function queryFilterBackwards<T>({
   onBatch,
 }: QueryFilterBackwardsParams<T>): Promise<T[]> {
   const ranges = getBackwardBlockRanges(latestBlock, batchSize, stopAtBlock)
+  const normalizedMaxConcurrentRequests = positiveIntegerOrOne(maxConcurrentRequests)
   const collectedLogs: T[] = []
   let processedBatches = 0
 
-  for (let index = 0; index < ranges.length && processedBatches < maxBatches; index += maxConcurrentRequests) {
+  for (
+    let index = 0;
+    index < ranges.length && processedBatches < maxBatches;
+    index += normalizedMaxConcurrentRequests
+  ) {
     const remainingBatches = maxBatches - processedBatches
-    const group = ranges.slice(index, index + Math.min(maxConcurrentRequests, remainingBatches))
+    const group = ranges.slice(index, index + Math.min(normalizedMaxConcurrentRequests, remainingBatches))
     const results = await Promise.all(
       group.map(async (range) => ({
         range,
@@ -60,7 +70,7 @@ export async function queryFilterBackwards<T>({
         break
       }
 
-      await onBatch(result.logs, result.range)
+      await onBatch?.(result.logs, result.range)
       processedBatches += 1
       collectedLogs.push(...result.logs)
     }
