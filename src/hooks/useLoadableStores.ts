@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { type Slice } from '@reduxjs/toolkit'
 import { useAppDispatch } from '@/store'
 import { type AsyncResult } from './useAsync'
@@ -50,6 +50,38 @@ const useUpdateStore = (
   }, [dispatch, setAction, data, error, loading, getExtraPayload])
 }
 
+const useUpdateTxHistoryStore = (syncKey: string | undefined): void => {
+  const dispatch = useAppDispatch()
+  const [data, error, loading] = useLoadTxHistory()
+  const previousSyncKeyRef = useRef(syncKey)
+
+  useEffect(() => {
+    const syncKeyChanged = previousSyncKeyRef.current !== syncKey
+    previousSyncKeyRef.current = syncKey
+
+    if (syncKeyChanged) {
+      dispatch(
+        txHistorySlice.actions.set({
+          data: undefined,
+          error: undefined,
+          loading: false,
+          syncKey,
+        }),
+      )
+      return
+    }
+
+    dispatch(
+      txHistorySlice.actions.set({
+        data,
+        error: data ? undefined : error?.message,
+        loading: loading && !data,
+        syncKey,
+      }),
+    )
+  }, [data, dispatch, error, loading, syncKey])
+}
+
 const useLoadableStores = () => {
   const { safe, safeAddress } = useSafeInfo()
   const txHistorySyncKey = safeAddress ? buildTxHistorySyncKey(safe.chainId, safeAddress) : undefined
@@ -58,9 +90,7 @@ const useLoadableStores = () => {
   useUpdateStore(safeInfoSlice, useLoadSafeInfo)
   useUpdateStore(balancesSlice, useLoadBalances)
   useUpdateStore(collectiblesBalanceSlice, useLoadCollectiblesBalances)
-  useUpdateStore(txHistorySlice, useLoadTxHistory, () => ({
-    syncKey: txHistorySyncKey,
-  }))
+  useUpdateTxHistoryStore(txHistorySyncKey)
   useUpdateStore(txQueueSlice, useLoadTxQueue)
   useUpdateStore(spendingLimitSlice, useLoadSpendingLimits)
 }

@@ -85,4 +85,45 @@ describe('useLoadableStores', () => {
       }),
     )
   })
+
+  it('clears tx history on the first render after a sync key switch before restamping new data', () => {
+    const dispatch = jest.fn()
+    let currentChainId = '1'
+
+    ;(useAppDispatch as jest.Mock).mockReturnValue(dispatch)
+    ;(useSafeInfo as jest.Mock).mockImplementation(() => ({
+      safeAddress: '0x0000000000000000000000000000000000000afe',
+      safe: { chainId: currentChainId, nonce: 0, version: '1.4.1' },
+    }))
+    ;(useLoadChains as jest.Mock).mockReturnValue([undefined, undefined, false])
+    ;(useLoadSafeInfo as jest.Mock).mockReturnValue([undefined, undefined, false])
+    ;(useLoadBalances as jest.Mock).mockReturnValue([undefined, undefined, false])
+    ;(useLoadTxHistory as jest.Mock).mockReturnValue([{ tx: 'stale-history' }, undefined, false])
+    ;(useLoadTxQueue as jest.Mock).mockReturnValue([undefined, undefined, false])
+    ;(useLoadCollectiblesBalances as jest.Mock).mockReturnValue([undefined, undefined, false])
+    ;(useLoadSpendingLimits as jest.Mock).mockReturnValue([undefined, undefined, false])
+
+    const { rerender } = renderHook(() => useLoadableStores())
+
+    dispatch.mockClear()
+    currentChainId = '2'
+    rerender()
+
+    expect(dispatch).toHaveBeenCalledWith(
+      txHistorySlice.actions.set({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        syncKey: '2:0x0000000000000000000000000000000000000afe',
+      }),
+    )
+    expect(dispatch).not.toHaveBeenCalledWith(
+      txHistorySlice.actions.set({
+        data: { tx: 'stale-history' },
+        error: undefined,
+        loading: false,
+        syncKey: '2:0x0000000000000000000000000000000000000afe',
+      }),
+    )
+  })
 })
