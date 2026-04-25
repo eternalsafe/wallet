@@ -4,7 +4,11 @@ export type BlockRange = {
 }
 
 const positiveIntegerOrOne = (value: number) => {
-  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 1
+  return Math.max(1, Math.floor(Number.isFinite(value) ? value : 0))
+}
+
+const nonNegativeIntegerOrZero = (value: number) => {
+  return Math.max(0, Math.floor(Number.isFinite(value) ? value : 0))
 }
 
 export const getBackwardBlockRanges = (
@@ -13,11 +17,13 @@ export const getBackwardBlockRanges = (
   stopAtBlock = 0,
 ): BlockRange[] => {
   const normalizedBatchSize = positiveIntegerOrOne(batchSize)
+  const normalizedLatestBlock = nonNegativeIntegerOrZero(latestBlock)
+  const normalizedStopAtBlock = nonNegativeIntegerOrZero(stopAtBlock)
   const ranges: BlockRange[] = []
 
-  for (let toBlock = latestBlock; toBlock >= stopAtBlock; toBlock -= normalizedBatchSize) {
+  for (let toBlock = normalizedLatestBlock; toBlock >= normalizedStopAtBlock; toBlock -= normalizedBatchSize) {
     ranges.push({
-      fromBlock: Math.max(stopAtBlock, toBlock - normalizedBatchSize + 1),
+      fromBlock: Math.max(normalizedStopAtBlock, toBlock - normalizedBatchSize + 1),
       toBlock,
     })
   }

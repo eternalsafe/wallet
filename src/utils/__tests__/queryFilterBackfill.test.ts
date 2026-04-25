@@ -9,8 +9,8 @@ describe('getBackwardBlockRanges', () => {
     ])
   })
 
-  it('falls back to a batch size of one for non-positive values', () => {
-    expect(getBackwardBlockRanges(3, 0, 0)).toEqual([
+  it('normalizes fractional and non-positive inputs safely', () => {
+    expect(getBackwardBlockRanges(3.9, 0.5, -1.2)).toEqual([
       { fromBlock: 3, toBlock: 3 },
       { fromBlock: 2, toBlock: 2 },
       { fromBlock: 1, toBlock: 1 },
