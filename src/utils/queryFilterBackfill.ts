@@ -41,8 +41,9 @@ export async function queryFilterBackwards<T>({
 }: QueryFilterBackwardsParams<T>): Promise<T[]> {
   const ranges = getBackwardBlockRanges(latestBlock, batchSize, stopAtBlock)
   const collectedLogs: T[] = []
+  let processedBatches = 0
 
-  for (let index = 0; index < ranges.length && collectedLogs.length < maxBatches; index += maxConcurrentRequests) {
+  for (let index = 0; index < ranges.length && processedBatches < maxBatches; index += maxConcurrentRequests) {
     const group = ranges.slice(index, index + maxConcurrentRequests)
     const results = await Promise.all(
       group.map(async (range) => ({
@@ -54,11 +55,12 @@ export async function queryFilterBackwards<T>({
     results.sort((a, b) => a.range.fromBlock - b.range.fromBlock)
 
     for (const result of results) {
-      if (collectedLogs.length >= maxBatches) {
+      if (processedBatches >= maxBatches) {
         break
       }
 
       await onBatch(result.logs, result.range)
+      processedBatches += 1
       collectedLogs.push(...result.logs)
     }
   }
