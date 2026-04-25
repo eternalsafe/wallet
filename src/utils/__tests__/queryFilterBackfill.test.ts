@@ -29,6 +29,7 @@ describe('queryFilterBackwards', () => {
   })
 
   it('stops after the requested number of batches', async () => {
+    const queriedRanges: string[] = []
     const appliedRanges: string[] = []
     const collectedLogs: string[] = []
 
@@ -38,22 +39,23 @@ describe('queryFilterBackwards', () => {
       batchSize: 10,
       maxConcurrentRequests: 3,
       maxBatches: 2,
-      queryRange: async ({ fromBlock, toBlock }) => [
-        `${fromBlock}-${toBlock}-a`,
-        `${fromBlock}-${toBlock}-b`,
-      ],
+      queryRange: async ({ fromBlock, toBlock }) => {
+        queriedRanges.push(`${fromBlock}-${toBlock}`)
+        return [`${fromBlock}-${toBlock}-a`, `${fromBlock}-${toBlock}-b`]
+      },
       onBatch: async (logs, range) => {
         appliedRanges.push(`${range.fromBlock}-${range.toBlock}`)
         collectedLogs.push(...logs)
       },
     })
 
-    expect(appliedRanges).toEqual(['20-29', '30-39'])
+    expect(queriedRanges).toEqual(['40-49', '30-39'])
+    expect(appliedRanges).toEqual(['30-39', '40-49'])
     expect(collectedLogs).toEqual([
-      '20-29-a',
-      '20-29-b',
       '30-39-a',
       '30-39-b',
+      '40-49-a',
+      '40-49-b',
     ])
     expect(result).toEqual(collectedLogs)
   })

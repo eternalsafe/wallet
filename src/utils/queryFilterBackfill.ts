@@ -44,7 +44,8 @@ export async function queryFilterBackwards<T>({
   let processedBatches = 0
 
   for (let index = 0; index < ranges.length && processedBatches < maxBatches; index += maxConcurrentRequests) {
-    const group = ranges.slice(index, index + maxConcurrentRequests)
+    const remainingBatches = maxBatches - processedBatches
+    const group = ranges.slice(index, index + Math.min(maxConcurrentRequests, remainingBatches))
     const results = await Promise.all(
       group.map(async (range) => ({
         range,
