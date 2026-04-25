@@ -80,35 +80,114 @@ const filterHistoryForSafe = (history: TxHistory | undefined, safeAddress: strin
   return Object.fromEntries(entries)
 }
 
+const getOrderedHistoryItems = (history: TxHistory | undefined): TxHistoryItem[] => {
+  return Object.values(history ?? {})
+}
+
 const mergeTxHistoryItem = (current: TxHistoryItem | undefined, next: TxHistoryItem): TxHistoryItem => {
   return {
     ...current,
     ...next,
-    decodedTxData: next.decodedTxData
-      ? current?.decodedTxData
-        ? {
-            ...next.decodedTxData,
-            nonce: current.decodedTxData.nonce,
-          }
-        : next.decodedTxData
-      : current?.decodedTxData,
+    decodedTxData: next.decodedTxData ?? current?.decodedTxData,
   }
 }
 
-const mergeHistory = (current: TxHistory | undefined, nextItems: TxHistoryItem[]): TxHistory => {
-  const merged = {
-    ...(current ?? {}),
+const rebuildHistoryFromOrder = (orderedItems: TxHistoryItem[]): TxHistory | undefined => {
+  if (!orderedItems.length) {
+    return undefined
   }
 
-  for (const item of nextItems) {
-    merged[item.txId] = mergeTxHistoryItem(merged[item.txId], item)
-  }
+  return orderedItems.reduce<TxHistory>((acc, item, index) => {
+    acc[item.txId] = item.decodedTxData
+      ? {
+          ...item,
+          decodedTxData: {
+            ...item.decodedTxData,
+            nonce: index,
+          },
+        }
+      : item
 
-  return merged
+    return acc
+  }, {})
 }
 
-const countDecodedHistoryItems = (history: TxHistory | undefined) => {
-  return Object.values(history ?? {}).filter((item) => item.decodedTxData).length
+const insertRangeIntoOrderedHistory = (
+  currentOrderedHistory: TxHistoryItem[],
+  nextItems: TxHistoryItem[],
+  insertionIndex: number,
+) => {
+  const currentById = new Map(currentOrderedHistory.map((item) => [item.txId, item]))
+  const nextTxIds = new Set(nextItems.map((item) => item.txId))
+  const removedBeforeIndex = currentOrderedHistory
+    .slice(0, insertionIndex)
+    .filter((item) => nextTxIds.has(item.txId)).length
+  const remainingItems = currentOrderedHistory.filter((item) => !nextTxIds.has(item.txId))
+  const normalizedInsertionIndex = Math.max(
+    0,
+    Math.min(remainingItems.length, insertionIndex - removedBeforeIndex),
+  )
+  const mergedItems = nextItems.map((item) => mergeTxHistoryItem(currentById.get(item.txId), item))
+
+  return {
+    orderedHistory: [
+      ...remainingItems.slice(0, normalizedInsertionIndex),
+      ...mergedItems,
+      ...remainingItems.slice(normalizedInsertionIndex),
+    ],
+    nextInsertionIndex: normalizedInsertionIndex + mergedItems.length,
+  }
+}
+
+const mergePersistedHistorySnapshot = (
+  currentOrderedHistory: TxHistoryItem[],
+  persistedHistory: TxHistory | undefined,
+): TxHistoryItem[] => {
+  const persistedOrderedHistory = getOrderedHistoryItems(persistedHistory)
+  if (!persistedOrderedHistory.length) {
+    return currentOrderedHistory
+  }
+
+  if (!currentOrderedHistory.length) {
+    return persistedOrderedHistory
+  }
+
+  const nextOrderedHistory = currentOrderedHistory.slice()
+
+  for (const [snapshotIndex, snapshotItem] of persistedOrderedHistory.entries()) {
+    const currentIndex = nextOrderedHistory.findIndex((item) => item.txId === snapshotItem.txId)
+
+    if (currentIndex >= 0) {
+      nextOrderedHistory[currentIndex] = mergeTxHistoryItem(nextOrderedHistory[currentIndex], snapshotItem)
+      continue
+    }
+
+    let insertAt = nextOrderedHistory.length
+
+    for (let lookAheadIndex = snapshotIndex + 1; lookAheadIndex < persistedOrderedHistory.length; lookAheadIndex += 1) {
+      const futureIndex = nextOrderedHistory.findIndex((item) => item.txId === persistedOrderedHistory[lookAheadIndex].txId)
+      if (futureIndex >= 0) {
+        insertAt = futureIndex
+        break
+      }
+    }
+
+    if (insertAt === nextOrderedHistory.length) {
+      for (let lookBackIndex = snapshotIndex - 1; lookBackIndex >= 0; lookBackIndex -= 1) {
+        const previousIndex = nextOrderedHistory.findIndex(
+          (item) => item.txId === persistedOrderedHistory[lookBackIndex].txId,
+        )
+        if (previousIndex >= 0) {
+          insertAt = previousIndex + 1
+          break
+        }
+      }
+    }
+
+    nextOrderedHistory.splice(insertAt, 0, snapshotItem)
+  }
+
+  return nextOrderedHistory
 }
 
 const mergeCursor = (
@@ -179,6 +258,7 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
   const [error, setError] = useState<Error>()
   const [loading, setLoading] = useState(false)
   const dataRef = useRef<TxHistory | undefined>(persistedTxHistory)
+  const orderedHistoryRef = useRef<TxHistoryItem[]>(getOrderedHistoryItems(persistedTxHistory))
   const cursorRef = useRef<TxHistoryBackfillCursor | undefined>(persistedCursor)
   const previousSyncKeyRef = useRef(syncKey)
 
@@ -193,8 +273,11 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
   useEffect(() => {
     if (previousSyncKeyRef.current !== syncKey) {
       previousSyncKeyRef.current = syncKey
-      dataRef.current = persistedTxHistory
-      setData(persistedTxHistory)
+      const nextOrderedHistory = getOrderedHistoryItems(persistedTxHistory)
+      orderedHistoryRef.current = nextOrderedHistory
+      const nextHistory = rebuildHistoryFromOrder(nextOrderedHistory)
+      dataRef.current = nextHistory
+      setData(nextHistory)
       return
     }
 
@@ -202,11 +285,11 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
       return
     }
 
-    setData((current) => {
-      const merged = mergeHistory(current, Object.values(persistedTxHistory))
-      dataRef.current = merged
-      return merged
-    })
+    const nextOrderedHistory = mergePersistedHistorySnapshot(orderedHistoryRef.current, persistedTxHistory)
+    orderedHistoryRef.current = nextOrderedHistory
+    const nextHistory = rebuildHistoryFromOrder(nextOrderedHistory)
+    dataRef.current = nextHistory
+    setData(nextHistory)
   }, [persistedTxHistory, syncKey])
 
   useEffect(() => {
@@ -218,6 +301,7 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
       setLoading(false)
       setError(undefined)
       dataRef.current = undefined
+      orderedHistoryRef.current = []
       setData(undefined)
       return
     }
@@ -232,12 +316,11 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
     const executionSuccessFilter = safeContract.filters.ExecutionSuccess()
     let cancelled = false
 
-    const mergeIntoState = (items: TxHistoryItem[]) => {
-      setData((current) => {
-        const merged = mergeHistory(current, items)
-        dataRef.current = merged
-        return merged
-      })
+    const setOrderedHistory = (nextOrderedHistory: TxHistoryItem[]) => {
+      orderedHistoryRef.current = nextOrderedHistory
+      const nextHistory = rebuildHistoryFromOrder(nextOrderedHistory)
+      dataRef.current = nextHistory
+      setData(nextHistory)
     }
 
     const updateCursor = (nextCursor: TxHistoryBackfillCursor) => {
@@ -254,9 +337,8 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
     }
 
     const parseLogs = async (logs: ExecutionSuccessLog[]) => {
-      const nextNonceStart = countDecodedHistoryItems(dataRef.current)
       const parsed = await Promise.all(
-        logs.map(async (log, index) => {
+        logs.map(async (log) => {
           const [block, tx] = await Promise.all([provider.getBlock(log.blockNumber), provider.getTransaction(log.transactionHash)])
 
           let decodedTxData: Result | undefined
@@ -272,7 +354,7 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
             safeTxHash: log.args.txHash,
             timestamp: block.timestamp * 1000,
             executor: tx.from,
-            decodedTxData: decodedTxData ? parseDecodedTxData(decodedTxData, nextNonceStart + index) : undefined,
+            decodedTxData: decodedTxData ? parseDecodedTxData(decodedTxData, 0) : undefined,
           }
         }),
       )
@@ -283,15 +365,21 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
     const syncLogsInRanges = async ({
       latestBlock,
       stopAtBlock,
+      mode,
       onRangeApplied,
     }: {
       latestBlock: number
       stopAtBlock: number
+      mode: 'backfill' | 'forward'
       onRangeApplied?: (range: BlockRange) => void
     }) => {
       if (latestBlock < stopAtBlock) {
         return
       }
+
+      const baseInsertionIndex = mode === 'forward' ? orderedHistoryRef.current.length : 0
+      let insertionIndex = baseInsertionIndex
+      let previousAppliedRange: BlockRange | undefined
 
       await queryFilterBackwards({
         latestBlock,
@@ -309,7 +397,18 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
             return
           }
 
-          mergeIntoState(parsed)
+          const isNewOlderGroup =
+            previousAppliedRange !== undefined && range.toBlock < previousAppliedRange.fromBlock
+
+          if (isNewOlderGroup) {
+            insertionIndex = baseInsertionIndex
+          }
+
+          const insertionResult = insertRangeIntoOrderedHistory(orderedHistoryRef.current, parsed, insertionIndex)
+          insertionIndex = insertionResult.nextInsertionIndex
+          previousAppliedRange = range
+
+          setOrderedHistory(insertionResult.orderedHistory)
           onRangeApplied?.(range)
         },
       })
@@ -336,6 +435,7 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
           await syncLogsInRanges({
             latestBlock,
             stopAtBlock: activeCursor.latestSyncedBlock + 1,
+            mode: 'forward',
           })
 
           if (cancelled) {
@@ -355,6 +455,7 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
           await syncLogsInRanges({
             latestBlock: backfillCursor,
             stopAtBlock: 0,
+            mode: 'backfill',
             onRangeApplied: (range) => {
               updateCursor(buildCursorAfterRange(cursorRef.current ?? activeCursor, latestBlock, range))
             },
