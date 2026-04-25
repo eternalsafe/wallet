@@ -36,6 +36,7 @@ describe('store', () => {
         [txHistorySlice.name]: {
           loading: true,
           error: 'stale error',
+          syncKey: '1:0x1111111111111111111111111111111111111111',
           data: {
             persistedTx: {
               txId: 'persistedTx',
@@ -65,6 +66,7 @@ describe('store', () => {
         ...initialState[txHistorySlice.name],
         loading: false,
         error: undefined,
+        syncKey: '1:0x1111111111111111111111111111111111111111',
         data: {
           persistedTx: {
             txId: 'persistedTx',
@@ -94,6 +96,7 @@ describe('store', () => {
         if (key === txHistorySlice.name) {
           return {
             loading: false,
+            syncKey: '1:0x1111111111111111111111111111111111111111',
             data: {
               persistedTx: {
                 txId: 'persistedTx',
@@ -141,6 +144,7 @@ describe('store', () => {
       expect(mockedLocal.getItem.mock.calls.map(([key]) => key).sort()).toEqual([...expectedSliceNames].sort())
       expect(persistedState[txHistorySlice.name]).toStrictEqual({
         loading: false,
+        syncKey: '1:0x1111111111111111111111111111111111111111',
         data: {
           persistedTx: {
             txId: 'persistedTx',

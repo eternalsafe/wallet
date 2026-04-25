@@ -8,12 +8,7 @@ import useIntervalCounter from '@/hooks/useIntervalCounter'
 import { POLLING_INTERVAL } from '@/config/constants'
 import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { useAppDispatch, useAppSelector } from '@/store'
-import {
-  buildTxHistorySyncKey,
-  type TxHistoryBackfillCursor,
-  selectTxHistoryCursor,
-  setTxHistoryCursor,
-} from '@/store/historicalRpcSyncSlice'
+import { buildTxHistorySyncKey, type TxHistoryBackfillCursor, selectTxHistoryCursor, setTxHistoryCursor } from '@/store/historicalRpcSyncSlice'
 import {
   selectHistoricalRpcLogBatchSize,
   selectHistoricalRpcLogMaxConcurrentRequests,
@@ -245,11 +240,18 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
   )
   const persistedTxHistory = useAppSelector(
     (state) => {
-      if (!safeAddress || !syncKey || !selectTxHistoryCursor(state, syncKey)) {
+      const persistedTxHistoryState = selectTxHistory(state)
+
+      if (
+        !safeAddress ||
+        !syncKey ||
+        !selectTxHistoryCursor(state, syncKey) ||
+        persistedTxHistoryState.syncKey !== syncKey
+      ) {
         return undefined
       }
 
-      return filterHistoryForSafe(selectTxHistory(state).data, safeAddress)
+      return filterHistoryForSafe(persistedTxHistoryState.data, safeAddress)
     },
     isEqual,
   )
@@ -451,7 +453,7 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
         const backfillCursor = (cursorRef.current ?? activeCursor).backfillCursor
         const backfillComplete = (cursorRef.current ?? activeCursor).backfillComplete
 
-        if (!backfillComplete && backfillCursor > 0) {
+        if (!backfillComplete) {
           await syncLogsInRanges({
             latestBlock: backfillCursor,
             stopAtBlock: 0,
@@ -459,13 +461,6 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
             onRangeApplied: (range) => {
               updateCursor(buildCursorAfterRange(cursorRef.current ?? activeCursor, latestBlock, range))
             },
-          })
-        } else if (!backfillComplete && backfillCursor === 0) {
-          updateCursor({
-            ...(cursorRef.current ?? activeCursor),
-            latestSyncedBlock: Math.max((cursorRef.current ?? activeCursor).latestSyncedBlock, latestBlock),
-            backfillCursor: 0,
-            backfillComplete: true,
           })
         }
       } catch (err) {

@@ -189,6 +189,7 @@ describe('useLoadTxHistory', () => {
       [txHistorySlice.name]: {
         data: existingHistory,
         loading: false,
+        syncKey,
       },
       [historicalRpcSyncSlice.name]: {
         txHistoryBySafe: {
@@ -342,6 +343,7 @@ describe('useLoadTxHistory', () => {
           },
           loading: false,
           error: undefined,
+          syncKey,
         }),
       )
     })
@@ -358,7 +360,7 @@ describe('useLoadTxHistory', () => {
     )
   })
 
-  it('does not bootstrap persisted tx history from the same safe address on another chain', () => {
+  it('does not bootstrap persisted tx history from another chain when the current chain also has a cursor', () => {
     jest.spyOn(safeInfo, 'default').mockReturnValue({
       safeAddress: SAFE_ADDRESS,
       safe: { chainId: '2', nonce: 3, version: SAFE_VERSION },
@@ -377,6 +379,7 @@ describe('useLoadTxHistory', () => {
     } as any)
 
     const chainOneSyncKey = buildTxHistorySyncKey(CHAIN_ID, SAFE_ADDRESS)
+    const chainTwoSyncKey = buildTxHistorySyncKey('2', SAFE_ADDRESS)
     const persistedTxId = buildMultisigTxId(SAFE_ADDRESS, '0xabc')
     const { wrapper } = createWrapper({
       [txHistorySlice.name]: {
@@ -390,6 +393,7 @@ describe('useLoadTxHistory', () => {
           },
         },
         loading: false,
+        syncKey: chainOneSyncKey,
       },
       [historicalRpcSyncSlice.name]: {
         txHistoryBySafe: {
@@ -398,6 +402,11 @@ describe('useLoadTxHistory', () => {
             backfillCursor: 0,
             backfillComplete: true,
           },
+          [chainTwoSyncKey]: {
+            latestSyncedBlock: 8,
+            backfillCursor: 0,
+            backfillComplete: false,
+          },
         },
       },
     })
@@ -405,6 +414,80 @@ describe('useLoadTxHistory', () => {
     const { result } = renderHook(() => useLoadTxHistory(), { wrapper })
 
     expect(result.current[0]).toBeUndefined()
+  })
+
+  it('queries block 0 on resume before marking backfill complete', async () => {
+    const syncKey = buildTxHistorySyncKey(CHAIN_ID, SAFE_ADDRESS)
+    const zeroTxId = buildMultisigTxId(SAFE_ADDRESS, '0xzero')
+    const queryFilter = jest.fn((filter, fromBlock: number, toBlock: number) => {
+      if (filter !== 'execution-filter') {
+        return Promise.resolve([])
+      }
+
+      if (fromBlock === 0 && toBlock === 0) {
+        return Promise.resolve([createLog(0, '0xzero-hash', '0xzero')])
+      }
+
+      return Promise.resolve([])
+    })
+
+    ;(getSafeContract as jest.Mock).mockReturnValue({
+      filters: { ExecutionSuccess: jest.fn(() => 'execution-filter') },
+      queryFilter,
+      interface: { decodeFunctionData: jest.fn(() => createDecodedTxData()) },
+    })
+
+    jest.spyOn(web3, 'useMultiWeb3ReadOnly').mockReturnValue({
+      getBlockNumber: jest.fn().mockResolvedValue(25),
+      getBlock: jest.fn((blockNumber: number) => Promise.resolve({ timestamp: blockNumber })),
+      getTransaction: jest.fn(() =>
+        Promise.resolve({
+          from: constants.AddressZero,
+          data: '0xzero-data',
+        }),
+      ),
+    } as any)
+
+    const { store, wrapper } = createWrapper({
+      [settingsSlice.name]: {
+        ...settingsSlice.getInitialState(),
+        env: {
+          ...settingsSlice.getInitialState().env,
+          historicalRpcLogBatchSize: 5,
+          historicalRpcLogMaxConcurrentRequests: 1,
+        },
+      },
+      [historicalRpcSyncSlice.name]: {
+        txHistoryBySafe: {
+          [syncKey]: {
+            latestSyncedBlock: 25,
+            backfillCursor: 0,
+            backfillComplete: false,
+          },
+        },
+      },
+    })
+
+    const { result } = renderHook(() => useLoadTxHistory(), { wrapper })
+
+    await waitFor(() => expect(queryFilter).toHaveBeenCalledWith('execution-filter', 0, 0))
+    await waitFor(() =>
+      expect(result.current[0]).toEqual(
+        expect.objectContaining({
+          [zeroTxId]: expect.objectContaining({
+            txId: zeroTxId,
+            safeTxHash: '0xzero',
+          }),
+        }),
+      ),
+    )
+    await waitFor(() =>
+      expect(store.getState()[historicalRpcSyncSlice.name].txHistoryBySafe[syncKey]).toEqual({
+        latestSyncedBlock: 25,
+        backfillCursor: 0,
+        backfillComplete: true,
+      }),
+    )
   })
 
   it('keeps older backfill executions ahead of newer head sync executions when assigning nonces', async () => {
@@ -464,6 +547,7 @@ describe('useLoadTxHistory', () => {
           [middleTxId]: createDecodedTxHistoryItem(middleTxId, '0xmid', 9_000),
         },
         loading: false,
+        syncKey,
       },
       [historicalRpcSyncSlice.name]: {
         txHistoryBySafe: {

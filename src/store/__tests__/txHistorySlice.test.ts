@@ -6,6 +6,30 @@ import { PendingStatus } from '../pendingTxsSlice'
 import type { RootState } from '..'
 
 describe('txHistorySlice', () => {
+  describe('set', () => {
+    it('should persist the tx history sync key with the payload', () => {
+      const state = txHistorySlice.reducer(
+        undefined,
+        txHistorySlice.actions.set({
+          loading: false,
+          syncKey: '1:0xabc',
+          data: {
+            '0x123': { txId: '0x123', txHash: '0x456', safeTxHash: '0x123', timestamp: 0, executor: '0x789' },
+          },
+        }),
+      )
+
+      expect(state.syncKey).toBe('1:0xabc')
+      expect(state.data?.['0x123']).toEqual({
+        txId: '0x123',
+        txHash: '0x456',
+        safeTxHash: '0x123',
+        timestamp: 0,
+        executor: '0x789',
+      })
+    })
+  })
+
   describe('selectTxFromHistory', () => {
     it('should match tx ids regardless of address casing', () => {
       const txIdLower = 'multisig_0xa710c854ede0eeaf84ea272363083cfa547dd552_0xabc'

@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { type Slice } from '@reduxjs/toolkit'
 import { useAppDispatch } from '@/store'
 import { type AsyncResult } from './useAsync'
+import useSafeInfo from './useSafeInfo'
+import { buildTxHistorySyncKey } from '@/store/historicalRpcSyncSlice'
 
 // Import all the loadable hooks
 import useLoadChains from './loadables/useLoadChains'
@@ -22,28 +24,43 @@ import useLoadSpendingLimits from '@/hooks/loadables/useLoadSpendingLimits'
 import { collectiblesBalanceSlice } from '@/store/collectiblesBalancesSlice'
 
 // Dispatch into the corresponding store when the loadable is loaded
-const useUpdateStore = (slice: Slice, useLoadHook: () => AsyncResult<unknown>): void => {
+const useUpdateStore = (
+  slice: Slice,
+  useLoadHook: () => AsyncResult<unknown>,
+  getExtraPayload?: (params: {
+    data: unknown
+    error: Error | undefined
+    loading: boolean
+  }) => Record<string, unknown>,
+): void => {
   const dispatch = useAppDispatch()
   const [data, error, loading] = useLoadHook()
   const setAction = slice.actions.set
 
   useEffect(() => {
+    const extraPayload = getExtraPayload?.({ data, error, loading }) ?? {}
     dispatch(
       setAction({
         data,
         error: data ? undefined : error?.message,
         loading: loading && !data,
+        ...extraPayload,
       }),
     )
-  }, [dispatch, setAction, data, error, loading])
+  }, [dispatch, setAction, data, error, loading, getExtraPayload])
 }
 
 const useLoadableStores = () => {
+  const { safe, safeAddress } = useSafeInfo()
+  const txHistorySyncKey = safeAddress ? buildTxHistorySyncKey(safe.chainId, safeAddress) : undefined
+
   useUpdateStore(chainsSlice, useLoadChains)
   useUpdateStore(safeInfoSlice, useLoadSafeInfo)
   useUpdateStore(balancesSlice, useLoadBalances)
   useUpdateStore(collectiblesBalanceSlice, useLoadCollectiblesBalances)
-  useUpdateStore(txHistorySlice, useLoadTxHistory)
+  useUpdateStore(txHistorySlice, useLoadTxHistory, () => ({
+    syncKey: txHistorySyncKey,
+  }))
   useUpdateStore(txQueueSlice, useLoadTxQueue)
   useUpdateStore(spendingLimitSlice, useLoadSpendingLimits)
 }
