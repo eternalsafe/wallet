@@ -3,8 +3,20 @@ import { Paper, Grid, Typography, TextField, Button, Tooltip, IconButton, SvgIco
 import InputAdornment from '@mui/material/InputAdornment'
 import RotateLeftIcon from '@mui/icons-material/RotateLeft'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { selectSettings, setIPFS, setRpc, setTenderly, setWalletConnectApiKey } from '@/store/settingsSlice'
-import { CHAINLIST_URL } from '@/config/constants'
+import {
+  selectSettings,
+  setHistoricalRpcLogBatchSize,
+  setHistoricalRpcLogMaxConcurrentRequests,
+  setIPFS,
+  setRpc,
+  setTenderly,
+  setWalletConnectApiKey,
+} from '@/store/settingsSlice'
+import {
+  CHAINLIST_URL,
+  HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+  HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
+} from '@/config/constants'
 import useChainId from '@/hooks/useChainId'
 import { useCurrentChain } from '@/hooks/useChains'
 import InfoIcon from '@/public/images/notifications/info.svg'
@@ -14,6 +26,8 @@ import { useEffect, useState } from 'react'
 
 export enum EnvVariablesField {
   rpc = 'rpc',
+  historicalRpcLogBatchSize = 'historicalRpcLogBatchSize',
+  historicalRpcLogMaxConcurrentRequests = 'historicalRpcLogMaxConcurrentRequests',
   ipfs = 'ipfs',
   tenderlyOrgName = 'tenderlyOrgName',
   tenderlyProjectName = 'tenderlyProjectName',
@@ -23,6 +37,8 @@ export enum EnvVariablesField {
 
 export type EnvVariablesFormData = {
   [EnvVariablesField.rpc]: string
+  [EnvVariablesField.historicalRpcLogBatchSize]: number
+  [EnvVariablesField.historicalRpcLogMaxConcurrentRequests]: number
   [EnvVariablesField.ipfs]: string
   [EnvVariablesField.tenderlyOrgName]: string
   [EnvVariablesField.tenderlyProjectName]: string
@@ -40,6 +56,10 @@ const EnvironmentVariables = () => {
     mode: 'onChange',
     values: {
       [EnvVariablesField.rpc]: settings.env?.rpc[chainId] ?? '',
+      [EnvVariablesField.historicalRpcLogBatchSize]:
+        settings.env?.historicalRpcLogBatchSize ?? HISTORICAL_RPC_LOG_BLOCK_BATCH_SIZE,
+      [EnvVariablesField.historicalRpcLogMaxConcurrentRequests]:
+        settings.env?.historicalRpcLogMaxConcurrentRequests ?? HISTORICAL_RPC_LOG_MAX_CONCURRENT_REQUESTS,
       [EnvVariablesField.ipfs]: settings.env?.ipfs ?? '',
       [EnvVariablesField.tenderlyOrgName]: settings.env?.tenderly.orgName ?? '',
       [EnvVariablesField.tenderlyProjectName]: settings.env?.tenderly.projectName ?? '',
@@ -77,6 +97,11 @@ const EnvironmentVariables = () => {
         chainId,
         rpc: rpcValue,
       }),
+    )
+
+    dispatch(setHistoricalRpcLogBatchSize(Number(data[EnvVariablesField.historicalRpcLogBatchSize])))
+    dispatch(
+      setHistoricalRpcLogMaxConcurrentRequests(Number(data[EnvVariablesField.historicalRpcLogMaxConcurrentRequests])),
     )
 
     // strip ending slash if present
@@ -183,6 +208,38 @@ const EnvironmentVariables = () => {
                 }}
                 fullWidth
               />
+
+              <Typography fontWeight={700} mb={2} mt={3}>
+                Chain queries
+              </Typography>
+
+              <Grid mt={2} container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    {...register(EnvVariablesField.historicalRpcLogBatchSize, {
+                      valueAsNumber: true,
+                      validate: (value) => Number.isInteger(value) && value > 0,
+                    })}
+                    variant="outlined"
+                    label="Historical log block batch size"
+                    type="number"
+                    fullWidth
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    {...register(EnvVariablesField.historicalRpcLogMaxConcurrentRequests, {
+                      valueAsNumber: true,
+                      validate: (value) => Number.isInteger(value) && value > 0,
+                    })}
+                    variant="outlined"
+                    label="Max parallel historical log requests"
+                    type="number"
+                    fullWidth
+                  />
+                </Grid>
+              </Grid>
 
               <Typography fontWeight={700} mb={2} mt={3}>
                 IPFS URL

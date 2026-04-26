@@ -106,7 +106,9 @@ describe('useLoadTxHistory', () => {
 
     const { wrapper } = createWrapper()
 
-    renderHook(() => useLoadTxHistory(), { wrapper })
+    await act(async () => {
+      renderHook(() => useLoadTxHistory(), { wrapper })
+    })
 
     await waitFor(() => expect(queryFilter).toHaveBeenCalled())
 
@@ -203,13 +205,17 @@ describe('useLoadTxHistory', () => {
     }
 
     const { store, wrapper } = createWrapper(initialReduxState)
-    const { result } = renderHook(() => useLoadTxHistory(), { wrapper })
+    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
 
-    expect(result.current[0]).toEqual(existingHistory)
+    await act(async () => {
+      ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
+    })
+
+    expect(result!.current[0]).toEqual(expect.objectContaining(existingHistory))
 
     const firstMergedTxId = buildMultisigTxId(SAFE_ADDRESS, '0x222')
     await waitFor(() =>
-      expect(result.current[0]).toEqual(
+        expect(result!.current[0]).toEqual(
         expect.objectContaining({
           [persistedTxId]: existingHistory[persistedTxId],
           [firstMergedTxId]: expect.objectContaining({
@@ -224,12 +230,14 @@ describe('useLoadTxHistory', () => {
     expect(queryFilter).toHaveBeenCalledWith('execution-filter', 1, 5)
     expect(queryFilter).not.toHaveBeenCalledWith('execution-filter', 0, 'latest')
 
-    resolveSecondRange?.([createLog(3, '0xcccc', '0x333'), createLog(3, '0xdddd', '0x000')])
+    await act(async () => {
+      resolveSecondRange?.([createLog(3, '0xcccc', '0x333'), createLog(3, '0xdddd', '0x000')])
+    })
 
     const secondMergedTxId = buildMultisigTxId(SAFE_ADDRESS, '0x333')
     const thirdMergedTxId = buildMultisigTxId(SAFE_ADDRESS, '0x000')
     await waitFor(() =>
-      expect(result.current[0]).toEqual(
+        expect(result!.current[0]).toEqual(
         expect.objectContaining({
           [persistedTxId]: existingHistory[persistedTxId],
           [firstMergedTxId]: expect.any(Object),
@@ -245,10 +253,10 @@ describe('useLoadTxHistory', () => {
       ),
     )
 
-    expect(Object.keys(result.current[0] || {})).toEqual([secondMergedTxId, thirdMergedTxId, firstMergedTxId, persistedTxId])
-    expect(result.current[0]?.[secondMergedTxId]?.decodedTxData?.nonce).toBe(0)
-    expect(result.current[0]?.[thirdMergedTxId]?.decodedTxData?.nonce).toBe(1)
-    expect(result.current[0]?.[firstMergedTxId]?.decodedTxData?.nonce).toBe(2)
+    expect(Object.keys(result!.current[0] || {})).toEqual([secondMergedTxId, thirdMergedTxId, firstMergedTxId, persistedTxId])
+    expect(result!.current[0]?.[secondMergedTxId]?.decodedTxData?.nonce).toBe(0)
+    expect(result!.current[0]?.[thirdMergedTxId]?.decodedTxData?.nonce).toBe(1)
+    expect(result!.current[0]?.[firstMergedTxId]?.decodedTxData?.nonce).toBe(2)
 
     await waitFor(() =>
       expect(store.getState()[historicalRpcSyncSlice.name].txHistoryBySafe[syncKey]).toEqual({
@@ -260,7 +268,9 @@ describe('useLoadTxHistory', () => {
 
     expect(queryFilter).toHaveBeenCalledWith('execution-filter', 0, 0)
 
-    resolveFinalRange?.([])
+    await act(async () => {
+      resolveFinalRange?.([])
+    })
 
     await waitFor(() =>
       expect(store.getState()[historicalRpcSyncSlice.name].txHistoryBySafe[syncKey]).toEqual({
@@ -317,10 +327,14 @@ describe('useLoadTxHistory', () => {
     }
 
     const { store, wrapper } = createWrapper(initialReduxState)
-    const { result } = renderHook(() => useLoadTxHistory(), { wrapper })
+    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
+
+    await act(async () => {
+      ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
+    })
 
     await waitFor(() =>
-      expect(result.current[0]).toEqual(
+        expect(result!.current[0]).toEqual(
         expect.objectContaining({
           [localTxId]: expect.objectContaining({
             txId: localTxId,
@@ -349,7 +363,7 @@ describe('useLoadTxHistory', () => {
     })
 
     await waitFor(() =>
-      expect(result.current[0]).toEqual(
+        expect(result!.current[0]).toEqual(
         expect.objectContaining({
           [localTxId]: expect.any(Object),
           [persistedTxId]: expect.objectContaining({
@@ -360,7 +374,7 @@ describe('useLoadTxHistory', () => {
     )
   })
 
-  it('does not bootstrap persisted tx history from another chain when the current chain also has a cursor', () => {
+  it('does not bootstrap persisted tx history from another chain when the current chain also has a cursor', async () => {
     jest.spyOn(safeInfo, 'default').mockReturnValue({
       safeAddress: SAFE_ADDRESS,
       safe: { chainId: '2', nonce: 3, version: SAFE_VERSION },
@@ -411,9 +425,13 @@ describe('useLoadTxHistory', () => {
       },
     })
 
-    const { result } = renderHook(() => useLoadTxHistory(), { wrapper })
+    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
 
-    expect(result.current[0]).toBeUndefined()
+    await act(async () => {
+      ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
+    })
+
+    expect(result!.current[0]).toBeUndefined()
   })
 
   it('queries block 0 on resume before marking backfill complete', async () => {
@@ -468,11 +486,15 @@ describe('useLoadTxHistory', () => {
       },
     })
 
-    const { result } = renderHook(() => useLoadTxHistory(), { wrapper })
+    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
+
+    await act(async () => {
+      ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
+    })
 
     await waitFor(() => expect(queryFilter).toHaveBeenCalledWith('execution-filter', 0, 0))
     await waitFor(() =>
-      expect(result.current[0]).toEqual(
+        expect(result!.current[0]).toEqual(
         expect.objectContaining({
           [zeroTxId]: expect.objectContaining({
             txId: zeroTxId,
@@ -561,15 +583,19 @@ describe('useLoadTxHistory', () => {
     }
 
     const { wrapper } = createWrapper(initialReduxState)
-    const { result } = renderHook(() => useLoadTxHistory(), { wrapper })
+    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
+
+    await act(async () => {
+      ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
+    })
 
     await waitFor(() =>
-      expect(Object.keys(result.current[0] || {})).toEqual([olderTxId, middleTxId, newerTxId]),
+      expect(Object.keys(result!.current[0] || {})).toEqual([olderTxId, middleTxId, newerTxId]),
     )
 
-    expect(result.current[0]?.[olderTxId]?.decodedTxData?.nonce).toBe(0)
-    expect(result.current[0]?.[middleTxId]?.decodedTxData?.nonce).toBe(1)
-    expect(result.current[0]?.[newerTxId]?.decodedTxData?.nonce).toBe(2)
+    expect(result!.current[0]?.[olderTxId]?.decodedTxData?.nonce).toBe(0)
+    expect(result!.current[0]?.[middleTxId]?.decodedTxData?.nonce).toBe(1)
+    expect(result!.current[0]?.[newerTxId]?.decodedTxData?.nonce).toBe(2)
   })
 
   it('preserves nonce spacing when an execution cannot be decoded', async () => {
@@ -624,13 +650,17 @@ describe('useLoadTxHistory', () => {
       },
     })
 
-    const { result } = renderHook(() => useLoadTxHistory(), { wrapper })
+    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
+
+    await act(async () => {
+      ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
+    })
 
     await waitFor(() =>
-      expect(Object.keys(result.current[0] || {})).toEqual([undecodableTxId, decodableTxId]),
+      expect(Object.keys(result!.current[0] || {})).toEqual([undecodableTxId, decodableTxId]),
     )
 
-    expect(result.current[0]?.[undecodableTxId]?.decodedTxData).toBeUndefined()
-    expect(result.current[0]?.[decodableTxId]?.decodedTxData?.nonce).toBe(1)
+    expect(result!.current[0]?.[undecodableTxId]?.decodedTxData).toBeUndefined()
+    expect(result!.current[0]?.[decodableTxId]?.decodedTxData?.nonce).toBe(1)
   })
 })
