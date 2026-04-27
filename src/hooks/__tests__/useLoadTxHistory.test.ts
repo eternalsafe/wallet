@@ -33,10 +33,11 @@ const createWrapper = (initialReduxState?: Record<string, unknown>) => {
   return {
     store,
     wrapper: ({ children }: { children: React.ReactNode }) =>
-      React.createElement(Provider, {
-        store,
+      React.createElement(
+        Provider as React.ComponentType<{ store: typeof store; children?: React.ReactNode }>,
+        { store },
         children,
-      }),
+      ),
   }
 }
 
@@ -205,7 +206,7 @@ describe('useLoadTxHistory', () => {
     }
 
     const { store, wrapper } = createWrapper(initialReduxState)
-    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
+    let result: { current: ReturnType<typeof useLoadTxHistory> } | undefined
 
     await act(async () => {
       ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
@@ -215,7 +216,7 @@ describe('useLoadTxHistory', () => {
 
     const firstMergedTxId = buildMultisigTxId(SAFE_ADDRESS, '0x222')
     await waitFor(() =>
-        expect(result!.current[0]).toEqual(
+      expect(result!.current[0]).toEqual(
         expect.objectContaining({
           [persistedTxId]: existingHistory[persistedTxId],
           [firstMergedTxId]: expect.objectContaining({
@@ -237,7 +238,7 @@ describe('useLoadTxHistory', () => {
     const secondMergedTxId = buildMultisigTxId(SAFE_ADDRESS, '0x333')
     const thirdMergedTxId = buildMultisigTxId(SAFE_ADDRESS, '0x000')
     await waitFor(() =>
-        expect(result!.current[0]).toEqual(
+      expect(result!.current[0]).toEqual(
         expect.objectContaining({
           [persistedTxId]: existingHistory[persistedTxId],
           [firstMergedTxId]: expect.any(Object),
@@ -253,7 +254,12 @@ describe('useLoadTxHistory', () => {
       ),
     )
 
-    expect(Object.keys(result!.current[0] || {})).toEqual([secondMergedTxId, thirdMergedTxId, firstMergedTxId, persistedTxId])
+    expect(Object.keys(result!.current[0] || {})).toEqual([
+      secondMergedTxId,
+      thirdMergedTxId,
+      firstMergedTxId,
+      persistedTxId,
+    ])
     expect(result!.current[0]?.[secondMergedTxId]?.decodedTxData?.nonce).toBe(0)
     expect(result!.current[0]?.[thirdMergedTxId]?.decodedTxData?.nonce).toBe(1)
     expect(result!.current[0]?.[firstMergedTxId]?.decodedTxData?.nonce).toBe(2)
@@ -327,14 +333,14 @@ describe('useLoadTxHistory', () => {
     }
 
     const { store, wrapper } = createWrapper(initialReduxState)
-    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
+    let result: { current: ReturnType<typeof useLoadTxHistory> } | undefined
 
     await act(async () => {
       ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
     })
 
     await waitFor(() =>
-        expect(result!.current[0]).toEqual(
+      expect(result!.current[0]).toEqual(
         expect.objectContaining({
           [localTxId]: expect.objectContaining({
             txId: localTxId,
@@ -363,7 +369,7 @@ describe('useLoadTxHistory', () => {
     })
 
     await waitFor(() =>
-        expect(result!.current[0]).toEqual(
+      expect(result!.current[0]).toEqual(
         expect.objectContaining({
           [localTxId]: expect.any(Object),
           [persistedTxId]: expect.objectContaining({
@@ -379,7 +385,6 @@ describe('useLoadTxHistory', () => {
       safeAddress: SAFE_ADDRESS,
       safe: { chainId: '2', nonce: 3, version: SAFE_VERSION },
     } as any)
-
     ;(getSafeContract as jest.Mock).mockReturnValue({
       filters: { ExecutionSuccess: jest.fn(() => 'execution-filter') },
       queryFilter: jest.fn().mockResolvedValue([]),
@@ -425,7 +430,7 @@ describe('useLoadTxHistory', () => {
       },
     })
 
-    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
+    let result: { current: ReturnType<typeof useLoadTxHistory> } | undefined
 
     await act(async () => {
       ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
@@ -486,7 +491,7 @@ describe('useLoadTxHistory', () => {
       },
     })
 
-    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
+    let result: { current: ReturnType<typeof useLoadTxHistory> } | undefined
 
     await act(async () => {
       ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
@@ -494,7 +499,7 @@ describe('useLoadTxHistory', () => {
 
     await waitFor(() => expect(queryFilter).toHaveBeenCalledWith('execution-filter', 0, 0))
     await waitFor(() =>
-        expect(result!.current[0]).toEqual(
+      expect(result!.current[0]).toEqual(
         expect.objectContaining({
           [zeroTxId]: expect.objectContaining({
             txId: zeroTxId,
@@ -583,15 +588,13 @@ describe('useLoadTxHistory', () => {
     }
 
     const { wrapper } = createWrapper(initialReduxState)
-    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
+    let result: { current: ReturnType<typeof useLoadTxHistory> } | undefined
 
     await act(async () => {
       ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
     })
 
-    await waitFor(() =>
-      expect(Object.keys(result!.current[0] || {})).toEqual([olderTxId, middleTxId, newerTxId]),
-    )
+    await waitFor(() => expect(Object.keys(result!.current[0] || {})).toEqual([olderTxId, middleTxId, newerTxId]))
 
     expect(result!.current[0]?.[olderTxId]?.decodedTxData?.nonce).toBe(0)
     expect(result!.current[0]?.[middleTxId]?.decodedTxData?.nonce).toBe(1)
@@ -650,15 +653,13 @@ describe('useLoadTxHistory', () => {
       },
     })
 
-    let result: ReturnType<typeof renderHook<typeof useLoadTxHistory>>['result']
+    let result: { current: ReturnType<typeof useLoadTxHistory> } | undefined
 
     await act(async () => {
       ;({ result } = renderHook(() => useLoadTxHistory(), { wrapper }))
     })
 
-    await waitFor(() =>
-      expect(Object.keys(result!.current[0] || {})).toEqual([undecodableTxId, decodableTxId]),
-    )
+    await waitFor(() => expect(Object.keys(result!.current[0] || {})).toEqual([undecodableTxId, decodableTxId]))
 
     expect(result!.current[0]?.[undecodableTxId]?.decodedTxData).toBeUndefined()
     expect(result!.current[0]?.[decodableTxId]?.decodedTxData?.nonce).toBe(1)

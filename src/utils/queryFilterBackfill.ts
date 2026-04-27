@@ -11,11 +11,7 @@ const nonNegativeIntegerOrZero = (value: number) => {
   return Math.max(0, Math.floor(Number.isFinite(value) ? value : 0))
 }
 
-export const getBackwardBlockRanges = (
-  latestBlock: number,
-  batchSize: number,
-  stopAtBlock = 0,
-): BlockRange[] => {
+export const getBackwardBlockRanges = (latestBlock: number, batchSize: number, stopAtBlock = 0): BlockRange[] => {
   const normalizedBatchSize = positiveIntegerOrOne(batchSize)
   const normalizedLatestBlock = nonNegativeIntegerOrZero(latestBlock)
   const normalizedStopAtBlock = nonNegativeIntegerOrZero(stopAtBlock)

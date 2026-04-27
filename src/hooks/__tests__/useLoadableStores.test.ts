@@ -57,6 +57,14 @@ jest.mock('../loadables/useLoadSpendingLimits', () => ({
   default: jest.fn(),
 }))
 
+const txHistoryItem = {
+  txId: 'tx',
+  txHash: '0xtx',
+  safeTxHash: '0xsafe',
+  timestamp: 1,
+  executor: '0x0000000000000000000000000000000000000000',
+}
+
 describe('useLoadableStores', () => {
   it('tags tx history store writes with the active sync key', () => {
     const dispatch = jest.fn()
@@ -69,7 +77,7 @@ describe('useLoadableStores', () => {
     ;(useLoadChains as jest.Mock).mockReturnValue([undefined, undefined, false])
     ;(useLoadSafeInfo as jest.Mock).mockReturnValue([undefined, undefined, false])
     ;(useLoadBalances as jest.Mock).mockReturnValue([undefined, undefined, false])
-    ;(useLoadTxHistory as jest.Mock).mockReturnValue([{ tx: 'history' }, undefined, false])
+    ;(useLoadTxHistory as jest.Mock).mockReturnValue([{ tx: txHistoryItem }, undefined, false])
     ;(useLoadTxQueue as jest.Mock).mockReturnValue([undefined, undefined, false])
     ;(useLoadCollectiblesBalances as jest.Mock).mockReturnValue([undefined, undefined, false])
     ;(useLoadSpendingLimits as jest.Mock).mockReturnValue([undefined, undefined, false])
@@ -78,7 +86,7 @@ describe('useLoadableStores', () => {
 
     expect(dispatch).toHaveBeenCalledWith(
       txHistorySlice.actions.set({
-        data: { tx: 'history' },
+        data: { tx: txHistoryItem },
         error: undefined,
         loading: false,
         syncKey: '1:0x0000000000000000000000000000000000000afe',
@@ -98,7 +106,7 @@ describe('useLoadableStores', () => {
     ;(useLoadChains as jest.Mock).mockReturnValue([undefined, undefined, false])
     ;(useLoadSafeInfo as jest.Mock).mockReturnValue([undefined, undefined, false])
     ;(useLoadBalances as jest.Mock).mockReturnValue([undefined, undefined, false])
-    ;(useLoadTxHistory as jest.Mock).mockReturnValue([{ tx: 'stale-history' }, undefined, false])
+    ;(useLoadTxHistory as jest.Mock).mockReturnValue([{ tx: txHistoryItem }, undefined, false])
     ;(useLoadTxQueue as jest.Mock).mockReturnValue([undefined, undefined, false])
     ;(useLoadCollectiblesBalances as jest.Mock).mockReturnValue([undefined, undefined, false])
     ;(useLoadSpendingLimits as jest.Mock).mockReturnValue([undefined, undefined, false])
@@ -119,7 +127,7 @@ describe('useLoadableStores', () => {
     )
     expect(dispatch).not.toHaveBeenCalledWith(
       txHistorySlice.actions.set({
-        data: { tx: 'stale-history' },
+        data: { tx: txHistoryItem },
         error: undefined,
         loading: false,
         syncKey: '2:0x0000000000000000000000000000000000000afe',

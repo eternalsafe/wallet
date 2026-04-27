@@ -60,12 +60,7 @@ describe('queryFilterBackwards', () => {
 
     expect(queriedRanges).toEqual(['40-49', '30-39'])
     expect(appliedRanges).toEqual(['30-39', '40-49'])
-    expect(collectedLogs).toEqual([
-      '30-39-a',
-      '30-39-b',
-      '40-49-a',
-      '40-49-b',
-    ])
+    expect(collectedLogs).toEqual(['30-39-a', '30-39-b', '40-49-a', '40-49-b'])
     expect(result).toEqual(collectedLogs)
   })
 

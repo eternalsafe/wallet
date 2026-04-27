@@ -5,7 +5,7 @@ export const IS_DEV = process.env.NODE_ENV === 'development'
 
 export const getPositiveIntegerOrDefault = (value: unknown, fallback: number): number => {
   const parsedValue = typeof value === 'string' ? Number(value) : value
-  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : fallback
+  return typeof parsedValue === 'number' && Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : fallback
 }
 
 // Magic numbers

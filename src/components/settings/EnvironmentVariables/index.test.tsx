@@ -26,7 +26,6 @@ describe('EnvironmentVariables', () => {
       chainId: '1',
       publicRpcUri: { value: 'https://rpc.example' },
     } as any)
-
     ;(useAppDispatch as jest.Mock).mockReturnValue(dispatch)
     ;(useAppSelector as jest.Mock).mockImplementation((selector: (state: any) => unknown) =>
       selector({

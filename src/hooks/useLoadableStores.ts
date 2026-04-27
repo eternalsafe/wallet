@@ -27,11 +27,7 @@ import { collectiblesBalanceSlice } from '@/store/collectiblesBalancesSlice'
 const useUpdateStore = (
   slice: Slice,
   useLoadHook: () => AsyncResult<unknown>,
-  getExtraPayload?: (params: {
-    data: unknown
-    error: Error | undefined
-    loading: boolean
-  }) => Record<string, unknown>,
+  getExtraPayload?: (params: { data: unknown; error: Error | undefined; loading: boolean }) => Record<string, unknown>,
 ): void => {
   const dispatch = useAppDispatch()
   const [data, error, loading] = useLoadHook()

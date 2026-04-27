@@ -27,7 +27,6 @@ describe('store', () => {
 
   describe('hydrationReducer', () => {
     it('should merge persisted txHistory and historicalRpcSync without losing initial defaults', () => {
-      // @ts-expect-error demo state
       const initialState = _hydrationReducer(undefined, {
         type: '@@INIT',
       })
@@ -56,7 +55,6 @@ describe('store', () => {
         },
       }
 
-      // @ts-expect-error demo state
       const mergedState = _hydrationReducer(initialState, {
         type: '@@HYDRATE',
         payload: persistedState,
@@ -78,13 +76,13 @@ describe('store', () => {
         },
       })
 
-      expect(mergedState[historicalRpcSyncSlice.name].txHistoryBySafe['1:0x1111111111111111111111111111111111111111']).toEqual(
-        {
-          latestSyncedBlock: 0,
-          backfillCursor: 5,
-          backfillComplete: false,
-        },
-      )
+      expect(
+        mergedState[historicalRpcSyncSlice.name].txHistoryBySafe['1:0x1111111111111111111111111111111111111111'],
+      ).toEqual({
+        latestSyncedBlock: 0,
+        backfillCursor: 5,
+        backfillComplete: false,
+      })
 
       expect(mergedState.settings).toStrictEqual(initialState.settings)
     })

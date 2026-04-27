@@ -49,9 +49,7 @@ export const normalizeTxHistoryBackfillCursor = (
   }
 }
 
-export const normalizeHistoricalRpcSyncState = (
-  state: HistoricalRpcSyncState | undefined,
-): HistoricalRpcSyncState => {
+export const normalizeHistoricalRpcSyncState = (state: HistoricalRpcSyncState | undefined): HistoricalRpcSyncState => {
   return {
     txHistoryBySafe: Object.fromEntries(
       Object.entries(state?.txHistoryBySafe ?? {}).map(([key, cursor]) => [

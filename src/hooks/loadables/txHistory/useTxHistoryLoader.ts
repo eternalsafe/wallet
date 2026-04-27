@@ -8,11 +8,13 @@ import useIntervalCounter from '@/hooks/useIntervalCounter'
 import { POLLING_INTERVAL } from '@/config/constants'
 import { useMultiWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { buildTxHistorySyncKey, type TxHistoryBackfillCursor, selectTxHistoryCursor, setTxHistoryCursor } from '@/store/historicalRpcSyncSlice'
 import {
-  selectHistoricalRpcLogBatchSize,
-  selectHistoricalRpcLogMaxConcurrentRequests,
-} from '@/store/settingsSlice'
+  buildTxHistorySyncKey,
+  type TxHistoryBackfillCursor,
+  selectTxHistoryCursor,
+  setTxHistoryCursor,
+} from '@/store/historicalRpcSyncSlice'
+import { selectHistoricalRpcLogBatchSize, selectHistoricalRpcLogMaxConcurrentRequests } from '@/store/settingsSlice'
 import { selectTxHistory } from '@/store/txHistorySlice'
 import { asError } from '@/services/exceptions/utils'
 import { getSafeContract } from '@/utils/safe-versions'
@@ -118,10 +120,7 @@ const insertRangeIntoOrderedHistory = (
     .slice(0, insertionIndex)
     .filter((item) => nextTxIds.has(item.txId)).length
   const remainingItems = currentOrderedHistory.filter((item) => !nextTxIds.has(item.txId))
-  const normalizedInsertionIndex = Math.max(
-    0,
-    Math.min(remainingItems.length, insertionIndex - removedBeforeIndex),
-  )
+  const normalizedInsertionIndex = Math.max(0, Math.min(remainingItems.length, insertionIndex - removedBeforeIndex))
   const mergedItems = nextItems.map((item) => mergeTxHistoryItem(currentById.get(item.txId), item))
 
   return {
@@ -160,7 +159,9 @@ const mergePersistedHistorySnapshot = (
     let insertAt = nextOrderedHistory.length
 
     for (let lookAheadIndex = snapshotIndex + 1; lookAheadIndex < persistedOrderedHistory.length; lookAheadIndex += 1) {
-      const futureIndex = nextOrderedHistory.findIndex((item) => item.txId === persistedOrderedHistory[lookAheadIndex].txId)
+      const futureIndex = nextOrderedHistory.findIndex(
+        (item) => item.txId === persistedOrderedHistory[lookAheadIndex].txId,
+      )
       if (futureIndex >= 0) {
         insertAt = futureIndex
         break
@@ -238,23 +239,20 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
     (state) => (syncKey ? selectTxHistoryCursor(state, syncKey) : undefined),
     isEqual,
   )
-  const persistedTxHistory = useAppSelector(
-    (state) => {
-      const persistedTxHistoryState = selectTxHistory(state)
+  const persistedTxHistory = useAppSelector((state) => {
+    const persistedTxHistoryState = selectTxHistory(state)
 
-      if (
-        !safeAddress ||
-        !syncKey ||
-        !selectTxHistoryCursor(state, syncKey) ||
-        persistedTxHistoryState.syncKey !== syncKey
-      ) {
-        return undefined
-      }
+    if (
+      !safeAddress ||
+      !syncKey ||
+      !selectTxHistoryCursor(state, syncKey) ||
+      persistedTxHistoryState.syncKey !== syncKey
+    ) {
+      return undefined
+    }
 
-      return filterHistoryForSafe(persistedTxHistoryState.data, safeAddress)
-    },
-    isEqual,
-  )
+    return filterHistoryForSafe(persistedTxHistoryState.data, safeAddress)
+  }, isEqual)
 
   const [data, setData] = useState<TxHistory | undefined>(persistedTxHistory)
   const [error, setError] = useState<Error>()
@@ -341,7 +339,10 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
     const parseLogs = async (logs: ExecutionSuccessLog[]) => {
       const parsed = await Promise.all(
         logs.map(async (log) => {
-          const [block, tx] = await Promise.all([provider.getBlock(log.blockNumber), provider.getTransaction(log.transactionHash)])
+          const [block, tx] = await Promise.all([
+            provider.getBlock(log.blockNumber),
+            provider.getTransaction(log.transactionHash),
+          ])
 
           let decodedTxData: Result | undefined
           try {
@@ -399,8 +400,7 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
             return
           }
 
-          const isNewOlderGroup =
-            previousAppliedRange !== undefined && range.toBlock < previousAppliedRange.fromBlock
+          const isNewOlderGroup = previousAppliedRange !== undefined && range.toBlock < previousAppliedRange.fromBlock
 
           if (isNewOlderGroup) {
             insertionIndex = baseInsertionIndex
