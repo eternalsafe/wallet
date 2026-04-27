@@ -33,9 +33,12 @@ type UseTxHistoryLoaderResult = {
 type ExecutionSuccessLog = {
   blockNumber: number
   transactionHash: string
+  topics?: string[]
+  data?: string
   args: {
-    txHash: string
-  }
+    txHash?: string
+    [index: number]: string | undefined
+  } | null
 }
 
 const INITIAL_CURSOR: TxHistoryBackfillCursor = {
@@ -346,6 +349,24 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
       }
     }
 
+    const getSafeTxHash = (log: ExecutionSuccessLog): string | undefined => {
+      const argsTxHash = log.args?.txHash ?? log.args?.[0]
+      if (argsTxHash) {
+        return argsTxHash
+      }
+
+      if (!log.topics || !log.data) {
+        return undefined
+      }
+
+      try {
+        const parsed = safeContract.interface.parseLog({ topics: log.topics, data: log.data })
+        return parsed.args.txHash ?? parsed.args[0]
+      } catch {
+        return undefined
+      }
+    }
+
     const retryUnavailableTxDetails = async () => {
       const nextOrderedHistory = await Promise.all(
         orderedHistoryRef.current.map(async (item) => {
@@ -372,18 +393,23 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
       }
     }
 
-    const parseLogs = async (logs: ExecutionSuccessLog[]) => {
-      const parsed = await Promise.all(
+    const parseLogs = async (logs: ExecutionSuccessLog[]): Promise<TxHistoryItem[]> => {
+      const parsed: Array<TxHistoryItem | undefined> = await Promise.all(
         logs.map(async (log) => {
+          const safeTxHash = getSafeTxHash(log)
+          if (!safeTxHash) {
+            return undefined
+          }
+
           const [block, tx] = await Promise.all([
             provider.getBlock(log.blockNumber),
             provider.getTransaction(log.transactionHash),
           ])
 
           return {
-            txId: buildMultisigTxId(safeAddress, log.args.txHash),
+            txId: buildMultisigTxId(safeAddress, safeTxHash),
             txHash: log.transactionHash,
-            safeTxHash: log.args.txHash,
+            safeTxHash,
             timestamp: (block?.timestamp ?? 0) * 1000,
             executor: tx?.from ?? constants.AddressZero,
             decodedTxData: tx ? decodeTxData(tx.data) : undefined,
@@ -392,7 +418,7 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
         }),
       )
 
-      return parsed
+      return parsed.filter((item): item is TxHistoryItem => isTxHistoryItem(item))
     }
 
     const syncLogsInRanges = async ({

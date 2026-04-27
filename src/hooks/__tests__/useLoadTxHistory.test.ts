@@ -188,6 +188,55 @@ describe('useLoadTxHistory', () => {
     expect(decodeFunctionData).toHaveBeenCalledWith('execTransaction', '0xabcdef00')
   })
 
+  it('recovers execution success tx hash from raw log data when event args are null', async () => {
+    const safeTxHash = '0xb7056c6259d601cc1feed64e59c95d95cbcc911c62bb14cf783bfd3d809e609b'
+    const txId = buildMultisigTxId(SAFE_ADDRESS, safeTxHash)
+    const queryFilter = jest.fn().mockResolvedValue([
+      {
+        blockNumber: 4,
+        transactionHash: '0xe460983504ce8700f9847d397bf40c86955c4f1425501066d0b59763694dcfdf',
+        args: null,
+        topics: ['0x442e715f626346e8c54381002da614f62bee8d27386535b2521ec8540898556e'],
+        data: `${safeTxHash}0000000000000000000000000000000000000000000000000000000000000000`,
+      },
+    ])
+    const parseLog = jest.fn().mockReturnValue({ args: { txHash: safeTxHash } })
+
+    ;(getSafeContract as jest.Mock).mockReturnValue({
+      filters: { ExecutionSuccess: jest.fn(() => 'execution-filter') },
+      queryFilter,
+      interface: {
+        decodeFunctionData: jest.fn(() => createDecodedTxData()),
+        parseLog,
+      },
+    })
+
+    jest.spyOn(web3, 'useMultiWeb3ReadOnly').mockReturnValue({
+      getBlockNumber: jest.fn().mockResolvedValue(4),
+      getBlock: jest.fn().mockResolvedValue({ timestamp: 4 }),
+      getTransaction: jest.fn().mockResolvedValue({
+        from: constants.AddressZero,
+        data: '0xabcdef00',
+      }),
+    } as any)
+
+    const { wrapper } = createWrapper()
+
+    const { result } = renderHook(() => useLoadTxHistory(), { wrapper })
+
+    await waitFor(() =>
+      expect(result.current[0]?.[txId]).toEqual(
+        expect.objectContaining({
+          txId,
+          safeTxHash,
+          txHash: '0xe460983504ce8700f9847d397bf40c86955c4f1425501066d0b59763694dcfdf',
+        }),
+      ),
+    )
+    expect(result.current[1]).toBeUndefined()
+    expect(parseLog).toHaveBeenCalled()
+  })
+
   it('uses persisted history immediately and merges resumed backfill batches incrementally', async () => {
     const persistedTxId = buildMultisigTxId(SAFE_ADDRESS, '0x111')
     const existingHistory = {
