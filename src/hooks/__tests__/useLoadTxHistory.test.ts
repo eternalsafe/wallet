@@ -10,6 +10,7 @@ import { txHistorySlice } from '@/store/txHistorySlice'
 import { getSafeContract } from '@/utils/safe-versions'
 import { buildMultisigTxId } from '@/utils/tx-id'
 
+import useIntervalCounter from '../useIntervalCounter'
 import useLoadTxHistory from '../loadables/useLoadTxHistory'
 import * as safeInfo from '../useSafeInfo'
 import * as web3 from '../wallets/web3'
@@ -115,6 +116,76 @@ describe('useLoadTxHistory', () => {
 
     expect(queryFilter).not.toHaveBeenCalledWith('execution-filter', 0, 'latest')
     expect(queryFilter).toHaveBeenCalledWith('execution-filter', 15_001, 25_000)
+  })
+
+  it('keeps log-derived history when tx details are temporarily unavailable and retries later', async () => {
+    const txId = buildMultisigTxId(SAFE_ADDRESS, '0xmissing')
+    const queryFilter = jest.fn().mockResolvedValue([createLog(4, '0xmissing-tx', '0xmissing')])
+    const decodeFunctionData = jest.fn(() => createDecodedTxData())
+    let pollCount = 0
+
+    ;(useIntervalCounter as jest.Mock).mockImplementation(() => [pollCount, jest.fn()])
+    ;(getSafeContract as jest.Mock).mockReturnValue({
+      filters: { ExecutionSuccess: jest.fn(() => 'execution-filter') },
+      queryFilter,
+      interface: { decodeFunctionData },
+    })
+
+    const getTransaction = jest.fn().mockResolvedValueOnce(null).mockResolvedValueOnce({
+      from: '0x0000000000000000000000000000000000000002',
+      data: '0xabcdef00',
+    })
+
+    jest.spyOn(web3, 'useMultiWeb3ReadOnly').mockReturnValue({
+      getBlockNumber: jest.fn().mockResolvedValue(4),
+      getBlock: jest.fn().mockResolvedValue({ timestamp: 4 }),
+      getTransaction,
+    } as any)
+
+    const { wrapper } = createWrapper({
+      [settingsSlice.name]: {
+        ...settingsSlice.getInitialState(),
+        env: {
+          ...settingsSlice.getInitialState().env,
+          historicalRpcLogBatchSize: 5,
+          historicalRpcLogMaxConcurrentRequests: 1,
+        },
+      },
+    })
+
+    const { result, rerender } = renderHook(() => useLoadTxHistory(), { wrapper })
+
+    await waitFor(() =>
+      expect(result.current[0]?.[txId]).toEqual(
+        expect.objectContaining({
+          txId,
+          txHash: '0xmissing-tx',
+          safeTxHash: '0xmissing',
+          timestamp: 4_000,
+          executor: constants.AddressZero,
+          txDetailsUnavailable: true,
+        }),
+      ),
+    )
+    expect(result.current[1]).toBeUndefined()
+    expect(decodeFunctionData).not.toHaveBeenCalled()
+
+    pollCount = 1
+    rerender()
+
+    await waitFor(() =>
+      expect(result.current[0]?.[txId]).toEqual(
+        expect.objectContaining({
+          executor: '0x0000000000000000000000000000000000000002',
+          txDetailsUnavailable: undefined,
+          decodedTxData: expect.objectContaining({
+            nonce: 0,
+          }),
+        }),
+      ),
+    )
+    expect(getTransaction).toHaveBeenCalledWith('0xmissing-tx')
+    expect(decodeFunctionData).toHaveBeenCalledWith('execTransaction', '0xabcdef00')
   })
 
   it('uses persisted history immediately and merges resumed backfill batches incrementally', async () => {

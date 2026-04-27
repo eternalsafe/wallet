@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import isEqual from 'lodash/isEqual'
 import type { SafeTransactionData } from '@safe-global/safe-core-sdk-types'
 import type { Result } from 'ethers/lib/utils'
+import { constants } from 'ethers'
 
 import useSafeInfo from '@/hooks/useSafeInfo'
 import useIntervalCounter from '@/hooks/useIntervalCounter'
@@ -336,6 +337,41 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
       )
     }
 
+    const decodeTxData = (data: string): SafeTransactionData | undefined => {
+      try {
+        const decodedTxData = safeContract.interface.decodeFunctionData('execTransaction', data)
+        return parseDecodedTxData(decodedTxData, 0)
+      } catch {
+        return undefined
+      }
+    }
+
+    const retryUnavailableTxDetails = async () => {
+      const nextOrderedHistory = await Promise.all(
+        orderedHistoryRef.current.map(async (item) => {
+          if (!item.txDetailsUnavailable) {
+            return item
+          }
+
+          const tx = await provider.getTransaction(item.txHash)
+          if (!tx) {
+            return item
+          }
+
+          return {
+            ...item,
+            executor: tx.from,
+            decodedTxData: decodeTxData(tx.data),
+            txDetailsUnavailable: undefined,
+          }
+        }),
+      )
+
+      if (!isEqual(nextOrderedHistory, orderedHistoryRef.current)) {
+        setOrderedHistory(nextOrderedHistory)
+      }
+    }
+
     const parseLogs = async (logs: ExecutionSuccessLog[]) => {
       const parsed = await Promise.all(
         logs.map(async (log) => {
@@ -344,20 +380,14 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
             provider.getTransaction(log.transactionHash),
           ])
 
-          let decodedTxData: Result | undefined
-          try {
-            decodedTxData = safeContract.interface.decodeFunctionData('execTransaction', tx.data)
-          } catch {
-            decodedTxData = undefined
-          }
-
           return {
             txId: buildMultisigTxId(safeAddress, log.args.txHash),
             txHash: log.transactionHash,
             safeTxHash: log.args.txHash,
-            timestamp: block.timestamp * 1000,
-            executor: tx.from,
-            decodedTxData: decodedTxData ? parseDecodedTxData(decodedTxData, 0) : undefined,
+            timestamp: (block?.timestamp ?? 0) * 1000,
+            executor: tx?.from ?? constants.AddressZero,
+            decodedTxData: tx ? decodeTxData(tx.data) : undefined,
+            txDetailsUnavailable: tx ? undefined : true,
           }
         }),
       )
@@ -422,6 +452,11 @@ export const useTxHistoryLoader = (): UseTxHistoryLoaderResult => {
 
       try {
         const latestBlock = await provider.getBlockNumber()
+        if (cancelled) {
+          return
+        }
+
+        await retryUnavailableTxDetails()
         if (cancelled) {
           return
         }

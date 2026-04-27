@@ -7,6 +7,7 @@ export type TxHistoryItem = {
   timestamp: number
   executor: string
   decodedTxData?: SafeTransactionData
+  txDetailsUnavailable?: boolean
 }
 
 export type TxHistory = {
