@@ -2,7 +2,7 @@ import type { listenerMiddlewareInstance, RootState } from '@/store'
 import { txDispatch, TxEvent } from '@/services/tx/txEvents'
 import { selectPendingTxs } from './pendingTxsSlice'
 import type { Loadable } from './common'
-import type { TxHistory, TxHistoryItem } from '@/hooks/loadables/txHistory/types'
+import { isTxHistoryItem, type TxHistory, type TxHistoryItem } from '@/hooks/loadables/txHistory/types'
 import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { normalizeTxId } from '@/utils/tx-id'
 
@@ -58,7 +58,7 @@ export const txHistoryListener = (listenerMiddleware: typeof listenerMiddlewareI
       const pendingTxs = selectPendingTxs(listenerApi.getState())
 
       for (const item of Object.values(action.payload.data)) {
-        if (!item?.txId) {
+        if (!isTxHistoryItem(item)) {
           continue
         }
 

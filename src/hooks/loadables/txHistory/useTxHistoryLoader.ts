@@ -21,7 +21,7 @@ import { getSafeContract } from '@/utils/safe-versions'
 import { buildMultisigTxId } from '@/utils/tx-id'
 import { queryFilterBackwards, type BlockRange } from '@/utils/queryFilterBackfill'
 
-import type { TxHistory, TxHistoryItem } from './types'
+import { isTxHistoryItem, type TxHistory, type TxHistoryItem } from './types'
 
 type UseTxHistoryLoaderResult = {
   data: TxHistory | undefined
@@ -66,8 +66,8 @@ const getSafeAddressFromTxId = (txId: string): string | undefined => {
 
 const filterHistoryForSafe = (history: TxHistory | undefined, safeAddress: string): TxHistory | undefined => {
   const normalizedSafeAddress = safeAddress.toLowerCase()
-  const entries = Object.entries(history ?? {}).filter(([txId]) => {
-    return getSafeAddressFromTxId(txId) === normalizedSafeAddress
+  const entries = Object.entries(history ?? {}).filter(([txId, item]) => {
+    return isTxHistoryItem(item) && getSafeAddressFromTxId(txId) === normalizedSafeAddress
   })
 
   if (!entries.length) {
@@ -78,7 +78,7 @@ const filterHistoryForSafe = (history: TxHistory | undefined, safeAddress: strin
 }
 
 const getOrderedHistoryItems = (history: TxHistory | undefined): TxHistoryItem[] => {
-  return Object.values(history ?? {})
+  return Object.values(history ?? {}).filter(isTxHistoryItem)
 }
 
 const mergeTxHistoryItem = (current: TxHistoryItem | undefined, next: TxHistoryItem): TxHistoryItem => {

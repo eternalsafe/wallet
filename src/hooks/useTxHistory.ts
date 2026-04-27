@@ -12,6 +12,7 @@ import {
 } from '@/utils/transactions'
 import { type DetailedTransaction, isDetailedTransactionListItem } from '@/utils/transaction-guards'
 import { selectTxHistory } from '@/store/txHistorySlice'
+import { isTxHistoryItem } from './loadables/txHistory/types'
 
 const useTxHistory = (): {
   data: Array<DetailedTransaction>
@@ -35,6 +36,7 @@ const useTxHistory = (): {
 
       const results: Array<DetailedTransaction | undefined> = await Promise.all(
         Object.values(executedTransactions)
+          .filter(isTxHistoryItem)
           .map(async (executedTx) => {
             let txKey = getTxKeyFromTxId(executedTx.txId)
             if (!txKey) return
